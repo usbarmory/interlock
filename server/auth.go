@@ -1,0 +1,161 @@
+package main
+
+import (
+	"crypto/rand"
+	"encoding/base64"
+	"errors"
+	"net/http"
+	"os"
+	"path/filepath"
+)
+
+const cookieSize = 64
+const cookieAge = 8 * 60 * 60
+
+func randomString(size int) (c string, err error) {
+	rb := make([]byte, size)
+
+	_, err = rand.Read(rb)
+
+	c = base64.URLEncoding.EncodeToString(rb)
+
+	return
+}
+
+func authenticate(volume string, password string, dispose bool) (err error) {
+	err = luksOpen(volume, password)
+
+	if err != nil {
+		return
+	}
+
+	err = luksMount()
+
+	if err != nil {
+		_ = luksClose()
+		return
+	}
+
+	err = os.MkdirAll(filepath.Join(conf.mountPoint, conf.KeyPath), 0700)
+
+	if err != nil {
+		_ = luksUnmount()
+		_ = luksClose()
+		return
+	}
+
+	if dispose {
+		err = luksKeyOp(volume, password, "", _remove)
+	}
+
+	if err != nil {
+		_ = luksUnmount()
+		_ = luksClose()
+		return
+	}
+
+	return
+}
+
+func refreshXSRFToken(w http.ResponseWriter) (res jsonObject) {
+	res = jsonObject{
+		"status": "OK",
+		"response": map[string]interface{}{
+			"volume":    session.Volume,
+			"XSRFToken": session.XSRFToken},
+	}
+
+	return
+}
+
+func login(w http.ResponseWriter, r *http.Request) (res jsonObject) {
+	req, err := parseRequest(r)
+
+	if err != nil {
+		return errorResponse(err, "")
+	}
+
+	err = validateRequest(req, []string{"volume", "password", "dispose"})
+
+	if err != nil {
+		return errorResponse(err, "")
+	}
+
+	if session.SessionID != "" {
+		return errorResponse(errors.New("existing session"), "INVALID_SESSION")
+	}
+
+	err = authenticate(req["volume"].(string), req["password"].(string), req["dispose"].(bool))
+
+	if err != nil {
+		return errorResponse(err, "INVALID_SESSION")
+	}
+
+	sessionID, err := randomString(cookieSize)
+
+	if err != nil {
+		return errorResponse(err, "")
+	}
+
+	sessionCookie := &http.Cookie{
+		Name:     "Interlock-Token",
+		Value:    sessionID,
+		Path:     "/api",
+		MaxAge:   cookieAge,
+		Secure:   true,
+		HttpOnly: true,
+	}
+
+	http.SetCookie(w, sessionCookie)
+
+	XSRFToken, err := randomString(cookieSize)
+
+	if err != nil {
+		return errorResponse(err, "")
+	}
+
+	session.Set(req["volume"].(string), sessionID, XSRFToken)
+
+	res = jsonObject{
+		"status": "OK",
+		"response": map[string]interface{}{
+			"volume":    session.Volume,
+			"XSRFToken": session.XSRFToken},
+	}
+
+	return
+}
+
+func logout(w http.ResponseWriter) (res jsonObject) {
+	sessionCookie := &http.Cookie{
+		Name:     "Interlock-Token",
+		Value:    "delete",
+		Path:     "/api",
+		MaxAge:   -1,
+		Secure:   true,
+		HttpOnly: true,
+	}
+
+	http.SetCookie(w, sessionCookie)
+
+	res = jsonObject{
+		"status":   "OK",
+		"response": nil,
+	}
+
+	err := luksUnmount()
+
+	if err != nil {
+		return errorResponse(err, "")
+	}
+
+	err = luksClose()
+
+	if err != nil {
+		return errorResponse(err, "")
+	}
+
+	session.Clear()
+
+	return
+}

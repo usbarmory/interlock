@@ -1,0 +1,22 @@
+<div id="login_main">
+  <form id="login_form" action="/auth/login" method="POST" enctype="application/json" autocomplete="off">
+    <fieldset>
+      <div>
+        <input type="text" id="volume" name="volume" placeholder="volume" />
+        <input type="password" id="pwd" name="pwd" placeholder="password" />
+        <button type="submit">Login</button>
+        <p>
+          <input type="checkbox" id="dispose" name="dispose" />
+          <label for="dispose">dispose of the password after use</label>
+        </p>
+      </div>
+    </fieldset>
+  </form>
+</div>
+
+<script>
+  $("#login_form").submit(function(event) {
+    Interlock.Session.login($('#volume').val(), $('#pwd').val(), $('#dispose').is(':checked'));
+    event.preventDefault();
+  });
+</script>

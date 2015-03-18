@@ -1,0 +1,377 @@
+Interlock API
+=============
+
+# Main API Objects (data types definitions from JSON.org)
+
+partition:
+  {
+    "identifier":  string,   # partition identifier
+    "info":        string,   # encryption information
+    "total_space": number,   # size in bytes
+    "free_space":  number    # size in bytes
+  }
+
+inode:
+  {
+    "name":        string,   # absolute file or directory path
+    "dir" :        boolean,  # true => directory
+    "size":        number,   # size in bytes
+    "mtime":       number    # modify time in epoch
+  }
+
+cipher:
+  {
+    "name":        string,   # method name
+    "info":        string,   # method information
+    "key_format":  string,   # supported key format ("password", "armor")
+    "enc":         boolean,  # encryption support
+    "dec":         boolean,  # decryption support
+    "sig":         boolean   # signing support
+    "ext":         string    # encrypted file extension
+  }
+
+key:
+  {
+    "identifier":  string,   # key identifier
+    "key_format":  string,   # key format ("password", "armor")
+    "cipher":      string,   # name for cipher object
+    "private":     boolean   # identifies private, public keys
+    "path":        string    # key path
+  }
+
+positive response:
+  {
+    "status":      string,   # OK
+     ############  optional: ############
+    "response":    {} | [{}] # response object(s)
+  }
+
+error response:
+  {
+    "status":      string,   # KO | INVALID_SESSION | INVALID
+    "response":    string    # error string
+  }
+
+# API Methods (* == currently not implemented)
+
+  api/
+    auth/           login, logout
+    luks/           change, add, remove
+    file/           list, upload, delete, move, copy, mkdir
+    file/           encrypt, decrypt, verify*
+    crypto/         ciphers, keys, gen_key*, upload_key*
+    config/         time
+    status/         device, interlock
+  static/           static HTML/JavaScript content
+
+## POST api/auth/login
+
+On a successful login the "Interlock-Token" is returned as cookie via the
+"Set-Cookie" header in HTTP response.
+
+The XSRF protection token "X-XSRFToken" is returned in the response payload.
+This token must be included by the client as HTTP header in every request to
+the backend.
+
+The "dispose" boolean indicates that the LUKS password must be removed after
+mounting the encrypted partition, this is possible as long as one other valid
+password is configured.
+
+request:
+  {
+    "volume":      string,   # encrypted volume name
+    "password":    string,   # password for encrypted partition mount
+    "dispose":     boolean   # dispose of the password after use
+  }
+
+response:
+  {
+    "status":        string, # OK | KO | INVALID_SESSION | INVALID
+    "response": {
+      "volume":      string  # encrypted volume name
+      "XSRFToken":   string
+    }
+  }
+
+'Set-Cookie' header example:
+Set-Cookie: Interlock-Token=DQAAAK...Eaem_vYg; Path=/;
+            Expires=Wed, 30 Jan 2015 22:23:01 GMT; Secure; HttpOnly
+
+## POST api/auth/logout
+
+Invalidate the current session 'Interlock-Token' cookie and unmount the
+encrypted partition.
+
+## POST api/config/time
+
+Set the device data and time.
+
+request:
+  {
+    "epoch":       number    # system date and time in epoch format
+  }
+
+## POST api/luks/change
+
+Change existing password assigned to a LUKS key slot. The password is used to
+mount the encrypted partition and to perform the initial login.
+
+request:
+  {
+    "volume":      string,   # encrypted volume name
+    "password":    string,   # valid LUKS password
+    "newpassword": string    # new LUKS password
+  }
+
+## POST api/luks/add
+
+Add a new password to the next available LUKS key slot.
+
+request:
+  {
+    "volume":      string,   # encrypted volume name
+    "password":    string,   # valid LUKS password
+    "newpassword": string    # added LUKS password
+  }
+
+## POST api/luks/remove
+
+Delete an existing password from a LUKS key slots.
+
+request:
+  {
+    "volume":      string,   # encrypted volume name
+    "password":    string    # valid LUKS password
+  }
+
+## POST api/file/list
+
+Get the list of all files and directories under the specified path.
+
+request:
+  {
+    "path":        string    # supports wildcards (e.g. *, ?)
+  }
+
+response:
+  {
+    "status":      string,   # OK | KO
+    "response": {
+      "total_space": number, # partition size
+      "free_space":  number, # remaining size
+      "inodes":    [{inode}] # inode object(s)
+    }
+  }
+
+## POST api/file/upload
+
+Upload files using the XMLHttpRequest (XHR) API. The destination full path of
+the file is specified by the "X-UploadFilename" HTTP custom header.
+
+HTTP request headers:
+  X-UploadFilename: string
+  X-ForceOverwrite: 'true' | 'false'
+
+HTTP response codes:
+  200: success
+  400: bad request
+  401: unauthorized
+
+## POST api/file/download
+
+Retrieve the unique id for downloading a file or directory. If a directory is
+specified a zip file of its contents is downloaded. The returned id is meant to
+be used with a GET to 'api/file/download?id=<download_id>'.
+
+request:
+  {
+    "path":        string    # file path
+  }
+
+response:
+  {
+    "status":      string,    # OK | KO | INVALID_SESSION | INVALID
+    "response":    number     # unique download identifier
+  }
+
+## GET api/file/download?id=<download_id>
+
+Download a file, the file is specified by the download_id unique code returned
+by the POST to 'api/file/download'. The download_id is disposed after use.
+
+HTTP response codes:
+  200: success
+  400: bad request
+  401: unauthorized
+
+## POST api/file/delete
+
+Recursively delete one or more files or directories under a certain path.
+
+request:
+  {
+    "path":        [string]  # absolute path for files and/or directory delete
+  }
+
+## POST api/file/move
+
+Move/rename files or directories.
+
+request:
+  {
+    "src":         [string], # absolute path for files and/or directory move
+    "dst":         string    # absolute path for destination
+  }
+
+## POST api/file/copy
+
+Copy files or directories.
+
+request:
+  {
+    "src":         string,   # absolute path for files and/or directory copy
+    "dst":         string    # absolute path for destination
+  }
+
+## POST api/file/mkdir
+
+Create a new directory, path creation can include parent directories.
+
+request:
+  {
+    "path":        string    # absolute path for directory creation
+  }
+
+## POST api/file/encrypt
+
+Encrypt and/or sign one or more files.
+
+request:
+  {
+    "src":         string,
+    "cipher":      string,   # name for cipher object
+    "wipe_src":    boolean,  # wipe source after encryption (default: false)
+    "encrypt":     boolean,  # encrypt the file (default: true)
+    "sign":        boolean,  # sign the file (default: false)
+    "password":    string,   # symmetric cipher or key password
+    "key":         string,   # key path, only for asymmetric ciphers
+    "sig_key":     string    # signature key identifier
+  }
+
+## POST api/file/decrypt
+
+Decrypt one file.
+
+request:
+  {
+    "src":         string,
+    "password":    string,   # symmetric cipher or key password
+    "key":         string,   # key path, only for asymmetric ciphers
+     ############  optional: ############
+    "cipher":      string    # name for cipher object to be forced
+  }
+
+## POST api/file/verify
+
+Verify file signature.
+
+request:
+  {
+    "src":         string,
+     ############  optional: ############
+    "cipher":      string,   # name for cipher object
+    "sig_key":     string    # signature key identifier
+  }
+
+## GET api/crypto/ciphers
+
+Get the list of all the available crypto algorithms.
+
+response:
+  {
+    "status":      string,    # OK | KO | INVALID_SESSION | INVALID
+    "response":    [{cipher}] # cipher object(s)
+  }
+
+## POST api/crypto/keys
+
+Get the list of all the available public, private, symmetric keys.
+
+request:
+  {
+    "public":      boolean,  # list public keys
+    "private":     boolean,  # list private keys
+     ############  optional: ############
+    "filter":      string,   # pattern match for contents
+    "key_format":  string,   # key format ("password", "armor")
+    "cipher":      cipher    # supported cipher name
+  }
+
+response:
+  {
+    "status":      string,   # OK | KO | INVALID_SESSION | INVALID
+    "response":    [{key}]   # key object(s)
+  }
+
+## POST api/crypto/gen_key
+
+Generate a key and/or keypair.
+
+request:
+  {
+    "cipher":      string    # name for cipher object
+  }
+
+response:
+  {
+    "status":      string,   # OK | KO | INVALID_SESSION | INVALID
+    "response":    [{key}]   # key object(s)
+  }
+
+## POST api/crypto/upload_key
+
+Upload a key.
+
+request:
+  {
+    "key":         key       # key object
+    "data":        string    # key payload
+  }
+
+## GET api/status/interlock
+
+Retrieve interlock backend status information.
+
+response:
+  {
+    "status":      string,   # OK | KO | INVALID_SESSION | INVALID
+    "response": {
+      "log": [
+        {
+          "epoch": number,   # timestamp
+          "code":  number,   # RFC5424 severity level
+          "msg":   string,   # log message
+        }
+      ],
+      "notification": [
+        {
+          "epoch": number,   # timestamp
+          "code":  number,   # RFC5424 severity level
+          "msg":   string,   # notification message
+        }
+      ]
+    }
+  }
+
+## GET api/status/device
+
+Retrieve general device status information.
+
+response:
+  {
+    "status":      string,   # OK | KO | INVALID_SESSION | INVALID
+    "response": {
+      "kernel" :   string,   # Kernel version
+      "uptime" :   string    # Uptime
+    }
+  }

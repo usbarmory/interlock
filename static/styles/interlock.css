@@ -1,0 +1,438 @@
+* {
+  font-family: 'Arial', sans-serif;
+  line-height: 1.4em;
+  color: rgb(50,50,50)
+}
+
+html, body, img, h1, div {
+  font-size: 9pt;
+  margin: 0px;
+  border: none
+}
+
+#error-form,
+#modal-form {
+  background: rgba(255,255,255,0.9);
+  color: white;
+  padding: 5px;
+}
+
+#uploads {
+  list-style: none;
+  padding-left: 0;
+  background: rgba(255,255,255,0.4);
+  overflow-y: auto;
+  z-index: 0;
+}
+
+#uploads li {
+  display: block;
+  padding: 4px;
+  margin: 4px;
+  color: gray;
+}
+
+#uploads li.progress,
+#uploads li.success,
+#uploads li.failure {
+  display: block;
+  margin: 6px auto;
+  color: white;
+  font-weight: bold;
+  background: url(/images/progress_bar.png) no-repeat top left;
+}
+
+#uploads li.progress { color: gray }
+#uploads li.success { background: rgba(0,255,0,0.6) none 0 0 no-repeat }
+#uploads li.failure { background: rgba(255,0,0,0.6) none 0 0 no-repeat }
+
+.entitydrag {
+  display: none;
+  text-align: left;
+  padding: 5px;
+  margin: 1em 0;
+  color: #555;
+  border: 1px dotted rgb(255,255,255);
+  border-radius: 3px;
+  cursor: default;
+}
+
+.entitydrag.hover {
+  border: 1px solid silver;
+  background: rgba(0,0,0,0.05);
+}
+
+#upload_form {
+  margin: auto;
+  width: 98%;
+}
+
+.inode_menu {
+  z-index:1000;
+  position: absolute;
+  width: 200px;
+  background-color: rgba(200,200,200,0.9);
+  padding: 2px;
+  list-style-type: none;
+  border: 1px solid silver
+}
+
+.inode_menu li {
+  padding: 8px;
+  font-weight: bold;
+  border-bottom: 1px solid silver;  
+}
+
+.inode_menu li:hover {
+  cursor: pointer
+}
+
+.inode_menu li.disabled,
+.inode_menu li.disabled:hover {
+  color: gray;
+  cursor: default
+}
+
+.pwd {
+  display: block;
+  font-weight: bold;
+  width: 95%;
+}
+
+.pwd span:hover {
+  cursor: pointer
+}
+
+#file_manager {
+  position: absolute;
+  color: #272727;
+  right: 32%;
+  width: 67%;
+  height: 100%;
+  z-index: 0
+}
+
+#status {
+  position: absolute;
+  right: 0%;
+  width: 30%;
+  height: 100%;
+  padding: 10px;
+  z-index: 0
+}
+
+.actions ul, ul {
+  padding: 0;
+  list-style-type: none;
+}
+
+.actions ul li { display: inline; }
+
+.actions ul li {
+  text-decoration: none;
+  padding: 5px;
+  margin-right: 5px;
+  color: white;
+  background-color: black;
+  border-radius: 1px;
+}
+
+.actions ul li:hover {
+  cursor: pointer;
+}
+
+.actions.resize_text {
+  position: fixed;
+  bottom: 1%;
+  left: 1%;
+  z-index: 100;
+}
+
+input[type="checkbox"] {
+  vertical-align: bottom;
+  top: 9px;
+  position: relative
+}
+
+input[type="text"], input[type="password"] {
+  display: inline-block;
+  width: 100%;
+  font-family: sans-serif;
+  font-size: 12px;
+  appearance: none;
+  box-shadow: none;
+  border-radius: none;
+  border: 1px dotted silver
+  padding: 3px;
+  padding-left: 3px;
+  transition: border 0.3s
+}
+
+input[type="text"]:focus { border: 1px dotted black }
+
+::-webkit-input-placeholder { color: gray }
+:-moz-placeholder { color: gray }
+::-moz-placeholder { color: gray }
+:-ms-input-placeholder { color: gray }
+
+label.uploadLabel input[type="file"] {
+    position: fixed;
+    top: -1000px;
+}
+
+.uploadLabel :valid + span { color: white }
+
+.uploadLabel:hover { cursor: pointer }
+
+input {
+  margin-top: 10px;
+  margin-bottom: 10px
+}
+
+select {
+  float: right;
+  margin-top: 10px;
+  margin-bottom: 10px;
+  border: 0 !important;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background: url(/images/dropdown_menu.png) no-repeat;
+  background-position: 220px 7px;
+  width: 240px;
+  text-indent: 0.01px;
+  text-overflow: "";
+  color: black
+}
+
+select:hover { cursor: pointer }
+
+select::-ms-expand { display: none }
+
+button {
+  float: right;
+  border: none;
+  cursor: pointer;
+  margin-top: 20px;
+  padding: 5px;
+  color: white;
+  background: black;
+  border-radius: 1px;
+}
+
+button[disabled] {
+  cursor: auto;
+  background: rgb(160,160,160)
+}
+
+button#shellinabox,
+button#logout {
+  font-size: 9pt;
+  display: inline-block;
+  background: white;
+  color: gray;
+  margin-top: -2px;
+  margin-left: 6px;
+  padding: 2px;
+  font-weight: bold;
+}
+
+button#shellinabox:hover,
+button#logout:hover {
+  color: black;
+}
+
+fieldset { border: none }
+
+.inodes_table_container {
+  padding-right: 25px;
+  border-right: 2px solid rgba(0,0,0,0.1);
+  border-bottom: 1px dotted rgba(0,0,0,0.1);
+  display: block;
+  width: 100%;
+  height: 500px;
+  overflow-y: auto;
+}
+
+table.inodes_table thead th {
+  font-weight: bold;
+}
+
+table.inodes_table {
+  width: 100%;
+  position: relative;
+  border: none;
+  border-collapse: collapse;
+  margin: 20px auto;
+  margin-bottom: 20px
+}
+
+table.inodes_table td, table.inodes_table th {
+  padding: 1px 4px;
+  text-align: left
+}
+
+table.inodes_table tbody tr {
+  border-top: 1px solid #eeeeee
+}
+
+table.inodes_table tr.details {
+  border-top: 1px solid transparent;
+  text-align: left;
+  text-indent: 0px;
+  padding-left: 10px;
+  border-left: 20px solid transparent
+}
+
+table.inodes_table th { padding-bottom: 8px }
+
+table.inodes_table tbody tr {
+  padding: 2px;
+  border-left: 6px solid transparent;
+  text-decoration: none;
+  color: #272727
+}
+
+table.inodes_table tbody tr:hover {
+  border-left: 6px solid gray;
+}
+
+h1 {
+  text-align: right;
+  padding: 5px;
+  margin-right: 20px;
+  margin-left: 20px
+}
+
+#status h1 { margin: 0 }
+
+#status ul#uploads,
+#status ul#notifications,
+#status ul#logs {
+  display: block;
+  height: 23%;
+  overflow-y: auto
+}
+
+#status ul#notifications,
+#status ul#logs {
+  margin: 0.75em 0;
+  padding: 0 1em;
+  list-style: none;
+}
+
+#status ul#notifications li,
+#status ul#logs li {
+  padding: 1px;
+  padding-left: 6px;
+  margin-top: 2px;
+  border-bottom: 1px solid rgba(0,0,0,0.04);
+  border-right: 1px solid rgba(0,0,0,0.04);
+  background: rgba(0,0,0,0.03);
+}
+
+#status ul#notifications li:before,
+#status ul#logs li:before {
+  border: 1px solid silver;
+  display: block;
+  position: relative;
+}
+
+#status ul#uploads li {
+  width: 90%;
+}
+
+#login_main {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.8);
+}
+
+#login_form {
+  padding: 20px;
+  background: white;
+  margin: 15% auto;
+  width: 50%;
+  border: 1px solid rgb(240,240,240);
+}
+
+#login_form input[type="text"],
+#login_form input[type="password"] {
+  border: 1px dotted silver;
+  width: 30%;
+}
+
+.ajax_loader {
+  background: url("/images/loading_24px.gif") no-repeat center center transparent;
+  width:100%;
+  height:100%
+}
+
+.directory {
+  font-weight: bold;
+}
+
+.directory:hover {
+  cursor: pointer;
+}
+
+.file:hover {
+ cursor: default; 
+}
+
+/* jQuery style override */
+.ui-widget-overlay {
+  opacity: 0.6;
+  background: rgb(0,0,0);
+}
+
+.ui-dialog {
+  opacity: 0.9;
+  border: 1px solid rgb(240,240,240)
+}
+
+.ui-dialog-titlebar { background: black }
+.ui-dialog-title { color: white }
+
+button.ui-button { padding: 0; margin-top: 0; margin-left: 5px;}
+button.ui-button span {
+  float: right;
+  border: none;
+  cursor: pointer;
+  padding: 5px;
+  color: white;
+  background: black;
+}
+
+button.ui-dialog-titlebar-close { background: transparent }
+button.ui-dialog-titlebar-close span { background: url("/images/close_button.png") 0px 5px no-repeat }
+
+/* Corner radius */
+.ui-corner-all,
+.ui-corner-top,
+.ui-corner-left,
+.ui-corner-tl {
+  border-top-left-radius: 1px;
+}
+.ui-corner-all,
+.ui-corner-top,
+.ui-corner-right,
+.ui-corner-tr {
+  border-top-right-radius: 1px;
+}
+.ui-corner-all,
+.ui-corner-bottom,
+.ui-corner-left,
+.ui-corner-bl {
+  border-bottom-left-radius: 1px;
+}
+.ui-corner-all,
+.ui-corner-bottom,
+.ui-corner-right,
+.ui-corner-br {
+  border-bottom-right-radius: 1px;
+}
+

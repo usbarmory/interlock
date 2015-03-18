@@ -1,0 +1,166 @@
+<div class="actions resize_text">
+  <ul>
+    <li id="increase_font_size" onclick="Interlock.UI.resizeText(event, 1);">A+</li>
+    <li id="decrease_font_size" onclick="Interlock.UI.resizeText(event, -1);">A-</li>
+  </ul>
+</div>
+
+<div id="top-bar">
+  <h1>Interlock &alpha; |
+    <button id="logout" onclick="Interlock.Session.logout();">Lock and Logout</button>
+    <a id="shellinabox" href=":4200" onclick="Interlock.UI.OpenShellInABox(event);" target="_new">Console</a> |
+    <a id="add_password" href="">Add</a> -
+    <a id="remove_password" href="">Remove</a> -
+    <a id="change_password" href="">Change</a> Password |
+  </h1>
+</div>
+
+<div id="status">
+  <h1>Application Logs</h1>
+  <ul id="logs"></ul>
+
+  <h1>Uploads</h1>
+  <ul id="uploads"></ul>
+
+  <h1>Current Activity</h1>
+  <ul id="notifications"></ul>
+</div>
+
+<div id="file_manager">
+  <form id="upload_form" action="/api/file/upload" method="POST" enctype="multipart/form-data">
+    <fieldset>
+      <input type="hidden" id="SIZE_LIMIT" name="SIZE_LIMIT" value="300000" />
+
+      <!-- FIXME: add support for multiple view, not hardcoding view name -->
+      <div id="file_manager_mainView" class="entitydrag">
+        <div class="actions">
+          <ul>
+            <li id="add_new_directory">
+              Add new directory
+            </li>
+            <li>
+              <label class="uploadLabel">
+                <input type="file" id="fileselect" name="fileselect[]" multiple />
+                <span>Upload file</span>
+              </label>
+            </li>
+            <li>
+              <label class="uploadLabel">
+                <input type="file" id="directoryselect" name="directoryselect[]" multiple directory webkitdirectory mozdirectory />
+                <span>Upload directory</span>
+              </label>
+            </li>
+          </ul>
+        </div>
+
+        <span class="pwd"></span>
+
+        <div class="inodes_table_container">
+          <table class="inodes_table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Size</th>
+                <th>Last Modified</th>
+              </tr>
+            </thead>
+
+            <tbody class="inodes_container"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="disk_usage"><div>
+
+      <!-- browsers do not support drag and drop -->
+      <div id="submitbutton">
+        <button type="submit">Upload Files</button>
+      </div>
+    </fieldset>
+  </form>
+</div>
+
+<!-- FIXME: cleanup the template from js using unobtrusive JavaScript -->
+<script>
+  $(document).ready(function() {
+    Interlock.Config.setTime();
+    Interlock.Crypto.cipherList();
+    Interlock.Crypto.keyList();
+    Interlock.FileManager.createView('mainView', '/');
+
+    $('#add_password').on('click', function(e) {
+      e.preventDefault();
+      var buttons = { 'Add Password': function() { Interlock.LUKS.addPwd({password: $('#password').val(), newpassword: $('#newpassword').val(), volume: $('#volume').val() }) } };
+        var elements = [$(document.createElement('input')).attr('id', 'password')
+                                                          .attr('name', 'password')
+                                                          .attr('value', '')
+                                                          .attr('type', 'password')
+                                                          .attr('placeholder', 'password')
+                                                          .addClass('text ui-widget-content ui-corner-all'),
+                        $(document.createElement('input')).attr('id', 'newpassword')
+                                                          .attr('name', 'newpassword')
+                                                          .attr('value', '')
+                                                          .attr('type', 'password')
+                                                          .attr('placeholder', 'new password')
+                                                          .addClass('text ui-widget-content ui-corner-all'),
+                        $(document.createElement('input')).attr('id', 'volume')
+                                                          .attr('name', 'volume')
+                                                          .attr('value', sessionStorage.volume)
+                                                          .attr('type', 'text')
+                                                          .attr('placeholder', 'volume')
+                                                          .addClass('text ui-widget-content ui-corner-all')];
+
+
+        Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons, title: 'Add LUKS password' });
+        Interlock.UI.modalFormDialog('open');
+    });
+
+    $('#remove_password').on('click', function(e) {
+      e.preventDefault();
+      var buttons = { 'Delete Password': function() { Interlock.LUKS.removePwd({password: $('#password').val(), volume: $('#volume').val() }) } };
+        var elements = [$(document.createElement('input')).attr('id', 'password')
+                                                          .attr('name', 'password')
+                                                          .attr('value', '')
+                                                          .attr('type', 'password')
+                                                          .attr('placeholder', 'password')
+                                                          .addClass('text ui-widget-content ui-corner-all'),
+                        $(document.createElement('input')).attr('id', 'volume')
+                                                          .attr('name', 'volume')
+                                                          .attr('value', sessionStorage.volume)
+                                                          .attr('type', 'text')
+                                                          .attr('placeholder', 'volume')
+                                                          .addClass('text ui-widget-content ui-corner-all')];
+
+
+        Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons, title: 'Delete LUKS password' });
+        Interlock.UI.modalFormDialog('open');
+    });
+
+    $('#change_password').on('click', function(e) {
+      e.preventDefault();
+      var buttons = { 'Change Password': function() { Interlock.LUKS.changePwd({password: $('#password').val(), newpassword: $('#newpassword').val(), volume: $('#volume').val() }) } };
+        var elements = [$(document.createElement('input')).attr('id', 'password')
+                                                          .attr('name', 'password')
+                                                          .attr('value', '')
+                                                          .attr('type', 'password')
+                                                          .attr('placeholder', 'password')
+                                                          .addClass('text ui-widget-content ui-corner-all'),
+                        $(document.createElement('input')).attr('id', 'newpassword')
+                                                          .attr('name', 'newpassword')
+                                                          .attr('value', '')
+                                                          .attr('type', 'password')
+                                                          .attr('placeholder', 'new password')
+                                                          .addClass('text ui-widget-content ui-corner-all'),
+                        $(document.createElement('input')).attr('id', 'volume')
+                                                          .attr('name', 'volume')
+                                                          .attr('value', sessionStorage.volume)
+                                                          .attr('type', 'text')
+                                                          .attr('placeholder', 'volume')
+                                                          .addClass('text ui-widget-content ui-corner-all')];
+
+
+        Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons, title: 'Change LUKS password' });
+        Interlock.UI.modalFormDialog('open');
+    });
+  });
+</script>

@@ -93,8 +93,6 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 				res = keys(w, r)
 			case "/api/status/interlock":
 				res = interlockStatus(w)
-			case "/api/status/device":
-				res = deviceStatus(w)
 			default:
 				res = notFound(w)
 			}

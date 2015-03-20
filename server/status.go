@@ -7,6 +7,7 @@ import (
 	"log/syslog"
 	"net/http"
 	"sync"
+	"syscall"
 	"time"
 )
 
@@ -81,6 +82,9 @@ func (s *statusBuffer) Test(format string, a ...interface{}) {
 }
 
 func interlockStatus(w http.ResponseWriter) (res jsonObject) {
+	sys := &syscall.Sysinfo_t{}
+	_ = syscall.Sysinfo(sys)
+
 	log := []statusEntry{}
 
 	status.LogBuf.Do(func(v interface{}) {
@@ -92,37 +96,13 @@ func interlockStatus(w http.ResponseWriter) (res jsonObject) {
 	res = jsonObject{
 		"status": "OK",
 		"response": map[string]interface{}{
+			"uptime":       sys.Uptime,
+			"load_1":       sys.Loads[0],
+			"load_5":       sys.Loads[1],
+			"load_15":      sys.Loads[2],
+			"freeram":      sys.Freeram,
 			"log":          log,
 			"notification": status.Notifications(),
-		},
-	}
-
-	return
-}
-
-func deviceStatus(w http.ResponseWriter) (res jsonObject) {
-	versionArgs := []string{"-a"}
-	versionCommand := "/bin/uname"
-
-	versionOutput, err := execCommand(versionCommand, versionArgs, false, "")
-
-	if err != nil {
-		return errorResponse(err, "")
-	}
-
-	uptimeCommand := "/usr/bin/uptime"
-
-	uptimeOutput, err := execCommand(uptimeCommand, []string{}, false, "")
-
-	if err != nil {
-		return errorResponse(err, "")
-	}
-
-	res = jsonObject{
-		"status": "OK",
-		"response": map[string]interface{}{
-			"kernel": versionOutput,
-			"uptine": uptimeOutput,
 		},
 	}
 

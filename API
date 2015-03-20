@@ -26,7 +26,7 @@ cipher:
     "key_format":  string,   # supported key format ("password", "armor")
     "enc":         boolean,  # encryption support
     "dec":         boolean,  # decryption support
-    "sig":         boolean   # signing support
+    "sig":         boolean,  # signing support
     "ext":         string    # encrypted file extension
   }
 
@@ -35,7 +35,7 @@ key:
     "identifier":  string,   # key identifier
     "key_format":  string,   # key format ("password", "armor")
     "cipher":      string,   # name for cipher object
-    "private":     boolean   # identifies private, public keys
+    "private":     boolean,  # identifies private, public keys
     "path":        string    # key path
   }
 
@@ -61,7 +61,7 @@ error response:
     file/           encrypt, decrypt, verify*
     crypto/         ciphers, keys, gen_key*, upload_key*
     config/         time
-    status/         device, interlock
+    status/         interlock
   static/           static HTML/JavaScript content
 
 ## POST api/auth/login
@@ -88,7 +88,7 @@ response:
   {
     "status":        string, # OK | KO | INVALID_SESSION | INVALID
     "response": {
-      "volume":      string  # encrypted volume name
+      "volume":      string, # encrypted volume name
       "XSRFToken":   string
     }
   }
@@ -334,7 +334,7 @@ Upload a key.
 
 request:
   {
-    "key":         key       # key object
+    "key":         key,      # key object
     "data":        string    # key payload
   }
 
@@ -346,32 +346,24 @@ response:
   {
     "status":      string,   # OK | KO | INVALID_SESSION | INVALID
     "response": {
+      "uptime" :   number,   # Uptime
+      "load_1" :   number,   # Load average for the past 1 minute
+      "load_5" :   number,   # Load average for the past 5 minutes
+      "load_15":   number,   # Load average for the past 15 minutes
+      "freeram":   number,   # Available RAM
       "log": [
         {
           "epoch": number,   # timestamp
           "code":  number,   # RFC5424 severity level
-          "msg":   string,   # log message
+          "msg":   string    # log message
         }
       ],
       "notification": [
         {
           "epoch": number,   # timestamp
           "code":  number,   # RFC5424 severity level
-          "msg":   string,   # notification message
+          "msg":   string    # notification message
         }
       ]
-    }
-  }
-
-## GET api/status/device
-
-Retrieve general device status information.
-
-response:
-  {
-    "status":      string,   # OK | KO | INVALID_SESSION | INVALID
-    "response": {
-      "kernel" :   string,   # Kernel version
-      "uptime" :   string    # Uptime
     }
   }

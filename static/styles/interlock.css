@@ -244,6 +244,8 @@ button#logout:hover {
 
 fieldset { border: none }
 
+.warning { font-weight: bold }
+
 .inodes_table_container {
   padding-right: 25px;
   border-right: 2px solid rgba(0,0,0,0.1);

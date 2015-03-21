@@ -121,7 +121,7 @@ func fileOp(w http.ResponseWriter, r *http.Request, mode int) (res jsonObject) {
 			args := []string{"-ra", src, dst}
 			cmd := "/bin/cp"
 
-			_, err = execCommand(cmd, args, true, "")
+			_, err = execCommand(cmd, args, false, "")
 
 			if err != nil {
 				return errorResponse(err, "")

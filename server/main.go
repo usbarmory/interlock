@@ -30,9 +30,14 @@ func init() {
 	os.Setenv("TMPDIR", conf.mountPoint)
 
 	flag.BoolVar(&conf.Debug, "d", false, "debug mode")
+	flag.BoolVar(&conf.testMode, "t", false, "test mode (WARNING: disables authentication)")
 	flag.StringVar(&conf.BindAddress, "b", "127.0.0.1:443", "binding address:port pair")
 
 	flag.Parse()
+
+	if conf.testMode {
+		log.Println("*** WARNING *** authentication disabled (test mode switch enabled)")
+	}
 }
 
 func main() {

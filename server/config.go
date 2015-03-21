@@ -28,6 +28,7 @@ type config struct {
 	availableCiphers map[string]cipherInterface
 	enabledCiphers   map[string]cipherInterface
 	mountPoint       string
+	testMode         bool
 }
 
 var conf config
@@ -79,10 +80,12 @@ func (c *config) PrintAvailableCiphers() {
 }
 
 func (c *config) SetDefaults() {
+	c.Debug = false
 	c.TLSCert = "certs/cert.pem"
 	c.TLSKey = "certs/key.pem"
 	c.KeyPath = "keys"
 	c.mountPoint = "/mnt/interlock"
+	c.testMode = false
 }
 
 func (c *config) Set(configPath string) (err error) {

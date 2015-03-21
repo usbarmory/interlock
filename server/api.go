@@ -54,7 +54,7 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 				// download is an exception as it is already
 				// protected from XSRF with its own unique
 				// handshake
-				if validSessionID {
+				if validSessionID || conf.testMode {
 					p, _ := url.ParseQuery(u.RawQuery)
 					fileDownloadByID(w, p["id"][0])
 					break

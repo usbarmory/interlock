@@ -91,7 +91,9 @@ func login(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		return errorResponse(errors.New("existing session"), "INVALID_SESSION")
 	}
 
-	err = authenticate(req["volume"].(string), req["password"].(string), req["dispose"].(bool))
+	if !conf.testMode {
+		err = authenticate(req["volume"].(string), req["password"].(string), req["dispose"].(bool))
+	}
 
 	if err != nil {
 		return errorResponse(err, "INVALID_SESSION")

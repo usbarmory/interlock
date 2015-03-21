@@ -146,6 +146,7 @@ html, body, img, h1, div {
   bottom: 1%;
   left: 1%;
   z-index: 100;
+  opacity: 0.4;
 }
 
 input[type="checkbox"] {

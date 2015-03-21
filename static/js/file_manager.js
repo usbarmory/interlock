@@ -126,7 +126,8 @@ Interlock.FileManager = new function() {
                                                           .attr('type', 'text')
                                                           .addClass('text ui-widget-content ui-corner-all')];
 
-        Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons, title: 'Create new directory' });
+        Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
+          submitButton: 'Add directory', title: 'Create new directory' });
         Interlock.UI.modalFormDialog('open');
       });
 
@@ -150,7 +151,6 @@ Interlock.FileManager = new function() {
           $inodeName.click(function() {
                        Interlock.FileManager.fileList(currentView.name, path);
                      });
-
         } else {
           $inode.addClass('file');
         }
@@ -189,9 +189,10 @@ Interlock.FileManager = new function() {
                                                         .attr('placeholder', 'destination')
                                                         .addClass('text ui-widget-content ui-corner-all')];
 
-      Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons, title: 'Copy to' });
+      Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
+        submitButton: 'Copy to', title: 'Copy to' });
       Interlock.UI.modalFormDialog('open');
-                                                    }));
+    }));
 
     menuEntries.push($(document.createElement('li')).text('Move to')
                                                     .click(function() {
@@ -204,9 +205,10 @@ Interlock.FileManager = new function() {
                                                         .attr('placeholder', 'destination')
                                                         .addClass('text ui-widget-content ui-corner-all')];
 
-      Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons, title: 'Move to' });
+      Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
+        submitButton: 'Move to', title: 'Move to' });
       Interlock.UI.modalFormDialog('open');
-                                                    }));
+    }));
 
     menuEntries.push($(document.createElement('li')).text('Delete')
                                                     .click(function() {
@@ -288,7 +290,8 @@ Interlock.FileManager = new function() {
                                                           .attr('placeholder', 'encryption password')
                                                           .addClass('text ui-widget-content ui-corner-all')];
 
-        Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons, title: 'Encrypt File' });
+        Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
+          submitButton: 'Encrypt', title: 'Encrypt File' });
 
         Interlock.UI.modalFormDialog('open');
 
@@ -365,7 +368,8 @@ Interlock.FileManager = new function() {
                                                           .attr('placeholder', 'decryption password')
                                                           .addClass('text ui-widget-content ui-corner-all')];
 
-        Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons, title: 'Decrypt File' });
+        Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
+          submitButton: 'Decrypt', title: 'Decrypt File' });
 
         Interlock.UI.modalFormDialog('open');
 

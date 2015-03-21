@@ -86,8 +86,27 @@ Interlock.UI = new function() {
         $.each(options.elements, function (index, element) {
           element.appendTo($modalForm.fieldset);
         });
+
+        /* bind the enter keypress event to the configured submit button */
+        if (options.submitButton !== undefined) {
+          $modalForm.form.keypress(function(e) {
+            var keyPressed = e.keyCode || e.which;
+
+            if (keyPressed === 13) {
+              $('button > span:contains("' + options.submitButton + '")').click();
+              $modalForm.dialog('close');
+
+              /* prevent event propagation */
+              return false;
+            }
+          });
+        }
       },
-      close: function() { }
+      close: function() {
+        $modalForm.fieldset.html('');
+        /* unbind the registered keypress event handler (if any) */
+        $modalForm.form.unbind('keypress');
+      }
     });
   };
 };

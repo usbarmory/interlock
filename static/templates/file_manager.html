@@ -111,7 +111,8 @@
                                                           .attr('placeholder', 'new password')
                                                           .addClass('text ui-widget-content ui-corner-all')];
 
-        Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons, title: 'Add LUKS password' });
+        Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
+          submitButton: 'Add Password', title: 'Add LUKS password' });
         Interlock.UI.modalFormDialog('open');
     });
 
@@ -135,7 +136,8 @@
                                                       .text('WARNING: removing the last remaining passphrase ' +
                                                             'makes the LUKS encrypted container permanently inaccessible.')];
 
-        Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons, title: 'Delete LUKS password' });
+        Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
+          submitButton: 'Delete Password', title: 'Delete LUKS password' });
         Interlock.UI.modalFormDialog('open');
     });
 
@@ -162,7 +164,8 @@
                                                           .attr('placeholder', 'new password')
                                                           .addClass('text ui-widget-content ui-corner-all')]
 
-        Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons, title: 'Change LUKS password' });
+        Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
+          submitButton: 'Change Password', title: 'Change LUKS password' });
         Interlock.UI.modalFormDialog('open');
     });
   });

@@ -119,7 +119,7 @@
     $('#remove_password').on('click', function(e) {
       e.preventDefault();
       var buttons = { 'Delete Password': function() { Interlock.LUKS.removePwd({password: $('#password').val(), volume: $('#volume').val() }) } };
-        var elements = [$(document.createElement('p')).text('Specify the LUKS volume and the passwowd to remove.'),
+        var elements = [$(document.createElement('p')).text('Specify the LUKS volume and the password to remove.'),
                         $(document.createElement('input')).attr('id', 'volume')
                                                           .attr('name', 'volume')
                                                           .attr('value', '')
@@ -144,7 +144,7 @@
     $('#change_password').on('click', function(e) {
       e.preventDefault();
       var buttons = { 'Change Password': function() { Interlock.LUKS.changePwd({password: $('#password').val(), newpassword: $('#newpassword').val(), volume: $('#volume').val() }) } };
-        var elements = [$(document.createElement('p')).text('Specify the LUKS volume and the passwowd to change.'),
+        var elements = [$(document.createElement('p')).text('Specify the LUKS volume and the password to change.'),
                         $(document.createElement('input')).attr('id', 'volume')
                                                           .attr('name', 'volume')
                                                           .attr('value', '')

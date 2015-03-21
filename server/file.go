@@ -7,6 +7,7 @@
 package main
 
 import (
+	"archive/zip"
 	"errors"
 	"fmt"
 	"io"
@@ -18,6 +19,7 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"sync"
 	"syscall"
 )
@@ -74,6 +76,17 @@ func absolutePath(subPath string) (path string, err error) {
 	}
 
 	path = filepath.Join(conf.mountPoint, subPath)
+
+	return
+}
+
+func relativePath(path string) (subPath string, err error) {
+	if !strings.HasPrefix(path, conf.mountPoint) {
+		err = errors.New("invalid path")
+		return
+	}
+
+	subPath = path[len(conf.mountPoint):]
 
 	return
 }
@@ -220,16 +233,16 @@ func fileList(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 
 	inodes := []inode{}
 
-	for _, f := range fileInfo {
-		if f.Name() == "lost+found" {
+	for _, file := range fileInfo {
+		if file.Name() == "lost+found" {
 			continue
 		}
 
 		inode := inode{
-			Name:  f.Name(),
-			Dir:   f.IsDir(),
-			Size:  f.Size(),
-			Mtime: f.ModTime().Unix(),
+			Name:  file.Name(),
+			Dir:   file.IsDir(),
+			Size:  file.Size(),
+			Mtime: file.ModTime().Unix(),
 		}
 
 		inodes = append(inodes, inode)
@@ -318,14 +331,10 @@ func fileDownload(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		return errorResponse(err, "")
 	}
 
-	stat, err := os.Stat(osPath)
+	_, err = os.Stat(osPath)
 
 	if err != nil {
 		return errorResponse(err, "")
-	}
-
-	if stat.IsDir() {
-		return errorResponse(errors.New("unsupported"), "") // FIXME
 	}
 
 	id, err := randomString(16)
@@ -346,6 +355,7 @@ func fileDownload(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 
 func fileDownloadByID(w http.ResponseWriter, id string) {
 	var err error
+	var written int64
 
 	defer func() {
 		if err != nil {
@@ -366,31 +376,90 @@ func fileDownloadByID(w http.ResponseWriter, id string) {
 		return
 	}
 
-	if stat.IsDir() {
-		err = errors.New("unsupported") // FIXME
-		return
-	}
+	fileName := path.Base(osPath)
 
-	input, err := os.Open(osPath)
-	defer input.Close()
-
-	if err != nil {
-		return
-	}
-
-	n := status.Notify(syslog.LOG_NOTICE, "downloading %s", path.Base(osPath))
+	n := status.Notify(syslog.LOG_NOTICE, "downloading %s", fileName)
 	defer status.Remove(n)
 
-	w.Header().Set("Content-Disposition", "attachment; filename=\""+path.Base(osPath)+"\"")
+	if stat.IsDir() {
+		fileName += ".zip"
+	}
+
+	w.Header().Set("Content-Disposition", "attachment; filename=\""+fileName+"\"")
 	w.Header().Set("Content-Type", "application/octet-stream")
 
-	written, err := io.Copy(w, input)
+	if stat.IsDir() {
+		written, err = zipDir(w, osPath)
+	} else {
+		var input *os.File
+
+		input, err = os.Open(osPath)
+		defer input.Close()
+
+		written, err = io.Copy(w, input)
+	}
 
 	if err != nil {
 		return
 	}
 
-	status.Log(syslog.LOG_INFO, "downloaded %v bytes to %s", written, osPath)
+	status.Log(syslog.LOG_INFO, "downloaded %s (%v bytes)", fileName, written)
+}
+
+func zipDir(w http.ResponseWriter, dirPath string) (written int64, err error) {
+	zw := zip.NewWriter(w)
+	defer zw.Close()
+
+	walkFn := func(osPath string, info os.FileInfo, e error) (err error) {
+		var w int64
+		var f io.Writer
+		var input io.Reader
+
+		if info == nil {
+			return
+		}
+
+		if info.IsDir() {
+			return
+		}
+
+		n := status.Notify(syslog.LOG_NOTICE, "adding %s to archive", path.Base(osPath))
+		defer status.Remove(n)
+
+		relPath, err := relativePath(osPath)
+
+		if err != nil {
+			return
+		}
+
+		f, err = zw.Create(relPath)
+
+		if err != nil {
+			return
+		}
+
+		input, err = os.Open(osPath)
+
+		if err != nil {
+			return
+		}
+
+		w, err = io.Copy(f, input)
+		written += w
+
+		if err != nil {
+			return
+		}
+
+		return
+	}
+
+	n := status.Notify(syslog.LOG_NOTICE, "zipping %s", path.Base(dirPath))
+	defer status.Remove(n)
+
+	err = filepath.Walk(dirPath, walkFn)
+
+	return
 }
 
 func fileEncrypt(w http.ResponseWriter, r *http.Request) (res jsonObject) {

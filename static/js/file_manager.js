@@ -215,8 +215,7 @@ Interlock.FileManager = new function() {
                                                       Interlock.FileManager.fileDelete(view, [path]);
                                                     }));
     if (isDirectory) {
-      menuEntries.push($(document.createElement('li')).text('Download archive')
-                                                      .addClass('disabled')
+      menuEntries.push($(document.createElement('li')).text('Download (zip archive)')
                                                       .click(function() {
                                                         Interlock.FileManager.fileDownload(path);
                                                       }));

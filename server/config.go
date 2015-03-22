@@ -15,10 +15,12 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 )
 
 type config struct {
 	Debug       bool     `json:"debug"`
+	SetTime     bool     `json:"set_time"`
 	BindAddress string   `json:"bind_address"`
 	TLSCert     string   `json:"tls_cert"`
 	TLSKey      string   `json:"tls_key"`
@@ -81,9 +83,11 @@ func (c *config) PrintAvailableCiphers() {
 
 func (c *config) SetDefaults() {
 	c.Debug = false
+	c.SetTime = false
 	c.TLSCert = "certs/cert.pem"
 	c.TLSKey = "certs/key.pem"
 	c.KeyPath = "keys"
+	c.Ciphers = []string{"OpenPGP", "AES-256-OFB"}
 	c.mountPoint = "/mnt/interlock"
 	c.testMode = false
 }
@@ -102,12 +106,6 @@ func (c *config) Set(configPath string) (err error) {
 	}
 
 	err = json.Unmarshal(b, &c)
-
-	if err != nil {
-		return
-	}
-
-	c.EnableCiphers()
 
 	return
 }
@@ -141,15 +139,19 @@ func setTime(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		return errorResponse(errors.New("invalid epoch format"), "")
 	}
 
-	status.Log(syslog.LOG_NOTICE, "setting system time to %v", epoch)
-
 	args := []string{"-s", "@" + strconv.FormatInt(epoch, 10)}
 	cmd := "/bin/date"
 
-	_, err = execCommand(cmd, args, true, "")
+	if conf.SetTime {
+		_, err = execCommand(cmd, args, true, "")
 
-	if err != nil {
-		return errorResponse(err, "")
+		if err != nil {
+			return errorResponse(err, "")
+		}
+
+		hour, min, sec := time.Now().Clock()
+
+		status.Log(syslog.LOG_NOTICE, "adjusted device time to %d:%d:%d", hour, min, sec)
 	}
 
 	res = jsonObject{

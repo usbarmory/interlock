@@ -93,7 +93,48 @@ Options
   -b="127.0.0.1:443"   binding address:port pair
   -c="interlock.conf"  configuration file path
   -d=false:            debug mode
+  -t=false:            test mode (WARNING: disables authentication)
 ```
+
+Configuration
+=============
+
+* debug: enable debugging logs
+
+* set_time: use the client browser time to set server time at login, useful on
+  non-routed USB armory devices (unable to set the clock on their own)
+
+* bind_address: IP address, port pair
+
+* tls_cert: HTTPS server TLS certificate
+
+* tls_key: HTTPS server TLS key
+
+* key_path: path for public/private key storage on the encrypted filesystem
+
+* ciphers: array of cipher names to enable
+
+The following example illustrates the configuration file format and setting
+defaults.
+
+```
+{
+        "debug": false,
+        "set_time": false,
+        "bind_address": "127.0.0.1:4430",
+        "tls_cert": "certs/cert.pem",
+        "tls_key": "certs/key.pem",
+        "key_path": "keys",
+        "ciphers": [
+                "OpenPGP",
+                "AES-256-OFB"
+        ]
+}
+
+```
+
+At startup the interlock binary dumps the applied configuration in its file
+format.
 
 Authors
 =======

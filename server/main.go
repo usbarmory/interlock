@@ -16,7 +16,7 @@ import (
 	"syscall"
 )
 
-var configPath = flag.String("c", "interlock.conf", "configuration file path")
+var configPath = flag.String("c", "", "configuration file path")
 
 func init() {
 	if syscall.Geteuid() == 0 {
@@ -31,7 +31,7 @@ func init() {
 
 	flag.BoolVar(&conf.Debug, "d", false, "debug mode")
 	flag.BoolVar(&conf.testMode, "t", false, "test mode (WARNING: disables authentication)")
-	flag.StringVar(&conf.BindAddress, "b", "127.0.0.1:443", "binding address:port pair")
+	flag.StringVar(&conf.BindAddress, "b", "127.0.0.1:4430", "binding address:port pair")
 
 	flag.Parse()
 
@@ -60,6 +60,8 @@ func main() {
 
 		log.Printf("configuration file %s successfully parsed", *configPath)
 	}
+
+	conf.EnableCiphers()
 
 	if conf.Debug {
 		log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)

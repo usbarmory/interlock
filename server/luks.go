@@ -113,7 +113,6 @@ func luksKeyOp(volume string, password string, newpassword string, mode int) (er
 		action = "luksAddKey"
 		input = password + "\n" + newpassword + "\n" + newpassword + "\n"
 	case _remove:
-		// FIXME: do we want to verify that the existing slot is present ?
 		action = "luksRemoveKey"
 		input = password + "\n"
 	default:

@@ -1,5 +1,6 @@
 {
   "debug": true,
+  "set_time": true,
   "bind_address": "0.0.0.0:4430",
   "volume_name": "encryptedfs",
   "ciphers" : ["OpenPGP", "AES-256-OFB"]

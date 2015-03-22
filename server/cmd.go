@@ -9,6 +9,7 @@ package main
 import (
 	"bytes"
 	"errors"
+	"log"
 	"os/exec"
 )
 
@@ -36,6 +37,10 @@ func execCommand(cmd string, args []string, root bool, input string) (output str
 
 	c.Stdout = &stdout
 	c.Stderr = &stderr
+
+	if conf.Debug {
+		log.Printf("executing system command, sudo: %v, cmd: %s, args: %v\n", root, cmd, args)
+	}
 
 	err = c.Run()
 

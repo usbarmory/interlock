@@ -53,6 +53,10 @@ func (d *downloadCache) Add(id string, path string) {
 	d.Lock()
 	defer d.Unlock()
 
+	// an abusive client can potentially add download entries at will,
+	// given the non persistent nature of the server, this is not
+	// considered to be an issue
+
 	d.cache[id] = path
 }
 

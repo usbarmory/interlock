@@ -30,7 +30,7 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 
 	if r.RequestURI == "/api/auth/login" {
 		if validSessionID, _, _ := session.Validate(r); validSessionID {
-			// As the session is validated using a single session cookie, we re-send the
+			// The session is validated using a single session cookie, we re-send the
 			// XSRF token if authenticated user lands again on login page (e.g. different
 			// tab).
 			res = refreshXSRFToken(w)

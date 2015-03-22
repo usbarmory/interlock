@@ -19,6 +19,7 @@ import (
 )
 
 type config struct {
+	// exported settings
 	Debug       bool     `json:"debug"`
 	SetTime     bool     `json:"set_time"`
 	BindAddress string   `json:"bind_address"`
@@ -27,6 +28,7 @@ type config struct {
 	KeyPath     string   `json:"key_path"`
 	Ciphers     []string `json:"ciphers"`
 
+	// internal settings
 	availableCiphers map[string]cipherInterface
 	enabledCiphers   map[string]cipherInterface
 	mountPoint       string
@@ -113,7 +115,7 @@ func (c *config) Set(configPath string) (err error) {
 func (c *config) Print() {
 	j, _ := json.MarshalIndent(c, "", "\t")
 
-	log.Println("configuration:")
+	log.Println("applied configuration:")
 	log.Printf("\n%s", string(j))
 }
 

@@ -14,11 +14,10 @@ import (
 	"time"
 )
 
-// Only a single session can be active at any time
 type sessionData struct {
 	sync.Mutex
 	Volume    string
-	SessionID string
+	SessionID string // only a single session can be active at any time
 	XSRFToken string
 	createdAt *time.Time
 }

@@ -41,6 +41,9 @@ Design goals:
 * Clear separation between presentation and server layer to ease auditability
   and integration.
 
+* Minimum amount of external dependencies, currently no code outside of Go
+  standard and supplementary libraries is required for the server binary.
+
 * Authentication process directly tied to LUKS partition locking/unlocking.
 
 * Support for additional symmetric/asymmetric encryption on individual
@@ -114,8 +117,8 @@ Configuration
 
 * ciphers: array of cipher names to enable
 
-The following example illustrates the configuration file format and setting
-defaults.
+The following example illustrates the configuration file format (plain JSON)
+and defaults.
 
 ```
 {
@@ -133,7 +136,7 @@ defaults.
 
 ```
 
-At startup the interlock binary dumps the applied configuration in its file
+At startup the interlock server dumps the applied configuration in its file
 format.
 
 Authors

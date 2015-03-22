@@ -26,7 +26,7 @@ func init() {
 	conf.SetDefaults()
 
 	// ensure that no temporary file from Go internal functions end up in
-	// unencrypted space
+	// unencrypted space (relevant only after luksMount() but applied asap)
 	os.Setenv("TMPDIR", conf.mountPoint)
 
 	flag.BoolVar(&conf.Debug, "d", false, "debug mode")
@@ -62,11 +62,16 @@ func main() {
 	}
 
 	conf.EnableCiphers()
+	conf.Print()
+
+	log.Printf("starting server on %s", conf.BindAddress)
 
 	if conf.Debug {
 		log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
-		log.Println("debug mode")
+		log.Println("debug mode enabled")
 	} else {
+		log.Println("switching to syslog")
+
 		logwriter, err := syslog.New(syslog.LOG_INFO, "interlock")
 
 		if err != nil {
@@ -74,12 +79,10 @@ func main() {
 			return
 		}
 
+		log.SetFlags(0)
 		log.SetOutput(logwriter)
+		log.Printf("starting server on %s", conf.BindAddress)
 	}
-
-	conf.Print()
-
-	log.Printf("starting server on %s", conf.BindAddress)
 
 	registerHandlers()
 	err = http.ListenAndServeTLS(conf.BindAddress, "certs/cert.pem", "certs/key.pem", nil)

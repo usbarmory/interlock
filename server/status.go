@@ -12,6 +12,7 @@ import (
 	"log"
 	"log/syslog"
 	"net/http"
+	"sort"
 	"sync"
 	"syscall"
 	"time"
@@ -76,7 +77,15 @@ func (s *statusBuffer) Remove(n int) {
 }
 
 func (s *statusBuffer) Notifications() (notifications []statusEntry) {
+	var keys []int
+
 	for k := range s.Notification {
+		keys = append(keys, k)
+	}
+
+	sort.Ints(keys)
+
+	for _, k := range keys {
 		notifications = append(notifications, s.Notification[k])
 	}
 

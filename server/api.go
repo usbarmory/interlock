@@ -97,6 +97,8 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 				res = ciphers(w)
 			case "/api/crypto/keys":
 				res = keys(w, r)
+			case "/api/crypto/upload_key":
+				res = uploadKey(w, r)
 			case "/api/status/interlock":
 				res = interlockStatus(w)
 			default:

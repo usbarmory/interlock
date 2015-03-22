@@ -59,7 +59,7 @@ error response:
     luks/           change, add, remove
     file/           list, upload, delete, move, copy, mkdir
     file/           encrypt, decrypt, verify*
-    crypto/         ciphers, keys, gen_key*, upload_key*
+    crypto/         ciphers, keys, gen_key*, upload_key
     config/         time
     status/         interlock
   static/           static HTML/JavaScript content

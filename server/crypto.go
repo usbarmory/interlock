@@ -7,8 +7,11 @@
 package main
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"log/syslog"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -56,12 +59,12 @@ func ciphers(w http.ResponseWriter) (res jsonObject) {
 	return
 }
 
-func (k *key) BuildPath(identifier string, cipher cipherInterface, private bool, format string) (path string) {
+func (k *key) BuildPath(cipher cipherInterface) (path string) {
 	var subdir string
 
-	fileName := fmt.Sprintf("%s.%s", identifier, format)
+	fileName := fmt.Sprintf("%s.%s", k.Identifier, k.KeyFormat)
 
-	if private {
+	if k.Private {
 		subdir = "private"
 	} else {
 		subdir = "public"
@@ -193,6 +196,72 @@ func keys(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 	res = jsonObject{
 		"status":   "OK",
 		"response": keys,
+	}
+
+	return
+}
+
+// FIXME: untested
+func uploadKey(w http.ResponseWriter, r *http.Request) (res jsonObject) {
+	var k key
+	var cipher cipherInterface
+
+	req, err := parseRequest(r)
+
+	if err != nil {
+		return errorResponse(err, "")
+	}
+
+	err = validateRequest(req, []string{"key", "data"})
+
+	if err != nil {
+		return errorResponse(err, "")
+	}
+
+	err = json.Unmarshal(req["key"].([]byte), &k)
+
+	if err != nil {
+		return errorResponse(err, "")
+	}
+
+	for _, cipher = range conf.enabledCiphers {
+		if cipher.GetInfo().Name == k.Cipher {
+			break
+		}
+
+		if cipher.GetInfo().KeyFormat == "password" {
+			err = errors.New("specified cipher does not support key format")
+			break
+		}
+	}
+
+	if cipher == nil {
+		err = errors.New("could not identify compatible key cipher")
+	}
+
+	if err != nil {
+		return errorResponse(err, "")
+	}
+
+	keyPath := filepath.Join(conf.mountPoint, k.BuildPath(cipher))
+	output, err := os.OpenFile(keyPath, os.O_WRONLY|os.O_CREATE|os.O_EXCL|os.O_TRUNC, 0600)
+	defer output.Close()
+
+	if err != nil {
+		return errorResponse(err, "")
+	}
+
+	written, err := io.Copy(output, strings.NewReader(req["data"].(string)))
+
+	if err != nil {
+		return errorResponse(err, "")
+	}
+
+	status.Log(syslog.LOG_INFO, "uploaded %s key %s (%v bytes)", cipher.GetInfo().Name, k.Identifier, written)
+
+	res = jsonObject{
+		"status":   "OK",
+		"response": nil,
 	}
 
 	return

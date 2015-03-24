@@ -27,7 +27,9 @@ html, body, img, h1, div {
 
 #uploads li {
   display: block;
-  padding: 4px;
+  padding: 0px;
+  padding-left: 4px;
+  padding-right: 4px;
   margin: 4px;
   color: gray;
 }
@@ -42,9 +44,14 @@ html, body, img, h1, div {
   background: url(/images/progress_bar.png) no-repeat top left;
 }
 
-#uploads li.progress { color: gray }
-#uploads li.success { background: rgba(0,255,0,0.6) none 0 0 no-repeat }
-#uploads li.failure { background: rgba(255,0,0,0.6) none 0 0 no-repeat }
+#uploads li.progress { color: black }
+#uploads li.success { background: rgba(0,0,0,0.3) none 0 0 no-repeat }
+#uploads li.failure { background: rgb(0,0,0) none 0 0 no-repeat }
+
+.volumeName {
+  color: black;
+  font-size: 10pt;
+}
 
 .entitydrag {
   display: none;
@@ -94,6 +101,7 @@ html, body, img, h1, div {
 }
 
 .pwd {
+  color: rgba(0,0,0,0.4);
   display: block;
   font-weight: bold;
   width: 95%;
@@ -248,10 +256,10 @@ fieldset { border: none }
 .warning { font-weight: bold }
 
 .inodes_table_container {
+  display: block;
   padding-right: 25px;
   border-right: 2px solid rgba(0,0,0,0.1);
   border-bottom: 1px dotted rgba(0,0,0,0.1);
-  display: block;
   width: 100%;
   height: 500px;
   overflow-y: auto;
@@ -291,13 +299,13 @@ table.inodes_table th { padding-bottom: 8px }
 
 table.inodes_table tbody tr {
   padding: 2px;
-  border-left: 6px solid transparent;
+  border-left: 2px solid transparent;
   text-decoration: none;
   color: #272727
 }
 
 table.inodes_table tbody tr:hover {
-  border-left: 6px solid gray;
+  border-left: 2px solid silver;
 }
 
 h1 {
@@ -309,11 +317,16 @@ h1 {
 
 #status h1 { margin: 0 }
 
-#status ul#uploads,
-#status ul#notifications,
 #status ul#logs {
   display: block;
-  height: 23%;
+  height: 29%;
+  overflow-y: auto
+}
+
+#status ul#uploads,
+#status ul#notifications {
+  display: block;
+  height: 20%;
   overflow-y: auto
 }
 
@@ -327,11 +340,31 @@ h1 {
 #status ul#notifications li,
 #status ul#logs li {
   padding: 1px;
-  padding-left: 6px;
-  margin-top: 2px;
-  border-bottom: 1px solid rgba(0,0,0,0.04);
-  border-right: 1px solid rgba(0,0,0,0.04);
-  background: rgba(0,0,0,0.03);
+  padding-left: 10px;
+  padding-right: 10px;
+  margin-top: 3px;
+  border-bottom: 1px solid rgba(0,0,0,0.08);
+}
+
+li.severity_0,
+li.severity_1,
+li.severity_2,
+li.severity_3,
+li.severity_4 {
+  background: rgba(0,0,0,0.05);
+  color: black;
+  font-weight: bold;
+}
+
+#status ul#notifications li span.timestamp,
+#status ul#logs li span.timestamp {
+  display: block;
+  position: relative;
+  bottom: 0px;
+  text-align: right;
+  font-size: 7pt;
+  margin-top: -2px;
+  color: silver
 }
 
 #status ul#notifications li:before,

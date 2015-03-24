@@ -97,8 +97,10 @@ Interlock.Crypto.cipherListCallback = function(backendData) {
   } catch (e) {
     Interlock.Session.createEvent({'kind': 'critical',
       'msg': '[Interlock.Crypto.cipherListCallback] ' + e});
+  } finally {
+    Interlock.cipherList.resolve();
   }
-}
+};
 
 /**
  * @function
@@ -117,6 +119,8 @@ Interlock.Crypto.cipherList = function() {
   } catch (e) {
     Interlock.Session.createEvent({'kind': 'critical',
       'msg': '[Interlock.Crypto.cipherList] ' + e});
+
+    Interlock.cipherList.resolve();
   }
 };
 
@@ -142,6 +146,8 @@ Interlock.Crypto.keyListCallback = function(backendData) {
   } catch (e) {
     Interlock.Session.createEvent({'kind': 'critical',
       'msg': '[Interlock.Crypto.keyListCallback] ' + e});
+  } finally {
+    Interlock.keyList.resolve();
   }
 };
 
@@ -161,6 +167,8 @@ Interlock.Crypto.keyList = function() {
   } catch (e) {
     Interlock.Session.createEvent({'kind': 'critical',
       'msg': '[Interlock.Crypto.keyList] ' + e});
+
+    Interlock.keyList.resolve();
   }
 };
 

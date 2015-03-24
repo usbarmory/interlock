@@ -94,7 +94,6 @@ Interlock.UI = new function() {
 
             if (keyPressed === 13) {
               $('button > span:contains("' + options.submitButton + '")').click();
-              $modalForm.dialog('close');
 
               /* prevent event propagation */
               return false;
@@ -170,7 +169,6 @@ Interlock.UI.resizeText = function(e, resizeStep) {
  * @param {Integer} options
  * @returns {}
  */
-
 Interlock.UI.ajaxLoader = function (el, options) {
   var defaults = {
     bgColor: 'black',
@@ -220,4 +218,32 @@ Interlock.UI.ajaxLoader = function (el, options) {
   };
 
   this.init();
+};
+
+/**
+ * @function
+ * @public
+ *
+ * @description
+ * convert an epoch to a properly formatted time string
+ *
+ * @param {Integer} epoch, element, page element to cover with the loading spinner
+ * @param {Boolean} stripDate, strip the date part of the epoch and shows only the time
+ *
+ * @returns {String} time
+ */
+Interlock.UI.convertToTimeString = function(epoch, stripDate) {
+  var formattedTimestamp;
+  var timestamp = new Date(epoch * 1000);
+
+  /* applies any timezone offset */
+  timestamp.setMinutes(timestamp.getMinutes() - timestamp.getTimezoneOffset());
+
+  if (stripDate) {
+    formattedTimestamp = timestamp.toISOString().replace(/T/g, '  ').slice(11,20);
+  } else {
+    formattedTimestamp = timestamp.toISOString().replace(/T/g, '  ').slice(0,20);
+  }
+
+  return formattedTimestamp;
 };

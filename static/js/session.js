@@ -46,11 +46,21 @@ Interlock.Session = new function() {
     $statusDiv.logs.html('');
 
     $.each(notifications, function(index, notification) {
-      $statusDiv.notifications.append($(document.createElement('li')).text(notification.msg));
+      var timestamp =  Date(notification.epoch * 1000);
+      $statusDiv.notifications.append($(document.createElement('li')).text(notification.msg)
+                                                                     .addClass('severity_' + notification.code)
+        .append($(document.createElement('span')).text(Interlock.UI.convertToTimeString(notification.epoch, true))
+                                                 .addClass('timestamp'))
+      );
     });
 
     $.each(logs, function(index, log) {
-      $statusDiv.logs.append($(document.createElement('li')).text(log.msg));
+      var timestamp =  Date(log.epoch * 1000);
+      $statusDiv.logs.append($(document.createElement('li')).text(log.msg)
+                                                            .addClass('severity_' + log.code)
+        .append($(document.createElement('span')).text(Interlock.UI.convertToTimeString(log.epoch, true))
+                                                 .addClass('timestamp'))
+      );
     });
   };
 };
@@ -167,8 +177,6 @@ Interlock.Session.loginCallback = function(backendData, hideErrors) {
       });
 
       Interlock.Config.setTime();
-      Interlock.Crypto.cipherList();
-      Interlock.Crypto.keyList();
     } else {
        /* re-load the login page and present the error dialog on failures */
        $.get("/templates/login.html", function(data) {

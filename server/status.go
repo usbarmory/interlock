@@ -22,6 +22,7 @@ const bufferSize = 20
 
 // build information, initialized at compile time (see Makefile)
 var InterlockBuild string
+
 // release version
 var InterlockVersion = "alpha"
 

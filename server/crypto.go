@@ -38,10 +38,12 @@ type cipherInfo struct {
 
 type cipherInterface interface {
 	GetInfo() cipherInfo
-	SetPassword(p string) error
-	SetKey(k key) error
+	GetKeyInfo(key) (string, error)
+	SetPassword(string) error
+	SetKey(key) error
 	Encrypt(src *os.File, dst *os.File) error
 	Decrypt(src *os.File, dst *os.File) error
+	Reset() error // FIXME
 }
 
 func ciphers(w http.ResponseWriter) (res jsonObject) {
@@ -71,6 +73,47 @@ func (k *key) BuildPath(cipher cipherInterface) (path string) {
 	}
 
 	path = filepath.Join(conf.KeyPath, cipher.GetInfo().Extension, subdir, fileName)
+
+	return
+}
+
+func keyInfo(w http.ResponseWriter, r *http.Request) (res jsonObject) {
+	req, err := parseRequest(r)
+
+	if err != nil {
+		return errorResponse(err, "")
+	}
+
+	err = validateRequest(req, []string{"path"})
+
+	if err != nil {
+		return errorResponse(err, "")
+	}
+
+	path := req["path"].(string)
+	key, err := getKey(path)
+
+	if err != nil {
+		return errorResponse(err, "")
+	}
+
+	cipher := conf.FindCipherByExt(key.Cipher)
+
+	if cipher == nil {
+		err = errors.New("could not identify compatible key cipher")
+		return errorResponse(err, "")
+	}
+
+	info, err := cipher.GetKeyInfo(key)
+
+	if err != nil {
+		return errorResponse(err, "")
+	}
+
+	res = jsonObject{
+		"status":   "OK",
+		"response": info,
+	}
 
 	return
 }

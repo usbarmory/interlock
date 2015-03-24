@@ -99,6 +99,8 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 				res = keys(w, r)
 			case "/api/crypto/upload_key":
 				res = uploadKey(w, r)
+			case "/api/crypto/key_info":
+				res = keyInfo(w, r)
 			case "/api/status/version":
 				res = versionStatus(w)
 			case "/api/status/running":

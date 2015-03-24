@@ -54,6 +54,11 @@ func (a *aes256OFB) GetInfo() cipherInfo {
 	return a.info
 }
 
+func (a *aes256OFB) GetKeyInfo(k key) (i string, err error) {
+	err = errors.New("symmetric cipher does not support key")
+	return
+}
+
 func (a *aes256OFB) SetPassword(password string) (err error) {
 	if len(password) < 8 {
 		err = errors.New("password < 8 characters")
@@ -65,7 +70,7 @@ func (a *aes256OFB) SetPassword(password string) (err error) {
 	return
 }
 
-func (a *aes256OFB) SetKey(k key) (err error) {
+func (a *aes256OFB) SetKey(k key) error {
 	return errors.New("symmetric cipher does not support key")
 }
 

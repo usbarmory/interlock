@@ -59,7 +59,7 @@ error response:
     luks/           change, add, remove
     file/           list, upload, delete, move, copy, mkdir
     file/           encrypt, decrypt, verify*
-    crypto/         ciphers, keys, gen_key*, upload_key
+    crypto/         ciphers, keys, gen_key*, upload_key, key_info
     config/         time
     status/         version, running
   static/           static HTML/JavaScript content
@@ -339,6 +339,23 @@ request:
   {
     "key":         key,      # key object
     "data":        string    # key payload
+  }
+
+## POST api/crypto/key_info
+
+Retrieve detailed key information supplementary to the existing standardized
+attributes contained in the {key} object. The return details are dependent on
+specific cipher/key parsing (e.g. OpenPGP key fingerprint).
+
+request:
+  {
+    "path":        string,   # key path
+  }
+
+response:
+  {
+    "status":      string,   # OK | KO | INVALID_SESSION | INVALID
+    "response":    string    # key information
   }
 
 ## GET api/status/version

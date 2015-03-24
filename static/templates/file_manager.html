@@ -1,10 +1,3 @@
-<div class="actions resize_text">
-  <ul>
-    <li id="increase_font_size" onclick="Interlock.UI.resizeText(event, 1);">A+</li>
-    <li id="decrease_font_size" onclick="Interlock.UI.resizeText(event, -1);">A-</li>
-  </ul>
-</div>
-
 <div id="top-bar">
   <h1>Interlock &alpha; |
     <button id="logout" onclick="Interlock.Session.logout();">Lock and Logout</button>
@@ -29,9 +22,6 @@
 <div id="file_manager">
   <form id="upload_form" action="/api/file/upload" method="POST" enctype="multipart/form-data">
     <fieldset>
-      <input type="hidden" id="SIZE_LIMIT" name="SIZE_LIMIT" value="300000" />
-
-      <!-- FIXME: add support for multiple view, not hardcoding view name -->
       <div id="file_manager_mainView" class="entitydrag">
         <div class="actions">
           <ul>
@@ -80,13 +70,36 @@
   </form>
 </div>
 
+<div class="actions resize_text">
+  <ul>
+    <li id="increase_font_size" onclick="Interlock.UI.resizeText(event, 1);">A+</li>
+    <li id="decrease_font_size" onclick="Interlock.UI.resizeText(event, -1);">A-</li>
+  </ul>
+</div>
+
+<div id="file_manager_browsingView" style="display:none">
+  <span class="pwd"></span>
+
+  <div class="inodes_table_container">
+    <table class="inodes_table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Size</th>
+          <th>Last Modified</th>
+        </tr>
+      </thead>
+
+      <tbody class="inodes_container"></tbody>
+    </table>
+  </div>
+</div>
+
 <!-- FIXME: cleanup the template from js using unobtrusive JavaScript -->
 <script>
   $(document).ready(function() {
-    Interlock.Config.setTime();
-    Interlock.Crypto.cipherList();
-    Interlock.Crypto.keyList();
-    Interlock.FileManager.createView('mainView', '/');
+    Interlock.FileManager.init();
+    Interlock.FileManager.fileList('mainView');
 
     $('#add_password').on('click', function(e) {
       e.preventDefault();

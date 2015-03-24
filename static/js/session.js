@@ -165,6 +165,10 @@ Interlock.Session.loginCallback = function(backendData, hideErrors) {
 
         Interlock.Session.statusPoller();
       });
+
+      Interlock.Config.setTime();
+      Interlock.Crypto.cipherList();
+      Interlock.Crypto.keyList();
     } else {
        /* re-load the login page and present the error dialog on failures */
        $.get("/templates/login.html", function(data) {

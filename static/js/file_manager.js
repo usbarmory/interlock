@@ -7,33 +7,27 @@
  */
 Interlock.FileManager = new function() {
   /** @private */
-  var DEFAULT_PWD = '/';
-  var DEFAULT_SORT =  { attr: 'name', asc: true };
-  var view = { };
+  var cache = { 'mainView': [], 'browsingView': [] };
+
+  /* set default pwd and sorting rule for the main file manager
+     and the browsing view */
+  sessionStorage.mainViewPwd = '/';
+  sessionStorage.mainViewSortAttribute = 'name';
+  sessionStorage.mainViewSortAsc = true;
+
+  sessionStorage.browsingViewPwd = '/';
+  sessionStorage.browsingViewSortAttribute = 'name';
+  sessionStorage.browsingViewSortAsc = true;
 
   /** @protected */
-  this.createView = function(name, pwd, sort) {
-    var newView = { name: name,
-                    pwd: (pwd ? pwd : DEFAULT_PWD),
-                    sort: (sort ? sort : DEFAULT_SORT),
-                    inodes: [] };
-
-    /* FileManager initialization */
+  /* FileManager mainView initialization: register drag and drop and
+     file/directory upload button event handlers */
+  this.init = function() {
     var $fileSelect = $('#fileselect');
     var $directorySelect = $('#directoryselect');
     var $entityDrag = $('.entitydrag');
     var $submitButton = $('#submitbutton');
     var xhr = new XMLHttpRequest();
-
-    if (view.hasOwnProperty(name)) {
-      Interlock.Session.createEvent({'kind': 'info',
-        'msg': '[Interlock.FileManager.createView] failed to create view "' + name + '", view already exists'});
-    } else {
-      view[name] = newView;
-
-      Interlock.Session.createEvent({'kind': 'info',
-        'msg': '[Interlock.FileManager.createView] new view "' + name + '" has been created'});
-    }
 
     $fileSelect.on('change', function(e) { Interlock.FileManager.selectButtonHandler(e); });
     $directorySelect.on('change', function(e) { Interlock.FileManager.selectButtonHandler(e); });
@@ -49,127 +43,107 @@ Interlock.FileManager = new function() {
       $submitButton.css({display: 'none'});
     }
 
-    /* remove the context menu on any left click on the page */
+    /* remove the context menu on when the user clicks the left button */
     $(document).on('click', function(e) {
       $('ul.inode_menu').remove();
     });
 
-    /* fill the new File Manager view with the inode list */
-    Interlock.FileManager.fileList(newView.name, newView.pwd, newView.sort);
+    /* register the on 'click' event to the new directory button */
+    $('#add_new_directory').on('click', function() {
+      var buttons = { 'Add directory': function() { Interlock.FileManager.mkdir($('#directory').val());} };
+      var elements = [$(document.createElement('input')).attr('id', 'directory')
+                                                        .attr('name', 'directory')
+                                                        .attr('placeholder', 'directory name')
+                                                        .attr('type', 'text')
+                                                        .addClass('text ui-widget-content ui-corner-all')];
+
+      Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
+        submitButton: 'Add directory', title: 'Create new directory' });
+      Interlock.UI.modalFormDialog('open');
+    });
   };
 
-  this.destroyView = function(name) {
-    if (view.hasOwnProperty(name)) {
-      delete view[name];
-      Interlock.Session.createEvent({'kind': 'info',
-        'msg': '[Interlock.FileManager.destroyView] view "' + name + '" has been destroyed'});
-    } else {
-      Interlock.Session.createEvent({'kind': 'info',
-        'msg': '[Interlock.FileManager.destroyView] failed to destroy view "' + name + '", view does not exists'});
-    }
-  };
+  /* updates the disk usage info */
+  this.refreshDiskUsage = function(totalSpace, freeSpace) {
+    var $diskUsageSelector = $('#disk_usage');
+    var freeSpace = parseFloat(freeSpace / (1000 * 1000 * 1000)).toFixed(2);
+    var totalSpace = parseFloat(totalSpace / (1000 * 1000 * 1000)).toFixed(2);
 
-  this.refreshView = function(args, backendData) {
-    if (view[args.view]) {
-      /* udates the view internal structure:
-         list of inodes, current pwd and applied sort logic */
-      view[args.view].inodes = backendData.inodes;
-      view[args.view].pwd = (args.pwd ? args.pwd : view[args.view].pwd);
-      view[args.view].sort = (args.sort ? args.sort : view[args.view].sort);
+    $diskUsageSelector.text(freeSpace + ' GB Free (' + totalSpace + ' GB Total)' );
+  }
 
-      var currentView = view[args.view];
-      var traversingPath = '/';
-      var $inodesSelector = $('#file_manager_' + currentView.name + ' > div.inodes_table_container > table > tbody.inodes_container');
-      var $pwdSelector = $('#file_manager_' + currentView.name + ' > span.pwd');
-      var $pwdRoot = $(document.createElement('span'));
-      var $diskUsageSelector = $('#disk_usage');
-      var freeSpace = 0;
-      var totalSpace = 0;
+  this.refreshView = function(view, inodes) {
+    var traversingPath = '/';
+    var $inodesTable = $('#file_manager_' + view + ' > div.inodes_table_container > table > tbody.inodes_container');
+    var $pwd = $('#file_manager_' + view + ' > span.pwd');
 
-      /* updates the disk usage info */
-      if (backendData.free_space !== undefined && backendData.total_space !== undefined) {
-        freeSpace = parseFloat(backendData.free_space / (1000 * 1000 * 1000)).toFixed(2);
-        totalSpace = parseFloat(backendData.total_space / (1000 * 1000 * 1000)).toFixed(2);
+    $pwd.html('');
+    $inodesTable.html('');
+
+    /* insert the volume name as first element of the pwd browsing bar */
+    $(document.createElement('span')).text(sessionStorage.volume || 'InterlockVolume')
+                                     .addClass('volumeName')
+                                     .appendTo($pwd)
+                                     .click(function() {
+                                       Interlock.FileManager.fileList(view, '/');
+                                     });
+
+    /* updates the pwd browsing links */
+    $.each(sessionStorage[view + 'Pwd'].split('/'), function(index, directory) {
+      if (directory) {
+        traversingPath += directory + '/';
+        var $pwdNested = $(document.createElement('span'));
+        var path = traversingPath;
+
+        $pwd.append('&nbsp; &#9656; &nbsp;');
+        $pwdNested.text(directory)
+                  .appendTo($pwd)
+                  .click(function() {
+                    Interlock.FileManager.fileList(view, path);
+                  });
+      }
+    });
+
+    /* refresh file/directory table */
+    $.each(inodes, function(index, inode) {
+      /* don't show files in the browsingView */
+      if (view === 'browsingView' && inode.dir !== true) {
+        /* equivalent to continue inside a jQuery .each() loop */
+        return;
       }
 
-      $pwdSelector.html('');
-      $inodesSelector.html('');
+      var size = inode.size || '-';
+      var mtime = (inode.mtime === undefined) ? '-' : new Date(inode.mtime * 1000);
+      mtime.setMinutes(mtime.getMinutes() - mtime.getTimezoneOffset());
+      var path = sessionStorage[view + 'Pwd'] + (sessionStorage[view + 'Pwd'].slice(-1) === '/' ? '' : '/') + inode.name;
 
-      $pwdRoot.html('/')
-              .appendTo($pwdSelector)
-              .click(function() {
-                 Interlock.FileManager.fileList(currentView.name, '/');
-              });
+      var $inode = $(document.createElement('tr'));
+      var $inodeName = $(document.createElement('td')).text(inode.name);
+      var $inodeSize = $(document.createElement('td')).text(size);
+      var $inodeMtime = $(document.createElement('td')).text(mtime.toISOString().replace(/T/g, '  ').slice(0,20));
 
-      /* updates the pwd browsing links */
-      $.each(currentView.pwd.split('/'), function(index, directory) {
-        if (directory) {
-          traversingPath += directory + '/';
-          var $pwdNested = $(document.createElement('span'));
-          var path = traversingPath;
+      $inode.append($inodeName, $inodeSize, $inodeMtime)
+            .appendTo($inodesTable);
 
-          $pwdSelector.append('&nbsp; &#9656; &nbsp;');
-          $pwdNested.text(directory)
-                    .appendTo($pwdSelector)
-                    .click(function() {
-                      Interlock.FileManager.fileList(currentView.name, path);
-                    });
-        }
-      });
+      if (inode.dir) {
+        $inode.addClass('directory');
+        $inodeName.click(function() {
+          Interlock.FileManager.fileList(view, path);
+        });
+      } else {
+        $inode.addClass('file');
+      }
 
-      /* register the on 'click' event to the new directory button */
-      $('#add_new_directory').on('click', function() {
-        var buttons = { 'Add directory': function() { Interlock.FileManager.mkdir(currentView, $('#directory').val());} };
-        var elements = [$(document.createElement('input')).attr('id', 'directory')
-                                                          .attr('name', 'directory')
-                                                          .attr('placeholder', 'directory name')
-                                                          .attr('type', 'text')
-                                                          .addClass('text ui-widget-content ui-corner-all')];
-
-        Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
-          submitButton: 'Add directory', title: 'Create new directory' });
-        Interlock.UI.modalFormDialog('open');
-      });
-
-      /* refresh file/directory list */
-      $.each(backendData.inodes, function(index, inode) {
-        var size = inode.size || '-';
-        var mtime = (inode.mtime === undefined) ? '-' : new Date(inode.mtime * 1000);
-        mtime.setMinutes(mtime.getMinutes() - mtime.getTimezoneOffset());
-        var path = currentView.pwd + (currentView.pwd.slice(-1) === '/' ? '' : '/') + inode.name;
-
-        var $inode = $(document.createElement('tr'));
-        var $inodeName = $(document.createElement('td')).text(inode.name);
-        var $inodeSize = $(document.createElement('td')).text(size);
-        var $inodeMtime = $(document.createElement('td')).text(mtime.toISOString().replace(/T/g, '  ').slice(0,20));
-
-        $inode.append($inodeName, $inodeSize, $inodeMtime)
-              .appendTo($inodesSelector);
-
-        if (inode.dir) {
-          $inode.addClass('directory');
-          $inodeName.click(function() {
-                       Interlock.FileManager.fileList(currentView.name, path);
-                     });
-        } else {
-          $inode.addClass('file');
-        }
-
-        /* open the context menu on right click on the inode */
-        $inode.on('contextmenu', function(e) { Interlock.FileManager.contextMenu(e, currentView, inode.dir, path) });
-
-        /* updates the disk usage info */
-        $diskUsageSelector.text(freeSpace + ' GB Free (' + totalSpace + ' GB Total)' );
-      });
-    } else {
-      Interlock.Session.createEvent({'kind': 'critical',
-        'msg': '[Interlock.FileManager.refreshView] failed to refresh "' + args.view + '", view does not exist'});
-    }
+      /* open the context menu on right click on the inode (mainView only) */
+      if (view === 'mainView') {
+        $inode.on('contextmenu', function(e) { Interlock.FileManager.contextMenu(e, inode.dir, path) });
+      }
+    });
   };
 
   /* dinamically creates the context menu for every inode entry in the
-     File Manager view */
-  this.contextMenu = function(e, view, isDirectory, path) {
+     File Manager mainView */
+  this.contextMenu = function(e, isDirectory, path) {
     e.preventDefault();
     $('ul.inode_menu').remove();
 
@@ -180,7 +154,7 @@ Interlock.FileManager = new function() {
 
     menuEntries.push($(document.createElement('li')).text('Copy to')
                                                     .click(function() {
-      var buttons = { 'Copy to': function() { Interlock.FileManager.fileCopy(view, {src: path, dst: $('#dst').val() }) } };
+      var buttons = { 'Copy to': function() { Interlock.FileManager.fileCopy({ src: path, dst: $('#dst').val() }) } };
 
       var elements = [$(document.createElement('input')).attr('id', 'dst')
                                                         .attr('name', 'dst')
@@ -196,7 +170,7 @@ Interlock.FileManager = new function() {
 
     menuEntries.push($(document.createElement('li')).text('Move to')
                                                     .click(function() {
-      var buttons = { 'Move to': function() { Interlock.FileManager.fileMove(view, {src: path, dst: $('#dst').val() }) } };
+      var buttons = { 'Move to': function() { Interlock.FileManager.fileMove({ src: path, dst: $('#dst').val() }) } };
 
       var elements = [$(document.createElement('input')).attr('id', 'dst')
                                                         .attr('name', 'dst')
@@ -212,7 +186,7 @@ Interlock.FileManager = new function() {
 
     menuEntries.push($(document.createElement('li')).text('Delete')
                                                     .click(function() {
-                                                      Interlock.FileManager.fileDelete(view, [path]);
+                                                      Interlock.FileManager.fileDelete([path]);
                                                     }));
     if (isDirectory) {
       menuEntries.push($(document.createElement('li')).text('Download (zip archive)')
@@ -275,7 +249,7 @@ Interlock.FileManager = new function() {
         });
 
         var buttons = { 'Encrypt': function() {
-            Interlock.FileManager.fileEncrypt(view, path,
+            Interlock.FileManager.fileEncrypt( path,
               {cipher: $('#cipher').val(), password: $('#password').val(), key: $('#key').val() })
           }
         };
@@ -353,7 +327,7 @@ Interlock.FileManager = new function() {
         });
 
         var buttons = { 'Decrypt': function() {
-            Interlock.FileManager.fileDecrypt(view, path, {cipher: $('#cipher').val(),
+            Interlock.FileManager.fileDecrypt( path, {cipher: $('#cipher').val(),
               password: $('#password').val(), key: $('#key').val() })
           }
         };
@@ -489,9 +463,6 @@ Interlock.FileManager = new function() {
                                                       .addClass('progress')
                                                       .attr('id', file.name + '_' + rnd)
                                                       .prependTo($('#uploads'));
-
-    /* FIXME: add support multiple views */
-    var currentView = view['mainView'];
     var fileName = file.name;
 
     /* directory upload, applies only to Chrome */
@@ -513,16 +484,15 @@ Interlock.FileManager = new function() {
         document.getElementById(file.name + '_' + rnd).className = (xhr.status === 200 ? 'success' : 'failure');
 
         /* FIXME: optimization, don't perform a fileList for every file */
-        Interlock.FileManager.fileList(currentView.name, currentView.pwd, currentView.sort);
+        Interlock.FileManager.fileList('mainView');
       }
     };
 
     xhr.open('POST', document.getElementById('upload_form').action, true);
 
     xhr.setRequestHeader('X-XSRFToken', sessionStorage.XSRFToken);
-    /* FIXME: support for multiple views */
     xhr.setRequestHeader('X-UploadFilename',
-      view['mainView'].pwd + (view['mainView'].pwd.slice(-1) === '/' ? '' : '/') + path + fileName);
+      sessionStorage.mainViewPwd + (sessionStorage.mainViewPwd.slice(-1) === '/' ? '' : '/') + path + fileName);
     xhr.setRequestHeader('X-ForceOverwrite', 'true');
 
     xhr.send(file);
@@ -544,7 +514,13 @@ Interlock.FileManager = new function() {
 Interlock.FileManager.fileListCallback = function(backendData, args) {
   try {
     if (backendData.status === 'OK') {
-      Interlock.FileManager.refreshView(args, backendData.response);
+      /* updates view pwd and sorting rules */
+      sessionStorage[args.view + 'Pwd'] = args.pwd;
+      sessionStorage[args.view + 'SortAttribute'] = args.sort.attribute;
+      sessionStorage[args.view + 'SortAsc'] = args.sort.asc;
+
+      Interlock.FileManager.refreshView(args.view, backendData.response.inodes);
+      Interlock.FileManager.refreshDiskUsage(backendData.response.total_space, backendData.response.free_space);
     } else {
       Interlock.Session.createEvent({'kind': backendData.status,
                                      'msg': '[Interlock.FileManager.fileListCallback] ' + backendData.response});
@@ -580,10 +556,14 @@ Interlock.FileManager.fileListCallback = function(backendData, args) {
  */
 Interlock.FileManager.fileList = function(view, pwd, sort) {
   try {
+    var pwd = pwd || sessionStorage[view + 'Pwd'];
+    var sort = sort || { attribute: sessionStorage[view + 'SortAttribute'],
+                         asc: sessionStorage[view + 'SortAsc'] };
+
     Interlock.UI.ajaxLoader('#upload_form > fieldset');
 
     Interlock.Backend.APIRequest(Interlock.Backend.API.file.list, 'POST',
-      JSON.stringify({path: pwd, sort: sort}), 'FileManager.fileListCallback',
+      JSON.stringify({path: pwd}), 'FileManager.fileListCallback',
       null, {view: view, pwd: pwd, sort: sort});
   } catch (e) {
     $('#upload_form > fieldset > .ajax_overlay').remove();
@@ -626,7 +606,6 @@ Interlock.FileManager.fileDownloadCallback = function(backendData) {
  *
  * @description
  * Download a file or a directory archive
- * FIXME: directory download is currently not implemented
  *
  * @param {string} path fullpath of the file/directory to download
  * @returns {}
@@ -647,17 +626,16 @@ Interlock.FileManager.fileDownload = function(path) {
  * @public
  *
  * @description
- * Callback function, refresh the file listed in the view according with
+ * Callback function, refresh the file listed in the mainView according with
  * the current pwd after file deletions
  *
  * @param {Object} backendData
- * @param {Object} commandArguments view, pwd
  * @returns {}
  */
-Interlock.FileManager.fileDeleteCallback = function(backendData, args) {
+Interlock.FileManager.fileDeleteCallback = function(backendData) {
   try {
     if (backendData.status === 'OK') {
-      Interlock.FileManager.fileList(args.view.name, args.view.pwd);
+      Interlock.FileManager.fileList('mainView');
     } else {
       Interlock.Session.createEvent({'kind': backendData.status,
         'msg': '[Interlock.FileManager.fileDeleteCallback] ' + backendData.response});
@@ -675,15 +653,13 @@ Interlock.FileManager.fileDeleteCallback = function(backendData, args) {
  * @description
  * Delete one or more files/directories
  *
- * @param {string} view FileManager view attached to this request
  * @param [{string}] path fullpath of the file/directory to delete
  * @returns {}
  */
-Interlock.FileManager.fileDelete = function(view, path) {
+Interlock.FileManager.fileDelete = function(path) {
   try {
     Interlock.Backend.APIRequest(Interlock.Backend.API.file.delete, 'POST',
-      JSON.stringify({path: path}), 'FileManager.fileDeleteCallback',
-      null, {view: view, path: path});
+      JSON.stringify({path: path}), 'FileManager.fileDeleteCallback');
   } catch (e) {
     Interlock.Session.createEvent({'kind': 'critical',
       'msg': '[Interlock.FileManager.fileDelete] ' + e});
@@ -695,18 +671,17 @@ Interlock.FileManager.fileDelete = function(view, path) {
  * @public
  *
  * @description
- * Callback function, refresh the file listed in the view according with
+ * Callback function, refresh the file listed in the mainView according with
  * the current pwd after directory creation
  *
- * @param {Object} backendData view
  * @param {Object} commandArguments
  * @returns {}
  */
-Interlock.FileManager.mkdirCallback = function(backendData, args) {
+Interlock.FileManager.mkdirCallback = function(backendData) {
   try {
     if (backendData.status === 'OK') {
       Interlock.UI.modalFormDialog('close');
-      Interlock.FileManager.fileList(args.view.name, args.view.pwd);
+      Interlock.FileManager.fileList('mainView');
     } else {
       Interlock.Session.createEvent({'kind': backendData.status,
         'msg': '[Interlock.FileManager.mkdirCallback] ' + backendData.response});
@@ -722,17 +697,17 @@ Interlock.FileManager.mkdirCallback = function(backendData, args) {
  * @public
  *
  * @description
- * Creates a new directory under the current pwd
+ * Creates a new directory under the current mainView pwd
  *
- * @param {string} view FileManager view attached to this request
  * @param [{string}] path fullpath of the directory to create
  * @returns {}
  */
-Interlock.FileManager.mkdir = function(view, path) {
+Interlock.FileManager.mkdir = function(path) {
   try {
     Interlock.Backend.APIRequest(Interlock.Backend.API.file.mkdir, 'POST',
-      JSON.stringify({path: view.pwd + (view.pwd.slice(-1) === '/' ? '' : '/') + path}),
-      'FileManager.mkdirCallback', null, {view: view});
+      JSON.stringify({path: sessionStorage['mainViewPwd'] +
+        (sessionStorage['mainViewPwd'].slice(-1) === '/' ? '' : '/') + path}),
+      'FileManager.mkdirCallback');
   } catch (e) {
     Interlock.Session.createEvent({'kind': 'critical',
       'msg': '[Interlock.FileManager.mkdir] ' + e});
@@ -744,10 +719,9 @@ Interlock.FileManager.mkdir = function(view, path) {
  * @public
  *
  * @description
- * Callback function, refresh the file listed in the view according with
+ * Callback function, refresh the file listed in the mainView according with
  * the current pwd after file/directory has been copied
  *
- * @param {Object} backendData view
  * @param {Object} commandArguments
  * @returns {}
  */
@@ -755,7 +729,7 @@ Interlock.FileManager.fileCopyCallback = function(backendData, args) {
   try {
     if (backendData.status === 'OK') {
       Interlock.UI.modalFormDialog('close');
-      Interlock.FileManager.fileList(args.view.name, args.view.pwd);
+      Interlock.FileManager.fileList('mainView');
     } else {
       Interlock.Session.createEvent({'kind': backendData.status,
         'msg': '[Interlock.FileManager.fileCopy] ' + backendData.response});
@@ -773,15 +747,14 @@ Interlock.FileManager.fileCopyCallback = function(backendData, args) {
  * @description
  * Copy a file or directory
  *
- * @param {string} view FileManager view attached to this request
  * @param {Object} copy options: source and destination paths
  * @returns {}
  */
-Interlock.FileManager.fileCopy = function(view, args){
+Interlock.FileManager.fileCopy = function(args){
   try {
     Interlock.Backend.APIRequest(Interlock.Backend.API.file.copy, 'POST',
-      JSON.stringify({src: args.src, dst: args.dst }),
-      'FileManager.fileCopyCallback', null, {view: view});
+      JSON.stringify({src: args.src, dst: args.dst}),
+      'FileManager.fileCopyCallback');
   } catch (e) {
     Interlock.Session.createEvent({'kind': 'critical',
       'msg': '[Interlock.FileManager.fileCopy] ' + e});
@@ -793,18 +766,17 @@ Interlock.FileManager.fileCopy = function(view, args){
  * @public
  *
  * @description
- * Callback function, refresh the file listed in the view according with
+ * Callback function, refresh the file listed in the mainView according with
  * the current pwd after file/directory has been moved
  *
  * @param {Object} backendData
- * @param {Object} commandArguments view
  * @returns {}
  */
-Interlock.FileManager.fileMoveCallback = function(backendData, args) {
+Interlock.FileManager.fileMoveCallback = function(backendData) {
   try {
     if (backendData.status === 'OK') {
       Interlock.UI.modalFormDialog('close');
-      Interlock.FileManager.fileList(args.view.name, args.view.pwd);
+      Interlock.FileManager.fileList('mainView');
     } else {
       Interlock.Session.createEvent({'kind': backendData.status,
         'msg': '[Interlock.FileManager.MoveCopy] ' + backendData.response});
@@ -822,15 +794,14 @@ Interlock.FileManager.fileMoveCallback = function(backendData, args) {
  * @description
  * Move a file or directory
  *
- * @param {string} view FileManager view attached to this request
  * @param {Object} commandArgs, move options: src, dst
  * @returns {}
  */
-Interlock.FileManager.fileMove = function(view, args){
+Interlock.FileManager.fileMove = function(args){
   try {
     Interlock.Backend.APIRequest(Interlock.Backend.API.file.move, 'POST',
-      JSON.stringify({src: args.src, dst: args.dst }),
-      'FileManager.fileMoveCallback', null, {view: view});
+      JSON.stringify({src: args.src, dst: args.dst}),
+      'FileManager.fileMoveCallback');
   } catch (e) {
     Interlock.Session.createEvent({'kind': 'critical',
       'msg': '[Interlock.FileManager.fileMove] ' + e});
@@ -842,18 +813,17 @@ Interlock.FileManager.fileMove = function(view, args){
  * @public
  *
  * @description
- * Callback function, refresh the file listed in the view according with
+ * Callback function, refresh the file listed in the mainView according with
  * the current pwd after encryption is submitted
  *
  * @param {Object} backendData
- * @param {Object} commandArguments view
  * @returns {}
  */
 Interlock.FileManager.fileEncryptCallback = function(backendData, args) {
   try {
     if (backendData.status === 'OK') {
       Interlock.UI.modalFormDialog('close');
-      Interlock.FileManager.fileList(args.view.name, args.view.pwd);
+      Interlock.FileManager.fileList('mainView');
     } else {
       Interlock.Session.createEvent({'kind': backendData.status,
         'msg': '[Interlock.FileManager.fileEncrypt] ' + backendData.response});
@@ -871,12 +841,11 @@ Interlock.FileManager.fileEncryptCallback = function(backendData, args) {
  * @description
  * Encrypt one or more files
  *
- * @param {string} view FileManager view attached to this request
  * @param {string} path fullpath of the file to encrypt
  * @param {Object} commandArguments key, wipe_src, encrypt, sign, sig_ley
  * @returns {}
  */
-Interlock.FileManager.fileEncrypt = function(view, path, args) {
+Interlock.FileManager.fileEncrypt = function(path, args) {
   try {
     Interlock.Backend.APIRequest(Interlock.Backend.API.file.encrypt, 'POST',
       JSON.stringify({src: path, cipher: args.cipher, password: args.password,
@@ -885,7 +854,7 @@ Interlock.FileManager.fileEncrypt = function(view, path, args) {
         encrypt: true,
         sign: false,
         sig_key: (args.sig_key === undefined ? '' : args.sig_key) }),
-      'FileManager.fileEncryptCallback', null, {view: view});
+      'FileManager.fileEncryptCallback');
   } catch (e) {
     Interlock.Session.createEvent({'kind': 'critical',
       'msg': '[Interlock.FileManager.fileEncrypt] ' + e});
@@ -897,18 +866,17 @@ Interlock.FileManager.fileEncrypt = function(view, path, args) {
  * @public
  *
  * @description
- * Callback function, refresh the file listed in the view according with
+ * Callback function, refresh the file listed in the mainView according with
  * the current pwd after decryption is submitted
  *
  * @param {Object} backendData
- * @param {Object} commandArguments view
  * @returns {}
  */
-Interlock.FileManager.fileDecryptCallback = function(backendData, args) {
+Interlock.FileManager.fileDecryptCallback = function(backendData) {
   try {
     if (backendData.status === 'OK') {
       Interlock.UI.modalFormDialog('close');
-      Interlock.FileManager.fileList(args.view.name, args.view.pwd);
+      Interlock.FileManager.fileList('mainView');
     } else {
       Interlock.Session.createEvent({'kind': backendData.status,
                                      'msg': '[Interlock.FileManager.fileDecrypt] ' + backendData.response});
@@ -926,19 +894,18 @@ Interlock.FileManager.fileDecryptCallback = function(backendData, args) {
  * @description
  * Decrypt one or more files
  *
- * @param {string} view FileManager view attached to this request
  * @param {string} path fullpath of the file to decrypt
  * @param {Object} encryption options: key, cipher, password
  * @returns {}
  */
-Interlock.FileManager.fileDecrypt = function(view, path, args) {
+Interlock.FileManager.fileDecrypt = function(path, args) {
   try {
     Interlock.Backend.APIRequest(Interlock.Backend.API.file.decrypt, 'POST',
       JSON.stringify({src: path,
         password: args.password,
         key: (args.key === undefined ? '' : args.key),
         cipher: args.cipher }),
-      'FileManager.fileDecryptCallback', null, {view: view});
+      'FileManager.fileDecryptCallback');
   } catch (e) {
     Interlock.Session.createEvent({'kind': 'critical',
       'msg': '[Interlock.FileManager.fileDencrypt] ' + e});

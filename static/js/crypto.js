@@ -92,10 +92,11 @@ Interlock.Crypto.cipherListCallback = function(backendData) {
       Interlock.Crypto.refreshCiphers(backendData.response);
     } else {
       Interlock.Session.createEvent({'kind': backendData.status,
-                                     'msg': '[Interlock.Crypto.cipherListCallback] ' + backendData.response});
+        'msg': '[Interlock.Crypto.cipherListCallback] ' + backendData.response});
     }
   } catch (e) {
-    Interlock.Session.createEvent({'kind': 'critical', 'msg': '[Interlock.Crypto.cipherListCallback] ' + e});
+    Interlock.Session.createEvent({'kind': 'critical',
+      'msg': '[Interlock.Crypto.cipherListCallback] ' + e});
   }
 }
 
@@ -114,7 +115,8 @@ Interlock.Crypto.cipherList = function() {
     Interlock.Backend.APIRequest(Interlock.Backend.API.crypto.ciphers, 'GET',
       null, 'Crypto.cipherListCallback', null);
   } catch (e) {
-    Interlock.Session.createEvent({'kind': 'critical', 'msg': '[Interlock.Crypto.cipherList] ' + e});
+    Interlock.Session.createEvent({'kind': 'critical',
+      'msg': '[Interlock.Crypto.cipherList] ' + e});
   }
 };
 
@@ -135,10 +137,11 @@ Interlock.Crypto.keyListCallback = function(backendData) {
       Interlock.Crypto.refreshKeys(backendData.response);
     } else {
       Interlock.Session.createEvent({'kind': backendData.status,
-                                     'msg': '[Interlock.Crypto.keyListCallback] ' + backendData.response});
+        'msg': '[Interlock.Crypto.keyListCallback] ' + backendData.response});
     }
   } catch (e) {
-    Interlock.Session.createEvent({'kind': 'critical', 'msg': '[Interlock.Crypto.keyListCallback] ' + e});
+    Interlock.Session.createEvent({'kind': 'critical',
+      'msg': '[Interlock.Crypto.keyListCallback] ' + e});
   }
 };
 
@@ -156,7 +159,8 @@ Interlock.Crypto.keyList = function() {
     Interlock.Backend.APIRequest(Interlock.Backend.API.crypto.keys, 'POST',
       JSON.stringify({private: true, public: true}), 'Crypto.keyListCallback');
   } catch (e) {
-    Interlock.Session.createEvent({'kind': 'critical', 'msg': '[Interlock.Crypto.keyList] ' + e});
+    Interlock.Session.createEvent({'kind': 'critical',
+      'msg': '[Interlock.Crypto.keyList] ' + e});
   }
 };
 

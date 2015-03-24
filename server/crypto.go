@@ -48,7 +48,7 @@ type cipherInterface interface {
 	// encryption method
 	Encrypt(src *os.File, dst *os.File, sign bool) error
 	// decryption method
-	Decrypt(src *os.File, dst *os.File) error
+	Decrypt(src *os.File, dst *os.File, verify bool) error
 	// clears previously set key material and password
 	Reset()
 }
@@ -224,6 +224,8 @@ func keys(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 	if err != nil {
 		return errorResponse(err, "")
 	}
+
+	// FIXME: implement filter, key_format, cipher req attributes
 
 	keys := []key{}
 

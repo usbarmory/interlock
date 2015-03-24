@@ -142,9 +142,13 @@ func (o *openPGP) Encrypt(input *os.File, output *os.File, _ bool) (err error) {
 	return
 }
 
-func (o *openPGP) Decrypt(input *os.File, output *os.File) (err error) {
+func (o *openPGP) Decrypt(input *os.File, output *os.File, verify bool) (err error) {
 	keyRing := openpgp.EntityList{}
 	keyRing = append(keyRing, o.secKey)
+
+	if o.pubKey != nil {
+		keyRing = append(keyRing, o.secKey)
+	}
 
 	messageDetails, err := openpgp.ReadMessage(input, keyRing, nil, nil)
 
@@ -153,6 +157,14 @@ func (o *openPGP) Decrypt(input *os.File, output *os.File) (err error) {
 	}
 
 	_, err = io.Copy(output, messageDetails.UnverifiedBody)
+
+	if err != nil {
+		return
+	}
+
+	if verify && !(messageDetails.IsSigned && messageDetails.SignatureError == nil) {
+		err = errors.New("file has been decrypted but signature verification failed")
+	}
 
 	return
 }

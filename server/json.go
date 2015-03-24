@@ -28,7 +28,7 @@ func parseRequest(r *http.Request) (j jsonObject, err error) {
 	}
 
 	if conf.Debug {
-		if !censorPattern.Match(body) {
+		if conf.testMode || !censorPattern.Match(body) {
 			log.Printf("%s", body)
 		}
 	}

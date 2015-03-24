@@ -34,7 +34,7 @@ func TestAes(t *testing.T) {
 	}
 
 	ciphertext.Seek(0, 0)
-	err = a.Decrypt(ciphertext, decrypted)
+	err = a.Decrypt(ciphertext, decrypted, false)
 
 	if err != nil {
 		t.Error(err)

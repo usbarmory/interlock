@@ -257,7 +257,6 @@ request:
     "src":         string,
     "cipher":      string,   # name for cipher object
     "wipe_src":    boolean,  # wipe source after encryption (default: false)
-    "encrypt":     boolean,  # encrypt the file (default: true)
     "sign":        boolean,  # sign the file (default: false)
     "password":    string,   # symmetric cipher or key password
     "key":         string,   # key path, only for asymmetric ciphers
@@ -272,9 +271,23 @@ request:
   {
     "src":         string,
     "password":    string,   # symmetric cipher or key password
+    "verify":      boolean,  # verify the file signature (default: false)
     "key":         string,   # key path, only for asymmetric ciphers
+    "sig_key":     string    # signature key identifier
      ############  optional: ############
-    "cipher":      string    # name for cipher object to be forced
+    "cipher":      string,   # name for cipher object, use ext if empty
+  }
+
+## POST api/file/sign
+
+Sign a file using an asymmetric cipher.
+
+request:
+  {
+    "src":         string,
+    "cipher":      string,   # name for cipher object
+    "password":    string,   # key password
+    "key":         string,   # key path
   }
 
 ## POST api/file/verify
@@ -284,9 +297,7 @@ Verify file signature.
 request:
   {
     "src":         string,
-     ############  optional: ############
-    "cipher":      string,   # name for cipher object
-    "sig_key":     string    # signature key identifier
+    "key":         string    # signature key identifier
   }
 
 ## GET api/crypto/ciphers

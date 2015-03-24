@@ -140,7 +140,7 @@ func TestOpenPGP(t *testing.T) {
 	}
 
 	ciphertext.Seek(0, 0)
-	err = o.Decrypt(ciphertext, decrypted)
+	err = o.Decrypt(ciphertext, decrypted, true)
 
 	if err != nil {
 		t.Error(err)

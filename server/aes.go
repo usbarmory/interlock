@@ -156,7 +156,12 @@ func (a *aes256OFB) Encrypt(input *os.File, output *os.File, sign bool) (err err
 	return
 }
 
-func (a *aes256OFB) Decrypt(input *os.File, output *os.File) (err error) {
+func (a *aes256OFB) Decrypt(input *os.File, output *os.File, verify bool) (err error) {
+	if verify {
+		err = errors.New("symmetric cipher does not support signature verification")
+		return
+	}
+
 	salt := make([]byte, 8)
 	_, err = io.ReadFull(input, salt)
 

@@ -46,6 +46,8 @@ func main() {
 	log.SetFlags(log.Ldate | log.Ltime)
 	log.SetOutput(os.Stdout)
 
+	log.Printf("starting INTERLOCK %s (%s)\n", InterlockVersion, InterlockBuild)
+
 	if err != nil {
 		fmt.Println(err)
 		return

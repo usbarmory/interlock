@@ -35,8 +35,8 @@ Interlock.Backend = new function() {
 
                'config':    { 'time': 'config/time' },
 
-               'status':    { 'device':    'status/device',
-                              'interlock': 'status/interlock' }
+               'status':    { 'version': 'status/version',
+                              'running': 'status/running' }
              };
 
   this.API.prefix = '/api/';

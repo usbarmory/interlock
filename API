@@ -341,9 +341,22 @@ request:
     "data":        string    # key payload
   }
 
-## GET api/status/interlock
+## GET api/status/version
 
-Retrieve interlock backend status information.
+Retrieve static backend version information.
+
+response:
+  {
+    "status":      string,   # OK | KO | INVALID_SESSION | INVALID
+    "response": {
+      "version" :  string,   # Interlock version
+      "build":     string,   # Interlock build information
+    }
+  }
+
+## GET api/status/running
+
+Retrieve dynamic backend status information.
 
 response:
   {

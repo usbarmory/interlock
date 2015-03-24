@@ -20,6 +20,11 @@ import (
 
 const bufferSize = 20
 
+// build information, initialized at compile time (see Makefile)
+var InterlockBuild string
+// release version
+var InterlockVersion = "alpha"
+
 type statusBuffer struct {
 	sync.Mutex
 	LogBuf       *ring.Ring
@@ -96,7 +101,19 @@ func (s *statusBuffer) Test(format string, a ...interface{}) {
 	fmt.Printf(format, a)
 }
 
-func interlockStatus(w http.ResponseWriter) (res jsonObject) {
+func versionStatus(w http.ResponseWriter) (res jsonObject) {
+	res = jsonObject{
+		"status": "OK",
+		"response": map[string]interface{}{
+			"version": InterlockVersion,
+			"build":   InterlockBuild,
+		},
+	}
+
+	return
+}
+
+func runningStatus(w http.ResponseWriter) (res jsonObject) {
 	sys := &syscall.Sysinfo_t{}
 	_ = syscall.Sysinfo(sys)
 

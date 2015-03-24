@@ -299,14 +299,14 @@ Interlock.Session.statusPollerCallback = function(backendData) {
  * @public
  *
  * @description
- * Interlock status poller
+ * Running status poller
  *
  * @param {}
  * @returns {}
  */
 Interlock.Session.statusPoller = function() {
   try {
-    Interlock.Backend.APIRequest(Interlock.Backend.API.status.interlock, 'POST',
+    Interlock.Backend.APIRequest(Interlock.Backend.API.status.running, 'POST',
       null, 'Session.statusPollerCallback');
   } catch (e) {
     Interlock.Session.createEvent({'kind': 'critical', 'msg': '[Interlock.Session.statusPoller] ' + e});

@@ -45,6 +45,11 @@ func (o *openPGP) Init() (c cipherInterface) {
 	return o
 }
 
+func (o *openPGP) Reset() {
+	o.secKey = nil
+	o.pubKey = nil
+}
+
 func (o *openPGP) GetInfo() cipherInfo {
 	return o.info
 }
@@ -136,7 +141,6 @@ func (o *openPGP) Encrypt(input *os.File, output *os.File) (err error) {
 
 func (o *openPGP) Decrypt(input *os.File, output *os.File) (err error) {
 	keyRing := openpgp.EntityList{}
-	keyRing = append(keyRing, o.pubKey)
 	keyRing = append(keyRing, o.secKey)
 
 	messageDetails, err := openpgp.ReadMessage(input, keyRing, nil, nil)
@@ -177,14 +181,14 @@ func printKeyInformation(entity *openpgp.Entity) (info string) {
 		info += fmt.Sprintf("OpenPGP private key:\n")
 	} else {
 		creation := entity.PrimaryKey.CreationTime
-		algoId := entity.PrimaryKey.PubKeyAlgo
+		algoID := entity.PrimaryKey.PubKeyAlgo
 		fingerprint := entity.PrimaryKey.Fingerprint
-		keyId := entity.PrimaryKey.KeyIdShortString()
+		keyID := entity.PrimaryKey.KeyIdShortString()
 		bitLength, _ := entity.PrimaryKey.BitLength()
 
 		info += fmt.Sprintf("OpenPGP public key:\n")
-		info += fmt.Sprintf("  ID: %v\n", keyId)
-		info += fmt.Sprintf("  Type: %v/%v\n", bitLength, algoName(algoId))
+		info += fmt.Sprintf("  ID: %v\n", keyID)
+		info += fmt.Sprintf("  Type: %v/%v\n", bitLength, algoName(algoID))
 		info += fmt.Sprintf("  Fingerprint: % X\n", fingerprint)
 		info += fmt.Sprintf("  Creation: %v\n", creation)
 	}

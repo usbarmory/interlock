@@ -625,7 +625,13 @@ func fileDecrypt(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 			return errorResponse(errors.New("invalid cipher"), "KO")
 		}
 
-		outputPath = src + ".decrypted"
+		suffix := "." + cipher.GetInfo().Extension
+
+		if strings.HasSuffix(src, suffix) {
+			outputPath = strings.TrimSuffix(src, suffix)
+		} else {
+			outputPath = src + ".decrypted"
+		}
 	} else {
 		ext := filepath.Ext(src)
 		cipher = conf.FindCipherByExt(ext[1:len(ext)])

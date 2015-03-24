@@ -61,7 +61,7 @@ error response:
     file/           encrypt, decrypt, verify*
     crypto/         ciphers, keys, gen_key*, upload_key
     config/         time
-    status/         interlock
+    status/         version, running
   static/           static HTML/JavaScript content
 
 ## POST api/auth/login

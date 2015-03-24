@@ -20,8 +20,9 @@ import (
 )
 
 /* Symmetric file encryption using AES256OFB, key is derived from password
- * using PBKDF2 with SHA-1 and 4096 rounds. The salt, initialization vector are
- * prepended to the encrypted file, the HMAC for authentication is appended:
+ * using PBKDF2 with SHA256 and 4096 rounds. The salt, initialization vector
+ * are prepended to the encrypted file, the HMAC for authentication is
+ * appended:
  *
  * salt (8 bytes) || iv (16 bytes) || ciphertext || hmac (32 bytes) */
 

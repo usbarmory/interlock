@@ -37,13 +37,20 @@ type cipherInfo struct {
 }
 
 type cipherInterface interface {
+	// provides cipher information
 	GetInfo() cipherInfo
+	// provides key information
 	GetKeyInfo(key) (string, error)
+	// sets symmetric or asymmetric key password
 	SetPassword(string) error
+	// sets encryption/decryption/signing key
 	SetKey(key) error
+	// encryption method
 	Encrypt(src *os.File, dst *os.File) error
+	// decryption method
 	Decrypt(src *os.File, dst *os.File) error
-	Reset() error // FIXME
+	// clears previously set key material and password
+	Reset()
 }
 
 func ciphers(w http.ResponseWriter) (res jsonObject) {
@@ -244,7 +251,6 @@ func keys(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 	return
 }
 
-// FIXME: untested
 func uploadKey(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 	var k key
 	var cipher cipherInterface

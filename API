@@ -17,6 +17,9 @@ inode:
     "dir" :        boolean,  # true => directory
     "size":        number,   # size in bytes
     "mtime":       number    # modify time in epoch
+    "key_path":    boolean,  # true if path is within key storage
+     ############  optional: ############
+    "key":         key       # key object
   }
 
 cipher:

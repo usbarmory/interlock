@@ -32,10 +32,12 @@ const (
 )
 
 type inode struct {
-	Name  string `json:"name"`
-	Dir   bool   `json:"dir"`
-	Size  int64  `json:"size"`
-	Mtime int64  `json:"mtime"`
+	Name    string `json:"name"`
+	Dir     bool   `json:"dir"`
+	Size    int64  `json:"size"`
+	Mtime   int64  `json:"mtime"`
+	KeyPath bool   `json:"key_path"`
+	Key     *key   `json:"key"`
 }
 
 type downloadCache struct {
@@ -235,6 +237,13 @@ func fileList(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 	totalSpace := stat.Blocks * uint64(stat.Bsize)
 	freeSpace := stat.Bavail * uint64(stat.Bsize)
 
+	inKeyPath := false
+	absoluteKeyPath := filepath.Join(conf.mountPoint, conf.KeyPath)
+
+	if strings.HasPrefix(path, absoluteKeyPath) {
+		inKeyPath = true
+	}
+
 	inodes := []inode{}
 
 	for _, file := range fileInfo {
@@ -243,10 +252,21 @@ func fileList(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		}
 
 		inode := inode{
-			Name:  file.Name(),
-			Dir:   file.IsDir(),
-			Size:  file.Size(),
-			Mtime: file.ModTime().Unix(),
+			Name:    file.Name(),
+			Dir:     file.IsDir(),
+			Size:    file.Size(),
+			Mtime:   file.ModTime().Unix(),
+			KeyPath: inKeyPath,
+		}
+
+		if !file.IsDir() && inKeyPath {
+			key, err := getKey(filepath.Join(path, file.Name()))
+
+			if err == nil {
+				inode.Key = &key
+			} else {
+				inode.Key = nil
+			}
 		}
 
 		inodes = append(inodes, inode)
@@ -497,6 +517,13 @@ func fileEncrypt(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		return errorResponse(errors.New("invalid cipher"), "")
 	}
 
+	input, err := os.Open(src)
+
+	if err != nil {
+		input.Close()
+		return errorResponse(err, "")
+	}
+
 	if encrypt && cipher.GetInfo().Enc {
 		if cipher.GetInfo().KeyFormat != "password" {
 			keyPath = filepath.Join(conf.mountPoint, keyPath)
@@ -515,16 +542,10 @@ func fileEncrypt(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 			err = cipher.SetPassword(password)
 
 			if err != nil {
+				cipher.Reset()
 				return errorResponse(err, "")
 			}
 		}
-	}
-
-	input, err := os.Open(src)
-
-	if err != nil {
-		input.Close()
-		return errorResponse(err, "")
 	}
 
 	outputPath := src + "." + cipher.GetInfo().Extension
@@ -532,12 +553,14 @@ func fileEncrypt(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 
 	if err != nil {
 		output.Close()
+		cipher.Reset()
 		return errorResponse(err, "")
 	}
 
 	go func() {
 		defer input.Close()
 		defer output.Close()
+		defer cipher.Reset()
 
 		n := status.Notify(syslog.LOG_INFO, "encrypting %s", path.Base(src))
 		defer status.Remove(n)
@@ -613,6 +636,13 @@ func fileDecrypt(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		}
 	}
 
+	input, err := os.Open(src)
+
+	if err != nil {
+		input.Close()
+		return errorResponse(err, "")
+	}
+
 	if cipher.GetInfo().Dec {
 		if cipher.GetInfo().KeyFormat != "password" {
 			keyPath = filepath.Join(conf.mountPoint, keyPath)
@@ -625,6 +655,7 @@ func fileDecrypt(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 			err = cipher.SetKey(key)
 
 			if err != nil {
+				cipher.Reset()
 				return errorResponse(err, "")
 			}
 		}
@@ -632,28 +663,23 @@ func fileDecrypt(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		err = cipher.SetPassword(password)
 
 		if err != nil {
+			cipher.Reset()
 			return errorResponse(err, "")
 		}
-
-	}
-
-	input, err := os.Open(src)
-
-	if err != nil {
-		input.Close()
-		return errorResponse(err, "")
 	}
 
 	output, err := os.OpenFile(outputPath, os.O_WRONLY|os.O_CREATE|os.O_EXCL|os.O_TRUNC, 0600)
 
 	if err != nil {
 		output.Close()
+		cipher.Reset()
 		return errorResponse(err, "")
 	}
 
 	go func() {
 		defer input.Close()
 		defer output.Close()
+		defer cipher.Reset()
 
 		n := status.Notify(syslog.LOG_INFO, "decrypting %s", path.Base(src))
 		defer status.Remove(n)

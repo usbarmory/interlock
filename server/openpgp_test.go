@@ -10,6 +10,7 @@ import (
 	"bytes"
 	"io/ioutil"
 	"os"
+	"path"
 	"testing"
 )
 
@@ -99,7 +100,7 @@ func TestOpenPGP(t *testing.T) {
 		KeyFormat:  "armor",
 		Cipher:     "OpenPGP",
 		Private:    false,
-		Path:       pubKeyFile.Name(),
+		Path:       path.Base(pubKeyFile.Name()),
 	}
 
 	secKey := key{
@@ -107,7 +108,7 @@ func TestOpenPGP(t *testing.T) {
 		KeyFormat:  "armor",
 		Cipher:     "OpenPGP",
 		Private:    true,
-		Path:       secKeyFile.Name(),
+		Path:       path.Base(secKeyFile.Name()),
 	}
 
 	err := o.SetKey(pubKey)

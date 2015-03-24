@@ -50,6 +50,10 @@ func (a *aes256OFB) Init() (c cipherInterface) {
 	return a
 }
 
+func (a *aes256OFB) Reset() {
+	a.password = ""
+}
+
 func (a *aes256OFB) GetInfo() cipherInfo {
 	return a.info
 }

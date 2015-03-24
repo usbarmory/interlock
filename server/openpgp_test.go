@@ -118,15 +118,21 @@ func TestOpenPGP(t *testing.T) {
 		return
 	}
 
-	err = o.Encrypt(input, ciphertext)
+	err = o.SetKey(secKey)
 
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	err = o.SetKey(secKey)
-	o.SetPassword(password)
+	err = o.SetPassword(password)
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	err = o.Encrypt(input, ciphertext, true)
 
 	if err != nil {
 		t.Error(err)

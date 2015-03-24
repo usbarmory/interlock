@@ -78,7 +78,12 @@ func (a *aes256OFB) SetKey(k key) error {
 	return errors.New("symmetric cipher does not support key")
 }
 
-func (a *aes256OFB) Encrypt(input *os.File, output *os.File) (err error) {
+func (a *aes256OFB) Encrypt(input *os.File, output *os.File, sign bool) (err error) {
+	if sign {
+		err = errors.New("symmetric cipher does not support signing")
+		return
+	}
+
 	salt := make([]byte, 8)
 	_, err = io.ReadFull(rand.Reader, salt)
 

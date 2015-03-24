@@ -124,12 +124,15 @@ func (o *openPGP) SetKey(k key) (err error) {
 	return
 }
 
-func (o *openPGP) Encrypt(input *os.File, output *os.File) (err error) {
+func (o *openPGP) Encrypt(input *os.File, output *os.File, _ bool) (err error) {
 	hints := &openpgp.FileHints{
 		IsBinary: true,
 		FileName: input.Name(),
 		ModTime:  time.Now(),
 	}
+
+	// signing is automatically detected if SetKey(secKey) is performed on
+	// the *openPGP instance
 
 	pgpOut, err := openpgp.Encrypt(output, []*openpgp.Entity{o.pubKey}, o.secKey, hints, nil)
 	defer pgpOut.Close()

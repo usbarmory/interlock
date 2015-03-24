@@ -493,8 +493,7 @@ func fileEncrypt(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		return errorResponse(err, "")
 	}
 
-	// FIXME: signing not yet implemented
-	err = validateRequest(req, []string{"src", "cipher", "wipe_src", "encrypt", "password", "key"})
+	err = validateRequest(req, []string{"src", "cipher", "wipe_src", "encrypt", "sign", "password", "key", "sig_key"})
 
 	if err != nil {
 		return errorResponse(err, "")
@@ -508,8 +507,10 @@ func fileEncrypt(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 
 	wipe := req["wipe_src"].(bool)
 	encrypt := req["encrypt"].(bool)
+	sign := req["sign"].(bool)
 	password := req["password"].(string)
 	keyPath := req["key"].(string)
+	sigKeyPath := req["sig_key"].(string)
 
 	cipher, ok := conf.enabledCiphers[req["cipher"].(string)]
 
@@ -525,26 +526,50 @@ func fileEncrypt(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 	}
 
 	if encrypt && cipher.GetInfo().Enc {
-		if cipher.GetInfo().KeyFormat != "password" {
-			keyPath = filepath.Join(conf.mountPoint, keyPath)
-			key, err := getKey(keyPath)
+		keyPath = filepath.Join(conf.mountPoint, keyPath)
+		key, err := getKey(keyPath)
 
-			if err != nil {
-				return errorResponse(err, "")
-			}
+		if err != nil {
+			return errorResponse(err, "")
+		}
 
-			err = cipher.SetKey(key)
+		err = cipher.SetKey(key)
 
-			if err != nil {
-				return errorResponse(err, "")
-			}
-		} else {
-			err = cipher.SetPassword(password)
+		if err != nil {
+			return errorResponse(err, "")
+		}
+	} else if encrypt && !cipher.GetInfo().Enc {
+		err = errors.New("encruption request but not supported by cipher")
 
-			if err != nil {
-				cipher.Reset()
-				return errorResponse(err, "")
-			}
+		return errorResponse(err, "")
+	}
+
+	if sign && cipher.GetInfo().Sig {
+		sigKeyPath = filepath.Join(conf.mountPoint, sigKeyPath)
+		key, err := getKey(sigKeyPath)
+
+		if err != nil {
+			return errorResponse(err, "")
+		}
+
+		err = cipher.SetKey(key)
+
+		if err != nil {
+			return errorResponse(err, "")
+		}
+	} else if sign && !cipher.GetInfo().Sig {
+		cipher.Reset()
+		err = errors.New("signing request but not supported by cipher")
+
+		return errorResponse(err, "")
+	}
+
+	if password != "" {
+		cipher.Reset()
+		err = cipher.SetPassword(password)
+
+		if err != nil {
+			return errorResponse(err, "")
 		}
 	}
 
@@ -565,7 +590,7 @@ func fileEncrypt(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		n := status.Notify(syslog.LOG_INFO, "encrypting %s", path.Base(src))
 		defer status.Remove(n)
 
-		err = cipher.Encrypt(input, output)
+		err = cipher.Encrypt(input, output, sign)
 
 		if err != nil {
 			status.Error(err)

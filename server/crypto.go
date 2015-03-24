@@ -43,10 +43,10 @@ type cipherInterface interface {
 	GetKeyInfo(key) (string, error)
 	// sets symmetric or asymmetric key password
 	SetPassword(string) error
-	// sets encryption/decryption/signing key
+	// sets encryption, decryption or signing key
 	SetKey(key) error
 	// encryption method
-	Encrypt(src *os.File, dst *os.File) error
+	Encrypt(src *os.File, dst *os.File, sign bool) error
 	// decryption method
 	Decrypt(src *os.File, dst *os.File) error
 	// clears previously set key material and password

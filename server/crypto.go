@@ -306,8 +306,9 @@ func uploadKey(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		return errorResponse(err, "")
 	}
 
-	for _, cipher = range conf.enabledCiphers {
-		if cipher.GetInfo().Name == k.Cipher {
+	for _, c := range conf.enabledCiphers {
+		if c.GetInfo().Name == k.Cipher {
+			cipher = c
 			break
 		}
 

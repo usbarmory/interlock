@@ -55,11 +55,26 @@ Design goals:
 * Minimal footprint (single statically linked binary + supporting static files)
   to ease integration with USB armory secure booted initrd ramdisk.
 
-Requirements
-============
+Supported Ciphers
+=================
 
-The use of INTERLOCK is coupled with the presence of a LUKS encrypted
-partition, its initial creation (for now) is left as an exercise to the user.
+Encrypted volumes:
+
+* LUKS encrypted partitions
+
+Asymmetric ciphers:
+
+* OpenPGP (using golang.org/x/crypto/openpgp)
+
+Symmetric ciphers:
+
+* AES-256-OFB w/ PBKDF2 password derivation (SHA256, 4096 rounds) and HMAC (SHA256)
+
+Requirements & Operation
+========================
+
+The use of INTERLOCK is coupled with the presence of at least one LUKS
+encrypted partition, its initial creation is pre-requisite left to the user.
 
 An example setup using cryptsetup and lvm2 follows (microSD partition is shown
 to illustrate typical USB armory setup):
@@ -74,10 +89,24 @@ mkfs.ext4 /dev/mapper/interlockfs
 cryptsetup luksClose interlockfs
 ```
 
+The login procedure of INTERLOCK prompts for an encrypted volume name (e.g.
+encryptedfs in the previous example) and one valid password for luksOpen.
+
+A successful login unlocks the encrypted partition, a successful logout locks
+it back.
+
+Once logged in users can change, add, remove LUKS passwords within INTERLOCK.
+Any login password can be disposed of using a dedicated boolean during login,
+this deletes the password from its LUKS key slot right after encrypted
+partition unlocking.
+
+**WARNING**: removing the last remaining password makes the LUKS encrypted
+container permanently inaccessible. This is a feature, not a bug.
+
 Compiling
 =========
 
-The INTERLOCK app requires a working Go environment to be compiled.
+The INTERLOCK app requires a working Go (>= 1.4) environment to be compiled.
 
 ```
 go get -u golang.org/x/crypto/pbkdf2

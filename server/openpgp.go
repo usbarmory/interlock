@@ -61,10 +61,12 @@ func (o *openPGP) GetKeyInfo(k key) (info string, err error) {
 		return
 	}
 
+	info = fmt.Sprintf("Identifier: %s, Format: %s, Cipher: %s\n", k.Identifier, k.KeyFormat, k.Cipher)
+
 	if k.Private {
-		info = printKeyInformation(o.secKey)
+		info += getKeyInfo(o.secKey)
 	} else {
-		info = printKeyInformation(o.pubKey)
+		info += getKeyInfo(o.pubKey)
 	}
 
 	return
@@ -124,12 +126,15 @@ func (o *openPGP) SetKey(k key) (err error) {
 	return
 }
 
-func (o *openPGP) Encrypt(input *os.File, output *os.File) (err error) {
+func (o *openPGP) Encrypt(input *os.File, output *os.File, _ bool) (err error) {
 	hints := &openpgp.FileHints{
 		IsBinary: true,
 		FileName: input.Name(),
 		ModTime:  time.Now(),
 	}
+
+	// signing is automatically detected if SetKey(secKey) is performed on
+	// the *openPGP instance
 
 	pgpOut, err := openpgp.Encrypt(output, []*openpgp.Entity{o.pubKey}, o.secKey, hints, nil)
 	defer pgpOut.Close()
@@ -139,9 +144,13 @@ func (o *openPGP) Encrypt(input *os.File, output *os.File) (err error) {
 	return
 }
 
-func (o *openPGP) Decrypt(input *os.File, output *os.File) (err error) {
+func (o *openPGP) Decrypt(input *os.File, output *os.File, verify bool) (err error) {
 	keyRing := openpgp.EntityList{}
 	keyRing = append(keyRing, o.secKey)
+
+	if o.pubKey != nil {
+		keyRing = append(keyRing, o.secKey)
+	}
 
 	messageDetails, err := openpgp.ReadMessage(input, keyRing, nil, nil)
 
@@ -150,6 +159,29 @@ func (o *openPGP) Decrypt(input *os.File, output *os.File) (err error) {
 	}
 
 	_, err = io.Copy(output, messageDetails.UnverifiedBody)
+
+	if err != nil {
+		return
+	}
+
+	if verify && !(messageDetails.IsSigned && messageDetails.SignatureError == nil) {
+		err = errors.New("file has been decrypted but signature verification failed")
+	}
+
+	return
+}
+
+func (o *openPGP) Sign(input *os.File, output *os.File) (err error) {
+	err = openpgp.ArmoredDetachSign(output, o.secKey, input, nil)
+
+	return
+}
+
+func (o *openPGP) Verify(input *os.File, signature *os.File) (err error) {
+	keyRing := openpgp.EntityList{}
+	keyRing = append(keyRing, o.pubKey)
+
+	_, err = openpgp.CheckArmoredDetachedSignature(keyRing, input, signature)
 
 	return
 }
@@ -176,7 +208,7 @@ func algoName(algo packet.PublicKeyAlgorithm) (name string) {
 	return
 }
 
-func printKeyInformation(entity *openpgp.Entity) (info string) {
+func getKeyInfo(entity *openpgp.Entity) (info string) {
 	if entity.PrivateKey != nil {
 		info += fmt.Sprintf("OpenPGP private key:\n")
 	} else {

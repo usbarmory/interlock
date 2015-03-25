@@ -93,6 +93,10 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 				res = fileEncrypt(w, r)
 			case "/api/file/decrypt":
 				res = fileDecrypt(w, r)
+			case "/api/file/sign":
+				res = fileSign(w, r)
+			case "/api/file/verify":
+				res = fileVerify(w, r)
 			case "/api/crypto/ciphers":
 				res = ciphers(w)
 			case "/api/crypto/keys":

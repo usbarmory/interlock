@@ -20,8 +20,9 @@ import (
 )
 
 /* Symmetric file encryption using AES256OFB, key is derived from password
- * using PBKDF2 with SHA-1 and 4096 rounds. The salt, initialization vector are
- * prepended to the encrypted file, the HMAC for authentication is appended:
+ * using PBKDF2 with SHA256 and 4096 rounds. The salt, initialization vector
+ * are prepended to the encrypted file, the HMAC for authentication is
+ * appended:
  *
  * salt (8 bytes) || iv (16 bytes) || ciphertext || hmac (32 bytes) */
 
@@ -78,7 +79,12 @@ func (a *aes256OFB) SetKey(k key) error {
 	return errors.New("symmetric cipher does not support key")
 }
 
-func (a *aes256OFB) Encrypt(input *os.File, output *os.File) (err error) {
+func (a *aes256OFB) Encrypt(input *os.File, output *os.File, sign bool) (err error) {
+	if sign {
+		err = errors.New("symmetric cipher does not support signing")
+		return
+	}
+
 	salt := make([]byte, 8)
 	_, err = io.ReadFull(rand.Reader, salt)
 
@@ -150,7 +156,12 @@ func (a *aes256OFB) Encrypt(input *os.File, output *os.File) (err error) {
 	return
 }
 
-func (a *aes256OFB) Decrypt(input *os.File, output *os.File) (err error) {
+func (a *aes256OFB) Decrypt(input *os.File, output *os.File, verify bool) (err error) {
+	if verify {
+		err = errors.New("symmetric cipher does not support signature verification")
+		return
+	}
+
 	salt := make([]byte, 8)
 	_, err = io.ReadFull(input, salt)
 
@@ -221,5 +232,15 @@ func (a *aes256OFB) Decrypt(input *os.File, output *os.File) (err error) {
 		return
 	}
 
+	return
+}
+
+func (a *aes256OFB) Sign(i *os.File, o *os.File) (err error) {
+	err = errors.New("symmetric cipher does not support signing")
+	return
+}
+
+func (a *aes256OFB) Verify(i *os.File, s *os.File) (err error) {
+	err = errors.New("symmetric cipher does not support signature verification")
 	return
 }

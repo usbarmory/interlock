@@ -147,7 +147,7 @@
                                                           .addClass('text ui-widget-content ui-corner-all'),
                         $(document.createElement('p')).addClass('warning')
                                                       .text('WARNING: removing the last remaining passphrase ' +
-                                                            'makes the LUKS encrypted container permanently inaccessible.')];
+                                                            'makes the LUKS encrypted container permanently inaccessible. This is a feature, not a bug.')];
 
         Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
           submitButton: 'Delete Password', title: 'Delete LUKS password' });

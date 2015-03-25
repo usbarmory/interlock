@@ -27,14 +27,14 @@ func TestAes(t *testing.T) {
 	a := &aes256OFB{}
 	a.SetPassword(password)
 
-	err := a.Encrypt(input, ciphertext)
+	err := a.Encrypt(input, ciphertext, false)
 
 	if err != nil {
 		t.Error(err)
 	}
 
 	ciphertext.Seek(0, 0)
-	err = a.Decrypt(ciphertext, decrypted)
+	err = a.Decrypt(ciphertext, decrypted, false)
 
 	if err != nil {
 		t.Error(err)

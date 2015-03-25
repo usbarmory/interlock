@@ -254,10 +254,9 @@ Encrypt and/or sign one or more files.
 
 request:
   {
-    "src":         string,
+    "src":         string,   # absolute path for file to encrypt
     "cipher":      string,   # name for cipher object
     "wipe_src":    boolean,  # wipe source after encryption (default: false)
-    "encrypt":     boolean,  # encrypt the file (default: true)
     "sign":        boolean,  # sign the file (default: false)
     "password":    string,   # symmetric cipher or key password
     "key":         string,   # key path, only for asymmetric ciphers
@@ -270,11 +269,25 @@ Decrypt one file.
 
 request:
   {
-    "src":         string,
+    "src":         string,   # absolute path for file to decrypt
     "password":    string,   # symmetric cipher or key password
+    "verify":      boolean,  # verify the file signature (default: false)
     "key":         string,   # key path, only for asymmetric ciphers
+    "sig_key":     string    # signature key identifier
      ############  optional: ############
-    "cipher":      string    # name for cipher object to be forced
+    "cipher":      string,   # name for cipher object, use ext if empty
+  }
+
+## POST api/file/sign
+
+Sign a file using an asymmetric cipher.
+
+request:
+  {
+    "src":         string,   # absolute path for file to sign
+    "cipher":      string,   # name for cipher object
+    "password":    string,   # key password
+    "key":         string,   # key path
   }
 
 ## POST api/file/verify
@@ -283,10 +296,11 @@ Verify file signature.
 
 request:
   {
-    "src":         string,
+    "src":         string,   # absolute path for file to verify
+    "sig":         string,   # absolute path for signature file
+    "key":         string    # signature key identifier
      ############  optional: ############
-    "cipher":      string,   # name for cipher object
-    "sig_key":     string    # signature key identifier
+    "cipher":      string,   # name for cipher object, use ext if empty
   }
 
 ## GET api/crypto/ciphers
@@ -308,8 +322,7 @@ request:
     "public":      boolean,  # list public keys
     "private":     boolean,  # list private keys
      ############  optional: ############
-    "filter":      string,   # pattern match for contents
-    "key_format":  string,   # key format ("password", "armor")
+    "filter":      string,   # case sensitive pattern match for key information
     "cipher":      cipher    # supported cipher name
   }
 

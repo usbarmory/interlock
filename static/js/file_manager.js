@@ -864,7 +864,7 @@ Interlock.FileManager.fileEncryptCallback = function(backendData, args) {
  * Encrypt one or more files
  *
  * @param {string} path fullpath of the file to encrypt
- * @param {Object} commandArguments key, wipe_src, encrypt, sign, sig_ley
+ * @param {Object} commandArguments key, wipe_src, sign, sig_ley
  * @returns {}
  */
 Interlock.FileManager.fileEncrypt = function(path, args) {
@@ -873,7 +873,6 @@ Interlock.FileManager.fileEncrypt = function(path, args) {
       JSON.stringify({src: path, cipher: args.cipher, password: args.password,
         key: (args.key === undefined ? '' : args.key),
         wipe_src: (args.wipe_src === undefined ? false : args.wipe_src),
-        encrypt: true,
         sign: false,
         sig_key: (args.sig_key === undefined ? '' : args.sig_key) }),
       'FileManager.fileEncryptCallback');
@@ -917,7 +916,7 @@ Interlock.FileManager.fileDecryptCallback = function(backendData) {
  * Decrypt one or more files
  *
  * @param {string} path fullpath of the file to decrypt
- * @param {Object} encryption options: key, cipher, password
+ * @param {Object} decryption options: src, password, verify, key, sig_key
  * @returns {}
  */
 Interlock.FileManager.fileDecrypt = function(path, args) {
@@ -925,7 +924,9 @@ Interlock.FileManager.fileDecrypt = function(path, args) {
     Interlock.Backend.APIRequest(Interlock.Backend.API.file.decrypt, 'POST',
       JSON.stringify({src: path,
         password: args.password,
+        verify: false,
         key: (args.key === undefined ? '' : args.key),
+        sig_key: (args.sig_key === undefined ? '' : args.sig_key),
         cipher: args.cipher }),
       'FileManager.fileDecryptCallback');
   } catch (e) {

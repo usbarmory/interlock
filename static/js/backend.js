@@ -31,7 +31,8 @@ Interlock.Backend = new function() {
                'crypto':    { 'ciphers':     'crypto/ciphers',
                               'keys':        'crypto/keys',
                               'generateKey': 'crypto/gen_key',
-                              'uploadKey':   'crypto/upload_key'},
+                              'uploadKey':   'crypto/upload_key',
+                              'keyInfo':     'crypto/key_info'},
 
                'config':    { 'time': 'config/time' },
 

@@ -247,3 +247,32 @@ Interlock.UI.convertToTimeString = function(epoch, stripDate) {
 
   return formattedTimestamp;
 };
+
+/**
+ * @function
+ * @public
+ *
+ * @description
+ * convert numeric uptime in dd:hh:mm format
+ *
+ * @param {Integer} uptime
+ *
+ * @returns {String} uptime (dd:hh:mm)
+ */
+Interlock.UI.convertUptime = function(uptime) {
+  var formattedUptime;
+  var uptimeDays;
+  var uptimeHours;
+  var uptimeMins;
+  var pad = '00';
+
+  uptimeDays = parseInt(uptime / 86400);
+  uptimeHours = parseInt(parseInt(uptime / 3600) - (uptimeDays * 24));
+  uptimeMins = parseInt(parseInt(uptime / 60) - (uptimeDays * 1440) - uptimeHours * 60);
+
+  formattedUptime = uptimeDays + ' days, ' +
+                    pad.substring(uptimeHours.toString().length) + uptimeHours + ':' +
+                    pad.substring(uptimeMins.toString().length) + uptimeMins;
+
+  return formattedUptime;
+};

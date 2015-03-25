@@ -37,14 +37,22 @@ Interlock.Session = new function() {
 
   this.refreshStatus = function(status) {
     var $statusDiv = $('#status');
+
+    var uptime = status.uptime;
+    var freeram = status.freeram;
+    var load = { '_1': status.load_1,
+                 '_5': status.load_5,
+                '_15': status.load_15 };
+
     var notifications = status.notification || [];
     var logs = status.log || [];
 
     $.extend($statusDiv,
-      {uploads: $('#uploads'), logs: $('#logs'), notifications: $('#notifications')});
+      {uploads: $('#uploads'), logs: $('#logs'), notifications: $('#notifications'), dynamicStatus: $('#dynamic_status')});
 
     $statusDiv.notifications.html('');
     $statusDiv.logs.html('');
+    $statusDiv.dynamicStatus.html('');
 
     $.each(notifications, function(index, notification) {
       var timestamp =  Date(notification.epoch * 1000);
@@ -70,6 +78,18 @@ Interlock.Session = new function() {
         Interlock.FileManager.fileList('mainView');
       }
     });
+
+    $statusDiv.dynamicStatus.append($(document.createElement('li')).css({'text-align': 'right',
+                                                                         'font-weight': 'bold'})
+                                                                   .text(
+     'Uptime: ' + Interlock.UI.convertUptime(uptime) + ' | ' +
+     'Free memory: ' +  parseFloat(freeram / (1000 * 1000)).toFixed(2) + 'MB'));
+    $statusDiv.dynamicStatus.append($(document.createElement('li')).css({'text-align': 'right',
+                                                                         'font-weight': 'bold'})
+                                                                   .text(
+      'Load Avarage: ' + parseFloat(load._1 / 65536).toFixed(2) + ', ' +
+                         parseFloat(load._5 / 65536).toFixed(2) + ', ' +
+                         parseFloat(load._15 / 65536).toFixed(2)));
   };
 };
 

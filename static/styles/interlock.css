@@ -290,6 +290,11 @@ h1 {
 
 #status h1 { margin: 0 }
 
+#status ul#dynamic_status {
+  padding-top: 5px;
+  border-top: 1px solid rgba(0,0,0,0.15);
+}
+
 #status ul#uploads,
 #status ul#notifications {
   list-style: none;

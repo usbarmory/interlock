@@ -174,7 +174,7 @@ func getKey(path string) (k key, err error) {
 	return
 }
 
-func getKeys(cipher cipherInterface, private bool) (keys []key, err error) {
+func getKeys(cipher cipherInterface, private bool, filter string) (keys []key, err error) {
 	var subdir string
 
 	basePath := filepath.Join(conf.mountPoint, conf.KeyPath, cipher.GetInfo().Extension)
@@ -187,12 +187,12 @@ func getKeys(cipher cipherInterface, private bool) (keys []key, err error) {
 
 	basePath = filepath.Join(basePath, subdir)
 
-	walkFn := func(path string, info os.FileInfo, e error) (err error) {
-		if info == nil {
+	walkFn := func(path string, fileInfo os.FileInfo, e error) (err error) {
+		if fileInfo == nil {
 			return
 		}
 
-		if info.IsDir() {
+		if fileInfo.IsDir() {
 			return
 		}
 
@@ -200,6 +200,20 @@ func getKeys(cipher cipherInterface, private bool) (keys []key, err error) {
 
 		if err != nil {
 			return
+		}
+
+		if filter != "" {
+			var info string
+
+			info, err = cipher.GetKeyInfo(k)
+
+			if err != nil {
+				return
+			}
+			
+			if !strings.Contains(info, filter) {
+				return
+			}
 		}
 
 		keys = append(keys, k)
@@ -213,6 +227,9 @@ func getKeys(cipher cipherInterface, private bool) (keys []key, err error) {
 }
 
 func keys(w http.ResponseWriter, r *http.Request) (res jsonObject) {
+	var filter string
+	var cipherName string
+
 	req, err := parseRequest(r)
 
 	if err != nil {
@@ -225,22 +242,32 @@ func keys(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		return errorResponse(err, "")
 	}
 
-	// FIXME: implement filter, key_format, cipher req attributes
+	if f, ok := req["filter"]; ok {
+		filter = f.(string)
+	}
+
+	if c, ok := req["cipher"]; ok {
+		cipherName = c.(string)
+	}
 
 	keys := []key{}
 
 	for _, cipher := range conf.enabledCiphers {
+		if cipherName != "" && !strings.Contains(cipher.GetInfo().Name, cipherName) {
+			continue
+		}
+
 		if cipher.GetInfo().KeyFormat == "password" {
 			continue
 		}
 
 		if req["public"].(bool) {
-			publicKeys, _ := getKeys(cipher, false)
+			publicKeys, _ := getKeys(cipher, false, filter)
 			keys = append(keys, publicKeys...)
 		}
 
 		if req["private"].(bool) {
-			privateKeys, _ := getKeys(cipher, true)
+			privateKeys, _ := getKeys(cipher, true, filter)
 			keys = append(keys, privateKeys...)
 		}
 	}

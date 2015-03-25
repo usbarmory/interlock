@@ -319,8 +319,7 @@ request:
     "public":      boolean,  # list public keys
     "private":     boolean,  # list private keys
      ############  optional: ############
-    "filter":      string,   # pattern match for contents
-    "key_format":  string,   # key format ("password", "armor")
+    "filter":      string,   # case sensitive pattern match for key information
     "cipher":      cipher    # supported cipher name
   }
 

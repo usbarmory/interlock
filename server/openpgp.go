@@ -61,10 +61,12 @@ func (o *openPGP) GetKeyInfo(k key) (info string, err error) {
 		return
 	}
 
+	info = fmt.Sprintf("Identifier: %s, Format: %s, Cipher: %s\n", k.Identifier, k.KeyFormat, k.Cipher)
+
 	if k.Private {
-		info = printKeyInformation(o.secKey)
+		info += getKeyInfo(o.secKey)
 	} else {
-		info = printKeyInformation(o.pubKey)
+		info += getKeyInfo(o.pubKey)
 	}
 
 	return
@@ -191,7 +193,7 @@ func algoName(algo packet.PublicKeyAlgorithm) (name string) {
 	return
 }
 
-func printKeyInformation(entity *openpgp.Entity) (info string) {
+func getKeyInfo(entity *openpgp.Entity) (info string) {
 	if entity.PrivateKey != nil {
 		info += fmt.Sprintf("OpenPGP private key:\n")
 	} else {

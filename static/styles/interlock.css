@@ -17,37 +17,6 @@ html, body, img, h1, div {
   padding: 5px;
 }
 
-#uploads {
-  list-style: none;
-  padding-left: 0;
-  background: rgba(255,255,255,0.4);
-  overflow-y: auto;
-  z-index: 0;
-}
-
-#uploads li {
-  display: block;
-  padding: 0px;
-  padding-left: 4px;
-  padding-right: 4px;
-  margin: 4px;
-  color: gray;
-}
-
-#uploads li.progress,
-#uploads li.success,
-#uploads li.failure {
-  display: block;
-  margin: 6px auto;
-  color: white;
-  font-weight: bold;
-  background: url(/images/progress_bar.png) no-repeat top left;
-}
-
-#uploads li.progress { color: black }
-#uploads li.success { background: rgba(0,0,0,0.3) none 0 0 no-repeat }
-#uploads li.failure { background: rgb(0,0,0) none 0 0 no-repeat }
-
 .volumeName {
   color: black;
   font-size: 10pt;
@@ -317,11 +286,45 @@ h1 {
 
 #status h1 { margin: 0 }
 
-#status ul#logs {
-  display: block;
-  height: 29%;
-  overflow-y: auto
+#status ul#uploads,
+#status ul#notifications {
+  list-style: none;
+  padding-left: 0;
+  background: rgba(255,255,255,0.4);
+  overflow-y: auto;
+  z-index: 0;
 }
+
+#status ul#uploads li,
+#status ul#notifications {
+  display: block;
+  padding: 0px;
+  padding-left: 4px;
+  padding-right: 4px;
+  margin: 4px;
+  color: gray;
+}
+
+#status ul#uploads li.progress,
+#status ul#uploads li.success,
+#status ul#uploads li.failure,
+#status ul#notifications li {
+  display: block;
+  margin: 6px auto;
+  color: white;
+  font-weight: bold;
+  width: 90%;
+}
+
+#uploads li.progress {
+  color: black;
+  background: url(/images/progress_bar.png) no-repeat top left
+}
+
+#uploads li.success,
+#status ul#notifications li { background: rgba(0,0,0,0.3) none 0 0 no-repeat }
+
+#uploads li.failure { background: rgb(0,0,0) none 0 0 no-repeat }
 
 #status ul#uploads,
 #status ul#notifications {
@@ -330,27 +333,34 @@ h1 {
   overflow-y: auto
 }
 
-#status ul#notifications,
 #status ul#logs {
+  display: block;
+  height: 29%;
+  overflow-y: auto;
   margin: 0.75em 0;
   padding: 0 1em;
-  list-style: none;
+  list-style: none
 }
 
-#status ul#notifications li,
 #status ul#logs li {
   padding: 1px;
   padding-left: 10px;
   padding-right: 10px;
   margin-top: 3px;
-  border-bottom: 1px solid rgba(0,0,0,0.08);
+  border-bottom: 1px solid rgba(0,0,0,0.08)
 }
 
-li.severity_0,
-li.severity_1,
-li.severity_2,
-li.severity_3,
-li.severity_4 {
+#status ul#notifications li {
+  padding: 1px;
+  padding-left: 10px;
+  padding-right: 10px
+}
+
+#status ul#logs li.severity_0,
+#status ul#logs li.severity_1,
+#status ul#logs li.severity_2,
+#status ul#logs li.severity_3,
+#status ul#logs li.severity_4 {
   background: rgba(0,0,0,0.05);
   color: black;
   font-weight: bold;
@@ -364,18 +374,15 @@ li.severity_4 {
   text-align: right;
   font-size: 7pt;
   margin-top: -2px;
-  color: silver
 }
 
-#status ul#notifications li:before,
+#status ul#notifications li span.timestamp { color: white }
+#status ul#logs li span.timestamp { color: silver }
+
 #status ul#logs li:before {
   border: 1px solid silver;
   display: block;
   position: relative;
-}
-
-#status ul#uploads li {
-  width: 90%;
 }
 
 #login_main {

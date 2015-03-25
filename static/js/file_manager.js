@@ -11,9 +11,9 @@ Interlock.FileManager = new function() {
 
   /* set default pwd and sorting rule for the main file manager
      and the browsing view */
-  sessionStorage.mainViewPwd = '/';
-  sessionStorage.mainViewSortAttribute = 'name';
-  sessionStorage.mainViewSortAsc = true;
+  sessionStorage.mainViewPwd = sessionStorage.mainViewPwd || '/';
+  sessionStorage.mainViewSortAttribute = sessionStorage.mainViewSortAttribute || 'name';
+  sessionStorage.mainViewSortAsc = sessionStorage.mainViewSortAsc || true;
 
   sessionStorage.browsingViewPwd = '/';
   sessionStorage.browsingViewSortAttribute = 'name';

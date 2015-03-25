@@ -186,4 +186,7 @@ func TestOpenPGP(t *testing.T) {
 
 	decrypted.Close()
 	os.Remove(decrypted.Name())
+
+	signature.Close()
+	os.Remove(signature.Name())
 }

@@ -894,7 +894,8 @@ func fileVerify(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 			return errorResponse(errors.New("invalid cipher"), "KO")
 		}
 	} else {
-		ext := filepath.Ext(src)
+		ext := filepath.Ext(sigPath)
+		ext = strings.TrimSuffix(ext, "-signature")
 		cipher = conf.FindCipherByExt(ext[1:len(ext)])
 
 		if cipher == nil {
@@ -962,9 +963,6 @@ func fileVerify(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 	if err != nil {
 		return errorResponse(err, "")
 	}
-
-	n := status.Notify(syslog.LOG_INFO, "verifying %s", path.Base(src))
-	defer status.Remove(n)
 
 	err = cipher.Verify(input, sig)
 

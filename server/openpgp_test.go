@@ -92,6 +92,7 @@ func TestOpenPGP(t *testing.T) {
 
 	ciphertext, _ := ioutil.TempFile("", "openpgp_test_ciphertext-")
 	decrypted, _ := ioutil.TempFile("", "openpgp_test_decrypted-")
+	signature, _ := ioutil.TempFile("", "openpgp_test_signature-")
 
 	o := &openPGP{}
 
@@ -152,6 +153,23 @@ func TestOpenPGP(t *testing.T) {
 
 	if bytes.Compare([]byte(cleartext), compare) != 0 {
 		t.Error("cleartext and decrypted text differ")
+	}
+
+	input.Seek(0, 0)
+	err = o.Sign(input, signature)
+
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	input.Seek(0, 0)
+	signature.Seek(0, 0)
+	err = o.Verify(input, signature)
+
+	if err != nil {
+		t.Error(err)
+		return
 	}
 
 	pubKeyFile.Close()

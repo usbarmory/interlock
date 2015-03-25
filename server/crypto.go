@@ -49,6 +49,10 @@ type cipherInterface interface {
 	Encrypt(src *os.File, dst *os.File, sign bool) error
 	// decryption method
 	Decrypt(src *os.File, dst *os.File, verify bool) error
+	// signing method
+	Sign(src *os.File, dst *os.File) error
+	// signature verification method
+	Verify(src *os.File, sig *os.File) error
 	// clears previously set key material and password
 	Reset()
 }
@@ -210,7 +214,7 @@ func getKeys(cipher cipherInterface, private bool, filter string) (keys []key, e
 			if err != nil {
 				return
 			}
-			
+
 			if !strings.Contains(info, filter) {
 				return
 			}

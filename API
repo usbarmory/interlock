@@ -254,7 +254,7 @@ Encrypt and/or sign one or more files.
 
 request:
   {
-    "src":         string,
+    "src":         string,   # absolute path for file to encrypt
     "cipher":      string,   # name for cipher object
     "wipe_src":    boolean,  # wipe source after encryption (default: false)
     "sign":        boolean,  # sign the file (default: false)
@@ -269,7 +269,7 @@ Decrypt one file.
 
 request:
   {
-    "src":         string,
+    "src":         string,   # absolute path for file to decrypt
     "password":    string,   # symmetric cipher or key password
     "verify":      boolean,  # verify the file signature (default: false)
     "key":         string,   # key path, only for asymmetric ciphers
@@ -284,7 +284,7 @@ Sign a file using an asymmetric cipher.
 
 request:
   {
-    "src":         string,
+    "src":         string,   # absolute path for file to sign
     "cipher":      string,   # name for cipher object
     "password":    string,   # key password
     "key":         string,   # key path
@@ -296,8 +296,11 @@ Verify file signature.
 
 request:
   {
-    "src":         string,
+    "src":         string,   # absolute path for file to verify
+    "sig":         string,   # absolute path for signature file
     "key":         string    # signature key identifier
+     ############  optional: ############
+    "cipher":      string,   # name for cipher object, use ext if empty
   }
 
 ## GET api/crypto/ciphers

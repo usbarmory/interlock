@@ -234,3 +234,13 @@ func (a *aes256OFB) Decrypt(input *os.File, output *os.File, verify bool) (err e
 
 	return
 }
+
+func (a *aes256OFB) Sign(i *os.File, o *os.File) (err error) {
+	err = errors.New("symmetric cipher does not support signing")
+	return
+}
+
+func (a *aes256OFB) Verify(i *os.File, s *os.File) (err error) {
+	err = errors.New("symmetric cipher does not support signature verification")
+	return
+}

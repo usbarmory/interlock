@@ -540,7 +540,7 @@ func fileEncrypt(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 			}
 		}
 	} else {
-		err = errors.New("encryption request but not supported by cipher")
+		err = errors.New("encryption requested but not supported by cipher")
 
 		return errorResponse(err, "")
 	}
@@ -560,7 +560,7 @@ func fileEncrypt(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		}
 	} else if sign && !cipher.GetInfo().Sig {
 		cipher.Reset()
-		err = errors.New("signing request but not supported by cipher")
+		err = errors.New("signing requested but not supported by cipher")
 
 		return errorResponse(err, "")
 	}
@@ -700,7 +700,7 @@ func fileDecrypt(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 			return errorResponse(err, "")
 		}
 	} else {
-		err = errors.New("decryption request but not supported by cipher")
+		err = errors.New("decryption requested but not supported by cipher")
 
 		return errorResponse(err, "")
 	}
@@ -750,6 +750,230 @@ func fileDecrypt(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 
 		status.Log(syslog.LOG_NOTICE, "completed decryption of %s", path.Base(src))
 	}()
+
+	res = jsonObject{
+		"status":   "OK",
+		"response": nil,
+	}
+
+	return
+}
+
+func fileSign(w http.ResponseWriter, r *http.Request) (res jsonObject) {
+	req, err := parseRequest(r)
+
+	if err != nil {
+		return errorResponse(err, "")
+	}
+
+	err = validateRequest(req, []string{"src", "cipher", "password", "key"})
+
+	if err != nil {
+		return errorResponse(err, "")
+	}
+
+	src, err := absolutePath(req["src"].(string))
+
+	if err != nil {
+		return errorResponse(err, "")
+	}
+
+	password := req["password"].(string)
+	keyPath := req["key"].(string)
+
+	cipher, ok := conf.enabledCiphers[req["cipher"].(string)]
+
+	if !ok {
+		return errorResponse(errors.New("invalid cipher"), "")
+	}
+
+	input, err := os.Open(src)
+
+	if err != nil {
+		input.Close()
+		return errorResponse(err, "")
+	}
+
+	if cipher.GetInfo().Sig {
+		keyPath = filepath.Join(conf.mountPoint, keyPath)
+		key, err := getKey(keyPath)
+
+		if err != nil {
+			return errorResponse(err, "")
+		}
+
+		err = cipher.SetKey(key)
+
+		if err != nil {
+			return errorResponse(err, "")
+		}
+	} else {
+		cipher.Reset()
+		err = errors.New("signing requested but not supported by cipher")
+
+		return errorResponse(err, "")
+	}
+
+	if password != "" {
+		cipher.Reset()
+		err = cipher.SetPassword(password)
+
+		if err != nil {
+			return errorResponse(err, "")
+		}
+	}
+
+	outputPath := src + "." + cipher.GetInfo().Extension + "-signature"
+	output, err := os.OpenFile(outputPath, os.O_WRONLY|os.O_CREATE|os.O_EXCL|os.O_TRUNC, 0600)
+
+	if err != nil {
+		output.Close()
+		cipher.Reset()
+		return errorResponse(err, "")
+	}
+
+	go func() {
+		defer input.Close()
+		defer output.Close()
+		defer cipher.Reset()
+
+		n := status.Notify(syslog.LOG_INFO, "signing %s", path.Base(src))
+		defer status.Remove(n)
+
+		err = cipher.Sign(input, output)
+
+		if err != nil {
+			status.Error(err)
+			return
+		}
+
+		status.Log(syslog.LOG_NOTICE, "completed signing of %s", path.Base(src))
+	}()
+
+	res = jsonObject{
+		"status":   "OK",
+		"response": nil,
+	}
+
+	return
+}
+
+func fileVerify(w http.ResponseWriter, r *http.Request) (res jsonObject) {
+	var cipher cipherInterface
+
+	req, err := parseRequest(r)
+
+	if err != nil {
+		return errorResponse(err, "")
+	}
+
+	err = validateRequest(req, []string{"src", "sig", "key"})
+
+	if err != nil {
+		return errorResponse(err, "")
+	}
+
+	src, err := absolutePath(req["src"].(string))
+
+	if err != nil {
+		return errorResponse(err, "")
+	}
+
+	sigPath, err := absolutePath(req["sig"].(string))
+
+	if err != nil {
+		return errorResponse(err, "")
+	}
+
+	sigKeyPath := req["key"].(string)
+
+	if c, ok := req["cipher"]; ok {
+		cipher, ok = conf.enabledCiphers[c.(string)]
+
+		if !ok {
+			return errorResponse(errors.New("invalid cipher"), "KO")
+		}
+	} else {
+		ext := filepath.Ext(src)
+		cipher = conf.FindCipherByExt(ext[1:len(ext)])
+
+		if cipher == nil {
+			return errorResponse(fmt.Errorf("file extension %s does not match valid cipher", ext), "")
+		}
+	}
+
+	input, err := os.Open(src)
+	defer input.Close()
+
+	if err != nil {
+		return errorResponse(err, "")
+	}
+
+	defer cipher.Reset()
+
+	if cipher.GetInfo().Sig {
+		if cipher.GetInfo().KeyFormat != "password" {
+			sigKeyPath = filepath.Join(conf.mountPoint, sigKeyPath)
+			key, err := getKey(sigKeyPath)
+
+			if err != nil {
+				return errorResponse(err, "")
+			}
+
+			err = cipher.SetKey(key)
+
+			if err != nil {
+				cipher.Reset()
+				return errorResponse(err, "")
+			}
+		}
+
+		if err != nil {
+			return errorResponse(err, "")
+		}
+	} else {
+		err = errors.New("signature verification requested but not supported by cipher")
+
+		return errorResponse(err, "")
+	}
+
+	if cipher.GetInfo().Sig {
+		sigKeyPath = filepath.Join(conf.mountPoint, sigKeyPath)
+		key, err := getKey(sigKeyPath)
+
+		if err != nil {
+			return errorResponse(err, "")
+		}
+
+		err = cipher.SetKey(key)
+
+		if err != nil {
+			return errorResponse(err, "")
+		}
+	} else {
+		err = errors.New("signature verification requested but not supported by cipher")
+
+		return errorResponse(err, "")
+	}
+
+	sig, err := os.Open(sigPath)
+	defer sig.Close()
+
+	if err != nil {
+		return errorResponse(err, "")
+	}
+
+	n := status.Notify(syslog.LOG_INFO, "verifying %s", path.Base(src))
+	defer status.Remove(n)
+
+	err = cipher.Verify(input, sig)
+
+	if err != nil {
+		status.Error(err)
+		return
+	}
+
+	status.Log(syslog.LOG_NOTICE, "completed verification of %s", path.Base(src))
 
 	res = jsonObject{
 		"status":   "OK",

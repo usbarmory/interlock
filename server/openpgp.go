@@ -171,6 +171,21 @@ func (o *openPGP) Decrypt(input *os.File, output *os.File, verify bool) (err err
 	return
 }
 
+func (o *openPGP) Sign(input *os.File, output *os.File) (err error) {
+	err = openpgp.ArmoredDetachSign(output, o.secKey, input, nil)
+
+	return
+}
+
+func (o *openPGP) Verify(input *os.File, signature *os.File) (err error) {
+	keyRing := openpgp.EntityList{}
+	keyRing = append(keyRing, o.pubKey)
+
+	_, err = openpgp.CheckArmoredDetachedSignature(keyRing, input, signature)
+
+	return
+}
+
 func algoName(algo packet.PublicKeyAlgorithm) (name string) {
 	switch algo {
 	case packet.PubKeyAlgoRSA:

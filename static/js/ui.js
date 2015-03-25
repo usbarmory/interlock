@@ -23,7 +23,7 @@ Interlock.UI = new function() {
   function errorFormInit() {
     $errorForm.dialog({
       autoOpen: false,
-      height: 300,
+      height: 350,
       width: 350,
       modal: true,
       buttons: { OK: function() { $errorForm.dialog('close'); } }
@@ -38,7 +38,7 @@ Interlock.UI = new function() {
                                                    .appendTo($modalForm.form);
     $modalForm.dialog({
       autoOpen: false,
-      height: 300,
+      height: 350,
       width: 350,
       modal: true,
       buttons: { Cancel: function() { $modalForm.dialog('close'); } }
@@ -49,7 +49,7 @@ Interlock.UI = new function() {
   this.errorFormDialog = function(msgs) {
     $errorForm.dialog({
       autoOpen: false,
-      height: 300,
+      height: 350,
       width: 350,
       modal: true,
       title: 'Interlock error',
@@ -74,7 +74,7 @@ Interlock.UI = new function() {
   this.modalFormConfigure = function(options) {
     $modalForm.dialog({
       autoOpen: false,
-      height: 300,
+      height: 350,
       width: 350,
       modal: true,
       title: options.title ? options.title : '',

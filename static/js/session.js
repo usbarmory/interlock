@@ -14,7 +14,7 @@ Interlock.Session = new function() {
   sessionStorage.logs = sessionStorage.logs ? sessionStorage.logs : JSON.stringify(logs);
 
   /** @protected */
-  this.STATUS_POLLER_INTERVAL = 5000;
+  this.STATUS_POLLER_INTERVAL = 3000;
 
   this.appendLog = function (eventObj) {
     try {

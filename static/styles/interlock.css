@@ -14,12 +14,12 @@ html, body, img, h1, div {
 #modal-form {
   background: rgba(255,255,255,0.9);
   color: white;
-  padding: 5px;
+  padding: 15px;
+  padding-top: 5px;
 }
 
 .volumeName {
   color: black;
-  font-size: 10pt;
 }
 
 .entitydrag {
@@ -47,30 +47,35 @@ html, body, img, h1, div {
   z-index:1000;
   position: absolute;
   width: 200px;
-  background-color: rgba(200,200,200,0.9);
-  padding: 2px;
+  background-color: rgba(255,255,255,0.9);
   list-style-type: none;
-  border: 1px solid silver
+  padding-left: 8px;
+  padding-right: 8px;
+  border-radius: 1px;
+  border: 1px solid silver;
+  box-shadow: 0 0 10px 1px rgba(0,0,0,0.1);
 }
 
 .inode_menu li {
-  padding: 8px;
+  padding-bottom: 4px;
+  padding-top: 5px;
   font-weight: bold;
-  border-bottom: 1px solid silver;  
+  border-bottom: 1px solid rgba(0,0,0,0.05);
+  color: black
 }
 
 .inode_menu li:hover {
-  cursor: pointer
+  cursor: pointer;
 }
 
 .inode_menu li.disabled,
 .inode_menu li.disabled:hover {
-  color: gray;
+  color: silver;
   cursor: default
 }
 
 .pwd {
-  color: rgba(0,0,0,0.4);
+  color: rgba(0,0,0,0.35);
   display: block;
   font-weight: bold;
   width: 95%;
@@ -140,7 +145,7 @@ input[type="text"], input[type="password"] {
   appearance: none;
   box-shadow: none;
   border-radius: none;
-  border: 1px dotted silver
+  border: 1px dotted silver;
   padding: 3px;
   padding-left: 3px;
   transition: border 0.3s
@@ -270,7 +275,6 @@ table.inodes_table tbody tr {
   padding: 2px;
   border-left: 2px solid transparent;
   text-decoration: none;
-  color: #272727
 }
 
 table.inodes_table tbody tr:hover {
@@ -316,7 +320,7 @@ h1 {
   width: 90%;
 }
 
-#uploads li.progress {
+#status ul#uploads li.progress {
   color: black;
   background: url(/images/progress_bar.png) no-repeat top left
 }
@@ -400,6 +404,7 @@ h1 {
   margin: 15% auto;
   width: 50%;
   border: 1px solid rgb(240,240,240);
+  box-shadow: 0 0 10px 1px rgba(0,0,0,0.8);
 }
 
 #login_form input[type="text"],
@@ -428,19 +433,61 @@ h1 {
 
 /* jQuery style override */
 .ui-widget-overlay {
-  opacity: 0.6;
+  opacity: 0.65;
   background: rgb(0,0,0);
 }
 
 .ui-dialog {
-  opacity: 0.9;
-  border: 1px solid rgb(240,240,240)
+  box-shadow: 0 0 10px 1px rgba(0,0,0,0.8);
+  border: 2px solid rgb(240,240,240)
 }
 
-.ui-dialog-titlebar { background: black }
-.ui-dialog-title { color: white }
+.ui-widget-content {
+  padding: 0;
+  border: none;
+}
 
-button.ui-button { padding: 0; margin-top: 0; margin-left: 5px;}
+.ui-widget-content input[type="checkbox"] {
+  vertical-align: bottom;
+  top: 9px;
+  position: relative
+}
+
+.ui-widget-content input[type="text"],
+.ui-widget-content input[type="password"] {
+  display: inline-block;
+  width: 100%;
+  font-family: sans-serif;
+  font-size: 12px;
+  appearance: none;
+  box-shadow: none;
+  border-radius: none;
+  border: 1px dotted silver;
+  padding: 3px;
+  padding-left: 3px;
+  transition: border 0.3s
+}
+
+.ui-widget-content input[type="text"]:focus { border: 1px dotted black }
+
+::-webkit-input-placeholder { color: gray }
+:-moz-placeholder { color: gray }
+::-moz-placeholder { color: gray }
+:-ms-input-placeholder { color: gray }
+
+.ui-widget-content input {
+  margin-top: 10px;
+  margin-bottom: 10px
+}
+
+.ui-dialog-titlebar { background: transparent }
+.ui-dialog-buttonplane { padding: 0px }
+
+.ui-state-default, .ui-widget-content .ui-state-default, .ui-widget-header .ui-state-default {
+  border: none;
+  background: transparent;
+}
+
 button.ui-button span {
   float: right;
   border: none;
@@ -450,8 +497,25 @@ button.ui-button span {
   background: black;
 }
 
-button.ui-dialog-titlebar-close { background: transparent }
-button.ui-dialog-titlebar-close span { background: url("/images/close_button.png") 0px 5px no-repeat }
+.ui-dialog-titlebar {
+  background: rgba(0,0,0,0.07);
+  color: black;
+  border: none;
+  border-bottom: 1px solid rgba(0,0,0,0.1);
+  padding-bottom: 15px
+}
+
+.ui-dialog-titlebar span {
+  color: black;
+  padding-bottom: 7px;
+  padding-top: 7px
+}
+
+button.ui-dialog-titlebar-close { background: transparent}
+button.ui-dialog-titlebar-close span.ui-button-icon-primary { background: url("/images/close_button.png") center center no-repeat }
+button.ui-dialog-titlebar-close span.ui-button-text { display:none }
+
+.ui-button-icon-only .ui-icon { margin-left: -20px; margin-top: -15px }
 
 /* Corner radius */
 .ui-corner-all,

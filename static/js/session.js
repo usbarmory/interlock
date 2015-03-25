@@ -10,6 +10,7 @@ Interlock.Session = new function() {
   var MAX_SESSION_LOGS = 1000;
   var logs = [];
 
+  sessionStorage.lastAsyncOperation = 0;
   sessionStorage.lastLog = sessionStorage.lastLog ? sessionStorage.lastLog : 0;
   sessionStorage.logs = sessionStorage.logs ? sessionStorage.logs : JSON.stringify(logs);
 
@@ -61,6 +62,13 @@ Interlock.Session = new function() {
         .append($(document.createElement('span')).text(Interlock.UI.convertToTimeString(log.epoch, true))
                                                  .addClass('timestamp'))
       );
+
+      /* triggers a fileList refresh when necessary: async operations like file
+         encryption/decryption */
+      if (log.epoch > sessionStorage.lastAsyncOperation && log.msg.match(/completed/)) {
+        sessionStorage.lastAsyncOperation = log.epoch;
+        Interlock.FileManager.fileList('mainView');
+      }
     });
   };
 };

@@ -289,7 +289,6 @@ func keys(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 }
 
 func uploadKey(w http.ResponseWriter, r *http.Request) (res jsonObject) {
-	var k key
 	var cipher cipherInterface
 
 	req, err := parseRequest(r)
@@ -304,7 +303,12 @@ func uploadKey(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		return errorResponse(err, "")
 	}
 
-	err = json.Unmarshal(req["key"].([]byte), &k)
+	k := key{}
+
+	// we re-marsahal and unmarshal to avoid having to assign struct
+	// elements individually
+	s, _ := json.Marshal(req["key"])
+	err = json.Unmarshal(s, &k)
 
 	if err != nil {
 		return errorResponse(err, "")

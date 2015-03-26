@@ -43,6 +43,8 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 			// the backend.
 			res = login(w, r)
 		}
+
+		sendResponse(w, res)
 	} else {
 		if validSessionID, validXSRFToken, err := session.Validate(r); !(validSessionID && validXSRFToken) {
 			u, _ := url.Parse(r.RequestURI)

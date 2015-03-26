@@ -135,6 +135,8 @@ func login(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 }
 
 func logout(w http.ResponseWriter) (res jsonObject) {
+	defer session.Clear()
+
 	sessionCookie := &http.Cookie{
 		Name:     "Interlock-Token",
 		Value:    "delete",
@@ -162,8 +164,6 @@ func logout(w http.ResponseWriter) (res jsonObject) {
 	if err != nil {
 		return errorResponse(err, "")
 	}
-
-	session.Clear()
 
 	return
 }

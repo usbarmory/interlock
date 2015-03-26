@@ -260,7 +260,7 @@ func fileList(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		}
 
 		if !file.IsDir() && inKeyPath {
-			key, err := getKey(filepath.Join(path, file.Name()))
+			key, _, err := getKey(filepath.Join(path, file.Name()))
 
 			if err == nil {
 				inode.Key = &key
@@ -527,7 +527,7 @@ func fileEncrypt(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 	if cipher.GetInfo().Enc {
 		if cipher.GetInfo().KeyFormat != "password" {
 			keyPath = filepath.Join(conf.mountPoint, keyPath)
-			key, err := getKey(keyPath)
+			key, _, err := getKey(keyPath)
 
 			if err != nil {
 				return errorResponse(err, "")
@@ -547,7 +547,7 @@ func fileEncrypt(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 
 	if sign && cipher.GetInfo().Sig {
 		sigKeyPath = filepath.Join(conf.mountPoint, sigKeyPath)
-		key, err := getKey(sigKeyPath)
+		key, _, err := getKey(sigKeyPath)
 
 		if err != nil {
 			return errorResponse(err, "")
@@ -679,7 +679,7 @@ func fileDecrypt(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 	if cipher.GetInfo().Dec {
 		if cipher.GetInfo().KeyFormat != "password" {
 			keyPath = filepath.Join(conf.mountPoint, keyPath)
-			key, err := getKey(keyPath)
+			key, _, err := getKey(keyPath)
 
 			if err != nil {
 				return errorResponse(err, "")
@@ -707,7 +707,7 @@ func fileDecrypt(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 
 	if verify && cipher.GetInfo().Sig {
 		sigKeyPath = filepath.Join(conf.mountPoint, sigKeyPath)
-		key, err := getKey(sigKeyPath)
+		key, _, err := getKey(sigKeyPath)
 
 		if err != nil {
 			return errorResponse(err, "")
@@ -796,7 +796,7 @@ func fileSign(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 
 	if cipher.GetInfo().Sig {
 		keyPath = filepath.Join(conf.mountPoint, keyPath)
-		key, err := getKey(keyPath)
+		key, _, err := getKey(keyPath)
 
 		if err != nil {
 			return errorResponse(err, "")
@@ -915,7 +915,7 @@ func fileVerify(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 	if cipher.GetInfo().Sig {
 		if cipher.GetInfo().KeyFormat != "password" {
 			sigKeyPath = filepath.Join(conf.mountPoint, sigKeyPath)
-			key, err := getKey(sigKeyPath)
+			key, _, err := getKey(sigKeyPath)
 
 			if err != nil {
 				return errorResponse(err, "")
@@ -940,7 +940,7 @@ func fileVerify(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 
 	if cipher.GetInfo().Sig {
 		sigKeyPath = filepath.Join(conf.mountPoint, sigKeyPath)
-		key, err := getKey(sigKeyPath)
+		key, _, err := getKey(sigKeyPath)
 
 		if err != nil {
 			return errorResponse(err, "")

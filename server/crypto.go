@@ -101,17 +101,15 @@ func keyInfo(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		return errorResponse(err, "")
 	}
 
-	path := req["path"].(string)
-	key, err := getKey(path)
+	path, err := absolutePath(req["path"].(string))
 
 	if err != nil {
 		return errorResponse(err, "")
 	}
 
-	cipher := conf.FindCipherByExt(key.Cipher)
+	key, cipher, err := getKey(path)
 
-	if cipher == nil {
-		err = errors.New("could not identify compatible key cipher")
+	if err != nil {
 		return errorResponse(err, "")
 	}
 
@@ -129,7 +127,7 @@ func keyInfo(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 	return
 }
 
-func getKey(path string) (k key, err error) {
+func getKey(path string) (k key, cipher cipherInterface, err error) {
 	var private bool
 
 	fileInfo, err := os.Stat(path)
@@ -167,10 +165,16 @@ func getKey(path string) (k key, err error) {
 		return
 	}
 
+	cipher = conf.FindCipherByExt(cipherExt)
+
+	if cipher == nil {
+		err = errors.New("could not identify compatible key cipher")
+	}
+
 	k = key{
 		Identifier: identifier,
 		KeyFormat:  format[1:],
-		Cipher:     conf.FindCipherByExt(cipherExt).GetInfo().Name,
+		Cipher:     cipher.GetInfo().Name,
 		Private:    private,
 		Path:       filepath.Join("/", conf.KeyPath, cipherExt, typeInfo, name),
 	}
@@ -200,7 +204,7 @@ func getKeys(cipher cipherInterface, private bool, filter string) (keys []key, e
 			return
 		}
 
-		k, err := getKey(path)
+		k, _, err := getKey(path)
 
 		if err != nil {
 			return

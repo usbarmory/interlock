@@ -61,58 +61,69 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 				}
 				fallthrough
 			default:
-				res = errorResponse(err, "INVALID_SESSION")
+				if conf.testMode {
+					handleRequest(w, r)
+				} else {
+					res = errorResponse(err, "INVALID_SESSION")
+					sendResponse(w, res)
+				}
 			}
 		} else {
-			switch r.RequestURI {
-			case "/api/auth/logout":
-				res = logout(w)
-			case "/api/luks/change":
-				res = passwordRequest(w, r, _change)
-			case "/api/luks/add":
-				res = passwordRequest(w, r, _add)
-			case "/api/luks/remove":
-				res = passwordRequest(w, r, _remove)
-			case "/api/config/time":
-				res = setTime(w, r)
-			case "/api/file/list":
-				res = fileList(w, r)
-			case "/api/file/upload":
-				fileUpload(w, r)
-			case "/api/file/download":
-				res = fileDownload(w, r)
-			case "/api/file/delete":
-				res = fileDelete(w, r)
-			case "/api/file/move":
-				res = fileMove(w, r)
-			case "/api/file/copy":
-				res = fileCopy(w, r)
-			case "/api/file/mkdir":
-				res = fileMkdir(w, r)
-			case "/api/file/encrypt":
-				res = fileEncrypt(w, r)
-			case "/api/file/decrypt":
-				res = fileDecrypt(w, r)
-			case "/api/file/sign":
-				res = fileSign(w, r)
-			case "/api/file/verify":
-				res = fileVerify(w, r)
-			case "/api/crypto/ciphers":
-				res = ciphers(w)
-			case "/api/crypto/keys":
-				res = keys(w, r)
-			case "/api/crypto/upload_key":
-				res = uploadKey(w, r)
-			case "/api/crypto/key_info":
-				res = keyInfo(w, r)
-			case "/api/status/version":
-				res = versionStatus(w)
-			case "/api/status/running":
-				res = runningStatus(w)
-			default:
-				res = notFound(w)
-			}
+			handleRequest(w, r)
 		}
+	}
+}
+
+func handleRequest(w http.ResponseWriter, r *http.Request) {
+	var res jsonObject
+
+	switch r.RequestURI {
+	case "/api/auth/logout":
+		res = logout(w)
+	case "/api/luks/change":
+		res = passwordRequest(w, r, _change)
+	case "/api/luks/add":
+		res = passwordRequest(w, r, _add)
+	case "/api/luks/remove":
+		res = passwordRequest(w, r, _remove)
+	case "/api/config/time":
+		res = setTime(w, r)
+	case "/api/file/list":
+		res = fileList(w, r)
+	case "/api/file/upload":
+		fileUpload(w, r)
+	case "/api/file/download":
+		res = fileDownload(w, r)
+	case "/api/file/delete":
+		res = fileDelete(w, r)
+	case "/api/file/move":
+		res = fileMove(w, r)
+	case "/api/file/copy":
+		res = fileCopy(w, r)
+	case "/api/file/mkdir":
+		res = fileMkdir(w, r)
+	case "/api/file/encrypt":
+		res = fileEncrypt(w, r)
+	case "/api/file/decrypt":
+		res = fileDecrypt(w, r)
+	case "/api/file/sign":
+		res = fileSign(w, r)
+	case "/api/file/verify":
+		res = fileVerify(w, r)
+	case "/api/crypto/ciphers":
+		res = ciphers(w)
+	case "/api/crypto/keys":
+		res = keys(w, r)
+	case "/api/crypto/upload_key":
+		res = uploadKey(w, r)
+	case "/api/crypto/key_info":
+		res = keyInfo(w, r)
+	case "/api/status/version":
+		res = versionStatus(w)
+	case "/api/status/running":
+		res = runningStatus(w)
+	default:
+		res = notFound(w)
 	}
 
 	if res != nil {

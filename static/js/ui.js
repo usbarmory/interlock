@@ -260,19 +260,61 @@ Interlock.UI.convertToTimeString = function(epoch, stripDate) {
  * @returns {String} uptime (dd:hh:mm)
  */
 Interlock.UI.convertUptime = function(uptime) {
-  var formattedUptime;
   var uptimeDays;
   var uptimeHours;
   var uptimeMins;
+  var uptimeSecs;
+  var uptime;
+
+  var formattedUptime = 'up ';
   var pad = '00';
 
-  uptimeDays = parseInt(uptime / 86400);
-  uptimeHours = parseInt(parseInt(uptime / 3600) - (uptimeDays * 24));
-  uptimeMins = parseInt(parseInt(uptime / 60) - (uptimeDays * 1440) - uptimeHours * 60);
+  uptimeDays = parseInt(uptime / (60 * 60 * 24));
+  uptimeHours = parseInt(parseInt(uptime / (60 * 60)) - (uptimeDays * 24));
+  uptimeMins = parseInt(parseInt(uptime / 60) - (uptimeDays * 60 * 24) - (uptimeHours * 60));
+  uptimeSecs = parseInt(uptime - (uptimeMins * 60) - (uptimeDays * 60 * 60 * 24) - (uptimeHours * 60 * 60));
 
-  formattedUptime = uptimeDays + ' days, ' +
-                    pad.substring(uptimeHours.toString().length) + uptimeHours + ':' +
-                    pad.substring(uptimeMins.toString().length) + uptimeMins;
+  if (uptimeDays > 0) {
+    if (uptimeDays === 1) {
+      uptime = uptimeDays + ' day';
+    } else {
+      uptime = uptimeDays + ' days';
+    }
+
+    formattedUptime += uptime + ', ' +
+      pad.substring(uptimeHours.toString().length) + uptimeHours + ':' +
+      pad.substring(uptimeMins.toString().length) + uptimeMins;
+  } else if (uptimeHours > 0) {
+    formattedUptime +=
+      pad.substring(uptimeHours.toString().length) + uptimeHours + ':' +
+      pad.substring(uptimeMins.toString().length) + uptimeMins;
+  } else if (uptimeMins > 0) {
+    formattedUptime += uptimeMins + ' min';
+  } else {
+    formattedUptime += uptimeSecs + ' sec';
+  }
 
   return formattedUptime;
+};
+
+/**
+ * @function
+ * @public
+ *
+ * @description
+ * return the current time in the format hh:mm
+ *
+ * @param {Integer} uptime
+ *
+ * @returns {String} currentTime (hh:mm)
+ */
+Interlock.UI.currentTime = function() {
+  var pad = '00';
+  var currentDate = new Date();
+
+  var hours = currentDate.getHours().toString();
+  var min = currentDate.getMinutes().toString();
+
+  return (pad.substring(hours.length) + hours + ':' +
+          pad.substring(min.length) + min);
 };

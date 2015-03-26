@@ -82,14 +82,16 @@ Interlock.Session = new function() {
     $statusDiv.dynamicStatus.append($(document.createElement('li')).css({'text-align': 'right',
                                                                          'font-weight': 'bold'})
                                                                    .text(
-     'Uptime: ' + Interlock.UI.convertUptime(uptime) + ' | ' +
-     'Free memory: ' +  parseFloat(freeram / (1000 * 1000)).toFixed(2) + 'MB'));
+     Interlock.UI.currentTime() + ' ' +
+     Interlock.UI.convertUptime(uptime) + ', ' +
+     'load avarage: ' + parseFloat(load._1  / 65536).toFixed(2) + ', ' +
+                        parseFloat(load._5  / 65536).toFixed(2) + ', ' +
+                        parseFloat(load._15 / 65536).toFixed(2)));
+
     $statusDiv.dynamicStatus.append($(document.createElement('li')).css({'text-align': 'right',
                                                                          'font-weight': 'bold'})
                                                                    .text(
-      'Load Avarage: ' + parseFloat(load._1 / 65536).toFixed(2) + ', ' +
-                         parseFloat(load._5 / 65536).toFixed(2) + ', ' +
-                         parseFloat(load._15 / 65536).toFixed(2)));
+      'free memory: ' +  parseFloat(freeram / (1024 * 1024)).toFixed(2) + ' MB'));
   };
 };
 

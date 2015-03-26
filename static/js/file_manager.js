@@ -69,7 +69,7 @@ Interlock.FileManager = new function() {
     var freeSpace = parseFloat(freeSpace / (1000 * 1000 * 1000)).toFixed(2);
     var totalSpace = parseFloat(totalSpace / (1000 * 1000 * 1000)).toFixed(2);
 
-    $diskUsageSelector.text(freeSpace + ' GB Free (' + totalSpace + ' GB Total)' );
+    $diskUsageSelector.text(freeSpace + ' GB free (' + totalSpace + ' GB total)' );
   }
 
   this.refreshView = function(view, inodes) {

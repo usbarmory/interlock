@@ -225,6 +225,8 @@ button#logout:hover {
   color: black;
 }
 
+button#logout { margin-right: -15px }
+
 fieldset { border: none }
 
 .warning { font-weight: bold }

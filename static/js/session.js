@@ -84,7 +84,7 @@ Interlock.Session = new function() {
                                                                    .text(
      Interlock.UI.currentTime() + ' ' +
      Interlock.UI.convertUptime(uptime) + ', ' +
-     'load avarage: ' + parseFloat(load._1  / 65536).toFixed(2) + ', ' +
+     'load average: ' + parseFloat(load._1  / 65536).toFixed(2) + ', ' +
                         parseFloat(load._5  / 65536).toFixed(2) + ', ' +
                         parseFloat(load._15 / 65536).toFixed(2)));
 

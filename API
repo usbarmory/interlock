@@ -58,10 +58,10 @@ error response:
 # API Methods (* == currently not implemented)
 
   api/
-    auth/           login, logout
+    auth/           login, logout, poweroff
     luks/           change, add, remove
     file/           list, upload, delete, move, copy, mkdir
-    file/           encrypt, decrypt, verify*
+    file/           encrypt, decrypt, verify
     crypto/         ciphers, keys, gen_key*, upload_key, key_info
     config/         time
     status/         version, running
@@ -104,6 +104,11 @@ Set-Cookie: Interlock-Token=DQAAAK...Eaem_vYg; Path=/;
 
 Invalidate the current session 'Interlock-Token' cookie and unmount the
 encrypted partition.
+
+## POST api/auth/poweroff
+
+Identical to logout with the addition of performing a power down of the device
+after session invalidation.
 
 ## POST api/config/time
 

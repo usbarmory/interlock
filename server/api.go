@@ -82,6 +82,8 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 	switch r.RequestURI {
 	case "/api/auth/logout":
 		res = logout(w)
+	case "/api/auth/poweroff":
+		res = poweroff(w)
 	case "/api/luks/change":
 		res = passwordRequest(w, r, _change)
 	case "/api/luks/add":

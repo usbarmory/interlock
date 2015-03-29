@@ -172,3 +172,13 @@ func logout(w http.ResponseWriter) (res jsonObject) {
 
 	return
 }
+
+func poweroff(w http.ResponseWriter) (res jsonObject) {
+	res = logout(w)
+
+	go func() {
+		_, _ = execCommand("/sbin/poweroff", []string{}, true, "")
+	}()
+
+	return
+}

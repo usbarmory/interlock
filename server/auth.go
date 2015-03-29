@@ -29,6 +29,18 @@ func randomString(size int) (c string, err error) {
 }
 
 func authenticate(volume string, password string, dispose bool) (err error) {
+	if volume == "" {
+		err = errors.New("empty volume name")
+	}
+
+	if password == "" {
+		err = errors.New("empty password")
+	}
+
+	if err != nil {
+		return
+	}
+
 	err = luksOpen(volume, password)
 
 	if err != nil {
@@ -38,26 +50,17 @@ func authenticate(volume string, password string, dispose bool) (err error) {
 	err = luksMount()
 
 	if err != nil {
-		_ = luksClose()
 		return
 	}
 
 	err = os.MkdirAll(filepath.Join(conf.mountPoint, conf.KeyPath), 0700)
 
 	if err != nil {
-		_ = luksUnmount()
-		_ = luksClose()
 		return
 	}
 
 	if dispose {
 		err = luksKeyOp(volume, password, "", _remove)
-	}
-
-	if err != nil {
-		_ = luksUnmount()
-		_ = luksClose()
-		return
 	}
 
 	return
@@ -96,6 +99,8 @@ func login(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 	}
 
 	if err != nil {
+		_ = luksUnmount()
+		_ = luksClose()
 		return errorResponse(err, "INVALID_SESSION")
 	}
 

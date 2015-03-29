@@ -10,6 +10,7 @@ import (
 	"errors"
 	"log/syslog"
 	"net/http"
+	"syscall"
 )
 
 const mapping = "interlockfs"
@@ -58,18 +59,6 @@ func passwordRequest(w http.ResponseWriter, r *http.Request, mode int) (res json
 }
 
 func luksOpen(volume string, password string) (err error) {
-	if volume == "" {
-		err = errors.New("empty volume name")
-	}
-
-	if password == "" {
-		err = errors.New("empty password")
-	}
-
-	if err != nil {
-		return
-	}
-
 	args := []string{"luksOpen", "/dev/lvmvolume/" + volume, mapping}
 	cmd := "/sbin/cryptsetup"
 
@@ -97,6 +86,7 @@ func luksUnmount() (err error) {
 
 	status.Log(syslog.LOG_NOTICE, "unmounting encrypted volume on %s", conf.mountPoint)
 
+	syscall.Sync()
 	_, err = execCommand(cmd, args, true, "")
 
 	return

@@ -437,7 +437,6 @@ func zipDir(w http.ResponseWriter, dirPath string) (written int64, err error) {
 	walkFn := func(osPath string, info os.FileInfo, e error) (err error) {
 		var w int64
 		var f io.Writer
-		var input io.Reader
 
 		if info == nil {
 			return
@@ -462,7 +461,8 @@ func zipDir(w http.ResponseWriter, dirPath string) (written int64, err error) {
 			return
 		}
 
-		input, err = os.Open(osPath)
+		input, err := os.Open(osPath)
+		defer input.Close()
 
 		if err != nil {
 			return

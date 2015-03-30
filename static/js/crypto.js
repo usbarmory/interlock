@@ -177,6 +177,64 @@ Interlock.Crypto.keyList = function() {
  * @public
  *
  * @description
+ * Callback function, get key information
+ *
+ * @param {Object} backendData
+ * @returns {}
+ */
+Interlock.Crypto.keyInfoCallback = function(backendData) {
+  try {
+    if (backendData.status === 'OK') {
+      var elements = [];
+      var buttons = [];
+
+      $.each(backendData.response.split(/\n/), function(index, line) {
+        var pEl = $(document.createElement('p'));
+
+        if (line.match(/\s\s/)) {
+          pEl.addClass('indent');
+        }
+
+        elements.push(pEl.text(line));
+      });
+
+      Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons, title: 'Key Info' });
+      Interlock.UI.modalFormDialog('open');
+    } else {
+      Interlock.Session.createEvent({'kind': backendData.status,
+        'msg': '[Interlock.Crypto.keyInfoCallback] ' + backendData.response});
+    }
+  } catch (e) {
+    Interlock.Session.createEvent({'kind': 'critical',
+      'msg': '[Interlock.Crypto.keyInfoCallback] ' + e});
+  }
+};
+
+/**
+ * @function
+ * @public
+ *
+ * @description
+ * Retrieve key information
+ *
+ * @param {String} path, key path
+ * @returns {}
+ */
+Interlock.Crypto.keyInfo = function(path) {
+  try {
+    Interlock.Backend.APIRequest(Interlock.Backend.API.crypto.keyInfo, 'POST',
+      JSON.stringify({path: path}), 'Crypto.keyInfoCallback', null);
+  } catch (e) {
+    Interlock.Session.createEvent({'kind': 'critical',
+      'msg': '[Interlock.Crypto.keyInfo] ' + e});
+  }
+};
+
+/**
+ * @function
+ * @public
+ *
+ * @description
  * basic key format validation
  *
  * @returns {}

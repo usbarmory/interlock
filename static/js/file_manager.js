@@ -135,14 +135,14 @@ Interlock.FileManager = new function() {
 
       /* open the context menu on right click on the inode (mainView only) */
       if (view === 'mainView') {
-        $inode.on('contextmenu', function(e) { Interlock.FileManager.contextMenu(e, inode.dir, path) });
+        $inode.on('contextmenu', function(e) { Interlock.FileManager.contextMenu(e, inode.dir, inode.key, path) });
       }
     });
   };
 
   /* dinamically creates the context menu for every inode entry in the
      File Manager mainView */
-  this.contextMenu = function(e, isDirectory, path) {
+  this.contextMenu = function(e, isDirectory, key, path) {
     e.preventDefault();
     $('ul.inode_menu').remove();
 
@@ -381,6 +381,13 @@ Interlock.FileManager = new function() {
                                                       .click(function() {
                                                         Interlock.FileManager.fileDownload(path);
                                                       }));
+
+      if (key && key.key_format === 'armor') {
+       menuEntries.push($(document.createElement('li')).text('Key Info')
+                                                      .click(function() {
+                                                        Interlock.Crypto.keyInfo(key.path);
+                                                      }));
+      }
     }
 
     contextMenu.append(menuEntries);

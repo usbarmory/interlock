@@ -438,6 +438,10 @@ h1 {
  cursor: default; 
 }
 
+.indent {
+  text-indent: 15px;
+}
+
 /* jQuery style override */
 .ui-widget-overlay {
   opacity: 0.65;

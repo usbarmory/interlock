@@ -97,6 +97,21 @@ func relativePath(path string) (subPath string, err error) {
 	return
 }
 
+func detectKeyPath(path string) (inKeyPath bool, private bool) {
+	inKeyPath = false
+	absoluteKeyPath := filepath.Join(conf.mountPoint, conf.KeyPath)
+
+	if strings.HasPrefix(path, absoluteKeyPath) {
+		inKeyPath = true
+	}
+
+	if inKeyPath && strings.HasSuffix(filepath.Dir(path), "private") {
+		private = true
+	}
+
+	return
+}
+
 func fileMove(w http.ResponseWriter, r *http.Request) jsonObject {
 	return fileOp(w, r, _move)
 }
@@ -237,12 +252,7 @@ func fileList(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 	totalSpace := stat.Blocks * uint64(stat.Bsize)
 	freeSpace := stat.Bavail * uint64(stat.Bsize)
 
-	inKeyPath := false
-	absoluteKeyPath := filepath.Join(conf.mountPoint, conf.KeyPath)
-
-	if strings.HasPrefix(path, absoluteKeyPath) {
-		inKeyPath = true
-	}
+	inKeyPath, _ := detectKeyPath(path)
 
 	inodes := []inode{}
 
@@ -352,6 +362,13 @@ func fileDownload(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 	osPath, err := absolutePath(req["path"].(string))
 
 	if err != nil {
+		return errorResponse(err, "")
+	}
+
+	inKeyPath, private := detectKeyPath(osPath)
+
+	if inKeyPath && private {
+		err = errors.New("cannot download private key material")
 		return errorResponse(err, "")
 	}
 

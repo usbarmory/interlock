@@ -7,6 +7,7 @@
 package main
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"io"
@@ -54,6 +55,54 @@ func (o *openPGP) GetInfo() cipherInfo {
 	return o.info
 }
 
+func (o *openPGP) GenKey(identifier string, email string) (pubKey string, secKey string, err error) {
+	buf := bytes.NewBuffer(nil)
+	header := map[string]string{
+		"Version": fmt.Sprintf("INTERLOCK %s OpenPGP generated key", InterlockVersion),
+	}
+
+	entity, err := openpgp.NewEntity(identifier, "", email, nil)
+
+	if err != nil {
+		return
+	}
+
+	encoder, err := armor.Encode(buf, openpgp.PublicKeyType, header)
+
+	if err != nil {
+		return
+	}
+
+	// we use our own function due to issues in openpgp.Serialize (see Serialize() comments)
+	err = serialize(entity, encoder, nil)
+
+	if err != nil {
+		return
+	}
+
+	encoder.Close()
+	pubKey = buf.String()
+
+	buf.Reset()
+	encoder, err = armor.Encode(buf, openpgp.PrivateKeyType, header)
+
+	if err != nil {
+		encoder.Close()
+		return
+	}
+
+	err = entity.SerializePrivate(encoder, nil)
+
+	if err != nil {
+		return
+	}
+
+	encoder.Close()
+	secKey = buf.String()
+
+	return
+}
+
 func (o *openPGP) GetKeyInfo(k key) (info string, err error) {
 	err = o.SetKey(k)
 
@@ -89,13 +138,12 @@ func (o *openPGP) SetPassword(password string) (err error) {
 
 func (o *openPGP) SetKey(k key) (err error) {
 	keyPath := filepath.Join(conf.mountPoint, k.Path)
-
 	keyFile, err := os.Open(keyPath)
-	defer keyFile.Close()
 
 	if err != nil {
 		return
 	}
+	defer keyFile.Close()
 
 	keyBlock, err := armor.Decode(keyFile)
 
@@ -119,10 +167,6 @@ func (o *openPGP) SetKey(k key) (err error) {
 		return fmt.Errorf("key type error: %s", keyBlock.Type)
 	}
 
-	if err != nil {
-		return
-	}
-
 	return
 }
 
@@ -137,6 +181,10 @@ func (o *openPGP) Encrypt(input *os.File, output *os.File, _ bool) (err error) {
 	// the *openPGP instance
 
 	pgpOut, err := openpgp.Encrypt(output, []*openpgp.Entity{o.pubKey}, o.secKey, hints, nil)
+
+	if err != nil {
+		return
+	}
 	defer pgpOut.Close()
 
 	_, err = io.Copy(pgpOut, input)
@@ -171,10 +219,8 @@ func (o *openPGP) Decrypt(input *os.File, output *os.File, verify bool) (err err
 	return
 }
 
-func (o *openPGP) Sign(input *os.File, output *os.File) (err error) {
-	err = openpgp.ArmoredDetachSign(output, o.secKey, input, nil)
-
-	return
+func (o *openPGP) Sign(input *os.File, output *os.File) error {
+	return openpgp.ArmoredDetachSign(output, o.secKey, input, nil)
 }
 
 func (o *openPGP) Verify(input *os.File, signature *os.File) (err error) {
@@ -245,4 +291,47 @@ func getKeyInfo(entity *openpgp.Entity) (info string) {
 	}
 
 	return
+}
+
+// entity.Serialize() does not generate valid encryption keys because of lack
+// of self signatures, we adapt SerializePrivate() for public key material.
+//
+// Additionally we address the fact that NewEntity returns key material not
+// compatible with its own package Encrypt function due to lack of the optional
+// PreferredHash Signature attribute.
+func serialize(e *openpgp.Entity, w io.Writer, config *packet.Config) (err error) {
+	err = e.PrimaryKey.Serialize(w)
+	if err != nil {
+		return
+	}
+	for _, ident := range e.Identities {
+		ident.SelfSignature.PreferredHash = []uint8{8}
+		err = ident.UserId.Serialize(w)
+		if err != nil {
+			return
+		}
+		err = ident.SelfSignature.SignUserId(ident.UserId.Id, e.PrimaryKey, e.PrivateKey, config)
+		if err != nil {
+			return
+		}
+		err = ident.SelfSignature.Serialize(w)
+		if err != nil {
+			return
+		}
+	}
+	for _, subkey := range e.Subkeys {
+		err = subkey.PublicKey.Serialize(w)
+		if err != nil {
+			return
+		}
+		err = subkey.Sig.SignKey(subkey.PublicKey, e.PrivateKey, config)
+		if err != nil {
+			return
+		}
+		err = subkey.Sig.Serialize(w)
+		if err != nil {
+			return
+		}
+	}
+	return nil
 }

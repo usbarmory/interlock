@@ -36,7 +36,7 @@ cipher:
 key:
   {
     "identifier":  string,   # key identifier
-    "key_format":  string,   # key format ("password", "armor")
+    "key_format":  string,   # key format ("armor")
     "cipher":      string,   # name for cipher object
     "private":     boolean,  # identifies private, public keys
     "path":        string    # key path
@@ -62,7 +62,7 @@ error response:
     luks/           change, add, remove
     file/           list, upload, delete, move, copy, mkdir
     file/           encrypt, decrypt, verify
-    crypto/         ciphers, keys, gen_key*, upload_key, key_info
+    crypto/         ciphers, keys, gen_key, upload_key, key_info
     config/         time
     status/         version, running
   static/           static HTML/JavaScript content
@@ -343,7 +343,10 @@ Generate a key and/or keypair.
 
 request:
   {
+    "identifier":  string,   # key identifier
+    "key_format":  string,   # key format ("armor")
     "cipher":      string    # name for cipher object
+    "email":       string    # email
   }
 
 response:

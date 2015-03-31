@@ -59,6 +59,11 @@ func (a *aes256OFB) GetInfo() cipherInfo {
 	return a.info
 }
 
+func (a *aes256OFB) GenKey(i string, e string) (p string, s string, err error) {
+	err = errors.New("symmetric cipher does not support key generation")
+	return
+}
+
 func (a *aes256OFB) GetKeyInfo(k key) (i string, err error) {
 	err = errors.New("symmetric cipher does not support key")
 	return
@@ -235,12 +240,10 @@ func (a *aes256OFB) Decrypt(input *os.File, output *os.File, verify bool) (err e
 	return
 }
 
-func (a *aes256OFB) Sign(i *os.File, o *os.File) (err error) {
-	err = errors.New("symmetric cipher does not support signing")
-	return
+func (a *aes256OFB) Sign(i *os.File, o *os.File) error {
+	return errors.New("symmetric cipher does not support signing")
 }
 
-func (a *aes256OFB) Verify(i *os.File, s *os.File) (err error) {
-	err = errors.New("symmetric cipher does not support signature verification")
-	return
+func (a *aes256OFB) Verify(i *os.File, s *os.File) error {
+	return errors.New("symmetric cipher does not support signature verification")
 }

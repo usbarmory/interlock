@@ -118,6 +118,8 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 		res = ciphers(w)
 	case "/api/crypto/keys":
 		res = keys(w, r)
+	case "/api/crypto/gen_key":
+		res = genKey(w, r)
 	case "/api/crypto/upload_key":
 		res = uploadKey(w, r)
 	case "/api/crypto/key_info":

@@ -47,6 +47,16 @@ func (c *config) FindCipherByExt(ext string) (cipher cipherInterface) {
 	return
 }
 
+func (c *config) FindCipherByName(name string) (cipher cipherInterface) {
+	for _, value := range c.enabledCiphers {
+		if value.GetInfo().Name == name {
+			return value
+		}
+	}
+
+	return
+}
+
 func (c *config) SetAvailableCipher(cipher cipherInterface) {
 	if c.availableCiphers == nil {
 		c.availableCiphers = make(map[string]cipherInterface)

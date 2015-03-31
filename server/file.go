@@ -328,11 +328,11 @@ func fileUpload(w http.ResponseWriter, r *http.Request) {
 	}
 
 	osFile, err := os.Create(osPath)
-	defer osFile.Close()
 
 	if err != nil {
 		return
 	}
+	defer osFile.Close()
 
 	n := status.Notify(syslog.LOG_NOTICE, "uploading to %s", path.Base(osPath))
 	defer status.Remove(n)
@@ -435,6 +435,10 @@ func fileDownloadByID(w http.ResponseWriter, id string) {
 		var input *os.File
 
 		input, err = os.Open(osPath)
+
+		if err != nil {
+			return
+		}
 		defer input.Close()
 
 		written, err = io.Copy(w, input)
@@ -479,11 +483,11 @@ func zipDir(w http.ResponseWriter, dirPath string) (written int64, err error) {
 		}
 
 		input, err := os.Open(osPath)
-		defer input.Close()
 
 		if err != nil {
 			return
 		}
+		defer input.Close()
 
 		w, err = io.Copy(f, input)
 		written += w
@@ -921,12 +925,11 @@ func fileVerify(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 	}
 
 	input, err := os.Open(src)
-	defer input.Close()
 
 	if err != nil {
 		return errorResponse(err, "")
 	}
-
+	defer input.Close()
 	defer cipher.Reset()
 
 	if cipher.GetInfo().Sig {
@@ -975,11 +978,11 @@ func fileVerify(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 	}
 
 	sig, err := os.Open(sigPath)
-	defer sig.Close()
 
 	if err != nil {
 		return errorResponse(err, "")
 	}
+	defer sig.Close()
 
 	err = cipher.Verify(input, sig)
 

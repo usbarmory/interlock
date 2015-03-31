@@ -39,6 +39,8 @@ type cipherInfo struct {
 type cipherInterface interface {
 	// provides cipher information
 	GetInfo() cipherInfo
+	// generate key
+	GenKey(identifier string, email string) (pub string, sec string, err error)
 	// provides key information
 	GetKeyInfo(key) (string, error)
 	// sets symmetric or asymmetric key password
@@ -72,7 +74,7 @@ func ciphers(w http.ResponseWriter) (res jsonObject) {
 	return
 }
 
-func (k *key) BuildPath(cipher cipherInterface) (path string) {
+func (k *key) Store(cipher cipherInterface, data string) (err error) {
 	var subdir string
 
 	fileName := fmt.Sprintf("%s.%s", k.Identifier, k.KeyFormat)
@@ -83,7 +85,21 @@ func (k *key) BuildPath(cipher cipherInterface) (path string) {
 		subdir = "public"
 	}
 
-	path = filepath.Join(conf.KeyPath, cipher.GetInfo().Extension, subdir, fileName)
+	path := filepath.Join(conf.mountPoint, conf.KeyPath, cipher.GetInfo().Extension, subdir, fileName)
+	output, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_EXCL|os.O_TRUNC, 0600)
+
+	if err != nil {
+		return
+	}
+	defer output.Close()
+
+	written, err := io.Copy(output, strings.NewReader(data))
+
+	if err != nil {
+		return
+	}
+
+	status.Log(syslog.LOG_INFO, "stored %s key %s (%v bytes)", cipher.GetInfo().Name, k.Identifier, written)
 
 	return
 }
@@ -288,9 +304,80 @@ func keys(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 	return
 }
 
-func uploadKey(w http.ResponseWriter, r *http.Request) (res jsonObject) {
-	var cipher cipherInterface
+func genKey(w http.ResponseWriter, r *http.Request) (res jsonObject) {
+	req, err := parseRequest(r)
 
+	if err != nil {
+		return errorResponse(err, "")
+	}
+
+	err = validateRequest(req, []string{"identifier", "key_format", "cipher", "email"})
+
+	if err != nil {
+		return errorResponse(err, "")
+	}
+
+	identifier := req["identifier"].(string)
+	email := req["email"].(string)
+
+	cipher := conf.FindCipherByName(req["cipher_name"].(string))
+
+	if cipher == nil || cipher.GetInfo().KeyFormat == "password" {
+		err = errors.New("could not identify compatible key cipher")
+		return errorResponse(err, "")
+	}
+
+	go func() {
+		n := status.Notify(syslog.LOG_INFO, "generating %s keypair %s", cipher.GetInfo().Name, identifier)
+		defer status.Remove(n)
+
+		pub, sec, err := cipher.GenKey(identifier, email)
+
+		if err != nil {
+			status.Error(err)
+			return
+		}
+
+		pubKey := key{
+			Identifier: identifier,
+			KeyFormat:  cipher.GetInfo().KeyFormat,
+			Cipher:     cipher.GetInfo().Name,
+			Private:    false,
+		}
+
+		err = pubKey.Store(cipher, pub)
+
+		if err != nil {
+			status.Error(err)
+			return
+		}
+
+		secKey := key{
+			Identifier: identifier,
+			KeyFormat:  cipher.GetInfo().KeyFormat,
+			Cipher:     cipher.GetInfo().Name,
+			Private:    true,
+		}
+
+		err = secKey.Store(cipher, sec)
+
+		if err != nil {
+			status.Error(err)
+			return
+		}
+
+		status.Log(syslog.LOG_NOTICE, "generated %s keypair %s", cipher.GetInfo().Name, identifier)
+	}()
+
+	res = jsonObject{
+		"status":   "OK",
+		"response": nil,
+	}
+
+	return
+}
+
+func uploadKey(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 	req, err := parseRequest(r)
 
 	if err != nil {
@@ -314,41 +401,18 @@ func uploadKey(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		return errorResponse(err, "")
 	}
 
-	for _, c := range conf.enabledCiphers {
-		if c.GetInfo().Name == k.Cipher {
-			cipher = c
-			break
-		}
+	cipher := conf.FindCipherByName(k.Cipher)
 
-		if cipher.GetInfo().KeyFormat == "password" {
-			err = errors.New("specified cipher does not support key format")
-			break
-		}
-	}
-
-	if cipher == nil {
+	if cipher == nil || cipher.GetInfo().KeyFormat == "password" {
 		err = errors.New("could not identify compatible key cipher")
+		return errorResponse(err, "")
 	}
+
+	err = k.Store(cipher, req["data"].(string))
 
 	if err != nil {
 		return errorResponse(err, "")
 	}
-
-	keyPath := filepath.Join(conf.mountPoint, k.BuildPath(cipher))
-	output, err := os.OpenFile(keyPath, os.O_WRONLY|os.O_CREATE|os.O_EXCL|os.O_TRUNC, 0600)
-	defer output.Close()
-
-	if err != nil {
-		return errorResponse(err, "")
-	}
-
-	written, err := io.Copy(output, strings.NewReader(req["data"].(string)))
-
-	if err != nil {
-		return errorResponse(err, "")
-	}
-
-	status.Log(syslog.LOG_INFO, "uploaded %s key %s (%v bytes)", cipher.GetInfo().Name, k.Identifier, written)
 
 	res = jsonObject{
 		"status":   "OK",

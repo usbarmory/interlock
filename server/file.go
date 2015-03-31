@@ -149,6 +149,13 @@ func fileOp(w http.ResponseWriter, r *http.Request, mode int) (res jsonObject) {
 			return errorResponse(err, "")
 		}
 
+		inKeyPath, _ := detectKeyPath(src)
+
+		if inKeyPath {
+			err = errors.New("cannot move or copy key(s)")
+			return errorResponse(err, "")
+		}
+
 		dst, err := absolutePath(req["dst"].(string))
 
 		if err != nil {
@@ -365,10 +372,10 @@ func fileDownload(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		return errorResponse(err, "")
 	}
 
-	inKeyPath, private := detectKeyPath(osPath)
+	inKeyPath, _ := detectKeyPath(osPath)
 
-	if inKeyPath && private {
-		err = errors.New("cannot download private key material")
+	if inKeyPath {
+		err = errors.New("cannot download key(s)")
 		return errorResponse(err, "")
 	}
 

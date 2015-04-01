@@ -186,7 +186,7 @@ Interlock.Crypto.keyInfoCallback = function(backendData) {
   try {
     if (backendData.status === 'OK') {
       var elements = [];
-      var buttons = [];
+      var buttons = {'OK': function() { Interlock.UI.modalFormDialog('close'); } };
 
       $.each(backendData.response.split(/\n/), function(index, line) {
         var pEl = $(document.createElement('p'));
@@ -198,7 +198,7 @@ Interlock.Crypto.keyInfoCallback = function(backendData) {
         elements.push(pEl.text(line));
       });
 
-      Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons, title: 'Key Info' });
+      Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons, title: 'Key Info', noCancelButton: true });
       Interlock.UI.modalFormDialog('open');
     } else {
       Interlock.Session.createEvent({'kind': backendData.status,

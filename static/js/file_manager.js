@@ -61,6 +61,66 @@ Interlock.FileManager = new function() {
         submitButton: 'Add directory', title: 'Create new directory' });
       Interlock.UI.modalFormDialog('open');
     });
+
+    /* register the on 'click' event to the new key button */
+    $('#add_new_key').on('click', function() {
+      var $selectCiphers = $(document.createElement('select')).attr('id', 'cipher')
+                                                              .attr('name', 'cipher');
+
+      var $availableCiphers = [$(document.createElement('option')).attr('value', '')
+                                                                  .text('choose encryption cipher')];
+
+      var buttons = { 'Add key': function() { Interlock.Crypto.uploadKey(
+        {identifier: $('#identifier').val(), key_format: $('#key_format').val(), cipher: $('#cipher').val(), private: $('#private').is(':checked')}, $('#data').val())}};
+
+      Interlock.cipherList = new $.Deferred();
+
+      Interlock.Crypto.cipherList();
+
+      /* waits until cipher list have been filled with the backend data */
+      $.when(Interlock.cipherList).done(function () {
+        $.each(Interlock.Crypto.getCiphers(), function(index, cipher) {
+          /* adds only ciphers that support armor as key format */
+          if (cipher.key_format === 'armor') {
+            $availableCiphers.push($(document.createElement('option')).attr('value', cipher.name)
+                                                                      .text(cipher.name));
+          }
+        });
+
+        $selectCiphers.append($availableCiphers);
+      });
+
+      var elements = [$selectCiphers,
+                      $(document.createElement('input')).attr('id', 'identifier')
+                                                        .attr('name', 'identifier')
+                                                        .attr('placeholder', 'key identifier')
+                                                        .attr('type', 'text')
+                                                        .addClass('text ui-widget-content ui-corner-all'),
+                      $(document.createElement('input')).attr('id', 'private')
+                                                        .attr('name', 'private')
+                                                        .attr('placeholder', 'private')
+                                                        .attr('type', 'checkbox')
+                                                        .addClass('text ui-widget-content ui-corner-all'),
+                      $(document.createElement('label')).text('private (leave it blank for public key)')
+                                                        .attr('for', 'private'),
+                      $(document.createElement('input')).attr('id', 'key_format')
+                                                        .attr('name', 'key_format')
+                                                        .attr('placeholder', 'key format')
+                                                        .attr('type', 'text')
+                                                        .attr('value', 'armor')
+                                                        .addClass('text ui-widget-content ui-corner-all')
+                                                        .hide(),
+                      $(document.createElement('textarea')).attr('id', 'data')
+                                                           .attr('name', 'data')
+                                                           .attr('cols', 45)
+                                                           .attr('rows', 10)
+                                                           .attr('placeholder', 'PGP key - armor format')
+                                                           .addClass('text ui-widget-content ui-corner-all')];
+
+      Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
+        submitButton: 'Add key', title: 'Add a new encryption key' });
+      Interlock.UI.modalFormDialog('open');
+    });
   };
 
   /* updates the disk usage info */

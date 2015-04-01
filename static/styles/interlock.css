@@ -137,11 +137,11 @@ input[type="checkbox"] {
   position: relative
 }
 
-input[type="text"], input[type="password"] {
+input[type="text"], input[type="password"], textarea {
   display: inline-block;
   width: 100%;
-  font-family: sans-serif;
   font-size: 12px;
+  font-family: sans-serif;
   appearance: none;
   box-shadow: none;
   border-radius: none;
@@ -151,7 +151,7 @@ input[type="text"], input[type="password"] {
   transition: border 0.3s
 }
 
-input[type="text"]:focus { border: 1px dotted black }
+input[type="text"]:focus, textarea:focus { border: 1px dotted black }
 
 ::-webkit-input-placeholder { color: gray }
 :-moz-placeholder { color: gray }
@@ -167,7 +167,7 @@ label.uploadLabel input[type="file"] {
 
 .uploadLabel:hover { cursor: pointer }
 
-input {
+input, textarea {
   margin-top: 10px;
   margin-bottom: 10px
 }
@@ -465,7 +465,8 @@ h1 {
 }
 
 .ui-widget-content input[type="text"],
-.ui-widget-content input[type="password"] {
+.ui-widget-content input[type="password"],
+.ui-widget-content textarea {
   display: inline-block;
   width: 100%;
   font-family: sans-serif;

@@ -235,6 +235,56 @@ Interlock.Crypto.keyInfo = function(path) {
  * @public
  *
  * @description
+ * Callback function, upload a new key
+ *
+ * @param {Object} backendData
+ * @returns {}
+ */
+Interlock.Crypto.uploadKeyCallback = function(backendData) {
+  try {
+    if (backendData.status === 'OK') {
+      Interlock.UI.modalFormDialog('close');
+
+      /* reload of the file list should be conditional: only if the
+         current pwd is a key path */
+      Interlock.FileManager.fileList('mainView');
+    } else {
+      Interlock.Session.createEvent({'kind': backendData.status,
+        'msg': '[Interlock.Crypto.uploadKeyCallback] ' + backendData.response});
+    }
+  } catch (e) {
+    Interlock.Session.createEvent({'kind': 'critical',
+      'msg': '[Interlock.Crypto.uploadKeyInfoCallback] ' + e});
+  }
+};
+
+/**
+ * @function
+ * @public
+ *
+ * @description
+ * Upload a new key
+ *
+ * @param {String} key, data
+ * @returns {}
+ */
+Interlock.Crypto.uploadKey = function(key, data) {
+  try {
+    Interlock.Backend.APIRequest(Interlock.Backend.API.crypto.uploadKey, 'POST',
+      JSON.stringify({key: key, data: data}), 'Crypto.uploadKeyCallback', null);
+  } catch (e) {
+    Interlock.Session.createEvent({'kind': 'critical',
+      'msg': '[Interlock.Crypto.uploadKey] ' + e});
+  }
+};
+
+
+
+/**
+ * @function
+ * @public
+ *
+ * @description
  * basic key format validation
  *
  * @returns {}

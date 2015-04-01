@@ -76,8 +76,10 @@ Requirements & Operation
 The use of INTERLOCK is coupled with the presence of at least one LUKS
 encrypted partition, its initial creation is pre-requisite left to the user.
 
-An example setup using cryptsetup and lvm2 follows (microSD partition is shown
-to illustrate typical USB armory setup):
+An example setup using cryptsetup and LVM2 follows. The example uses a microSD
+partition to illustrate typical USB armory setup, the partition (mmcblk0p2) is
+assumed to have been previously created with fdisk using the desired size and
+the Linux LVM type (8e).
 
 ```
 pvcreate /dev/mmcblk0p2
@@ -111,6 +113,8 @@ The INTERLOCK app requires a working Go (>= 1.4) environment to be compiled.
 ```
 go get -u golang.org/x/crypto/pbkdf2
 go get -u golang.org/x/crypto/openpgp
+git clone https://github.com/inversepath/interlock
+cd interlock
 make
 ```
 

@@ -10,6 +10,7 @@ import (
 	"errors"
 	"log/syslog"
 	"net/http"
+	"os/user"
 	"syscall"
 )
 
@@ -74,6 +75,21 @@ func luksMount() (err error) {
 	cmd := "/bin/mount"
 
 	status.Log(syslog.LOG_NOTICE, "mounting encrypted volume to %s", conf.mountPoint)
+
+	_, err = execCommand(cmd, args, true, "")
+
+	if err != nil {
+		return
+	}
+
+	u, _ := user.Current()
+	uid := u.Uid
+	gid := u.Gid
+
+	args = []string{uid + ":" + gid, conf.mountPoint}
+	cmd = "/bin/chown"
+
+	status.Log(syslog.LOG_NOTICE, "setting mount point permissions to %s:%s", uid, gid)
 
 	_, err = execCommand(cmd, args, true, "")
 

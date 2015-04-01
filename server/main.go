@@ -63,6 +63,12 @@ func main() {
 		log.Printf("configuration file %s successfully parsed", *configPath)
 	}
 
+	err = conf.SetMountPoint()
+
+	if err != nil {
+		log.Fatalf("%s", err)
+	}
+
 	conf.EnableCiphers()
 	conf.Print()
 

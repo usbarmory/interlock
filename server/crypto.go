@@ -185,6 +185,7 @@ func getKey(path string) (k key, cipher cipherInterface, err error) {
 
 	if cipher == nil {
 		err = errors.New("could not identify compatible key cipher")
+		return
 	}
 
 	k = key{

@@ -14,6 +14,7 @@ import (
 	"log/syslog"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strconv"
 	"time"
 )
@@ -100,8 +101,13 @@ func (c *config) SetDefaults() {
 	c.TLSKey = "certs/key.pem"
 	c.KeyPath = "keys"
 	c.Ciphers = []string{"OpenPGP", "AES-256-OFB"}
-	c.mountPoint = "/mnt/interlock"
 	c.testMode = false
+}
+
+func (c *config) SetMountPoint() (error) {
+	c.mountPoint = filepath.Join(os.Getenv("HOME"), ".interlock-mnt")
+
+	return  os.MkdirAll(c.mountPoint, 0700)
 }
 
 func (c *config) Set(configPath string) (err error) {

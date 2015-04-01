@@ -327,13 +327,13 @@ h1 {
   width: 90%;
 }
 
-#status ul#uploads li.progress {
+#status ul#uploads li.progress,
+#status ul#notifications li {
   color: black;
   background: url(/images/progress_bar.png) no-repeat top left
 }
 
-#uploads li.success,
-#status ul#notifications li { background: rgba(0,0,0,0.3) none 0 0 no-repeat }
+#uploads li.success { background: rgba(0,0,0,0.3) none 0 0 no-repeat }
 
 #uploads li.failure { background: rgb(0,0,0) none 0 0 no-repeat }
 

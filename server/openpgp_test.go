@@ -16,9 +16,9 @@ import (
 )
 
 func TestOpenPGP(t *testing.T) {
+	conf.mountPoint = "/tmp"
 	password := "interlocktest"
 	cleartext := "01234567890ABCDEFGHILMNOPQRSTUVZ!@#"
-
 	o := &openPGP{}
 
 	fmt.Println("openpgp_test is generating keypair, this might take a while")

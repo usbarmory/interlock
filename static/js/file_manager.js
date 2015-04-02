@@ -116,6 +116,7 @@ Interlock.FileManager = new function() {
                                                         .addClass('text ui-widget-content ui-corner-all'),
                       $(document.createElement('label')).text('private (leave it blank for public key)')
                                                         .attr('for', 'private'),
+                      /* FIXME: armor hardcoded in key_format */
                       $(document.createElement('input')).attr('id', 'key_format')
                                                         .attr('name', 'key_format')
                                                         .attr('placeholder', 'key format')
@@ -173,6 +174,7 @@ Interlock.FileManager = new function() {
                                                         .attr('placeholder', 'email')
                                                         .attr('type', 'text')
                                                         .addClass('text ui-widget-content ui-corner-all'),
+                      /* FIXME: armor hardcoded in key_format */
                       $(document.createElement('input')).attr('id', 'key_format')
                                                         .attr('name', 'key_format')
                                                         .attr('placeholder', 'key format')
@@ -197,6 +199,7 @@ Interlock.FileManager = new function() {
   }
 
   this.refreshView = function(view, inodes) {
+    var inodes = Interlock.FileManager.sortInodes(inodes);
     var traversingPath = '/';
     var $inodesTable = $('#file_manager_' + view + ' > div.inodes_table_container > table > tbody.inodes_container');
     var $pwd = $('#file_manager_' + view + ' > span.pwd');
@@ -1091,6 +1094,27 @@ Interlock.FileManager.fileDecrypt = function(path, args) {
   } catch (e) {
     Interlock.Session.createEvent({'kind': 'critical',
       'msg': '[Interlock.FileManager.fileDencrypt] ' + e});
+  }
+};
+
+/**
+ * @function
+ * @public
+ *
+ * @description
+ * Sort inodes following the current sorting method configured by the user
+ * for the current tab
+ *
+ * @param {array} unordered inodes array
+ * @returns {array} ordered inodes array
+ */
+Interlock.FileManager.sortInodes = function(inodes) {
+  try {
+    /* FIXME: implement sorting */
+    return inodes;
+  } catch (e) {
+    Interlock.Session.createEvent({'kind': 'critical',
+      'msg': '[Interlock.FileManager.sortInodes] unable to sort file list' + e});
   }
 };
 

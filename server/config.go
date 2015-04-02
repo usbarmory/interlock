@@ -169,7 +169,7 @@ func setTime(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 
 		hour, min, sec := time.Now().Clock()
 
-		status.Log(syslog.LOG_NOTICE, "adjusted device time to %d:%d:%d", hour, min, sec)
+		status.Log(syslog.LOG_NOTICE, "adjusted device time to %02d:%02d:%02d", hour, min, sec)
 	}
 
 	res = jsonObject{

@@ -57,7 +57,7 @@ Interlock.Crypto = new function() {
       if (key.private) {
         privateKeys.push(key);
       }
-    })
+    });
 
     return privateKeys;
   };
@@ -69,9 +69,24 @@ Interlock.Crypto = new function() {
       if (!key.private) {
         publicKeys.push(key);
       }
-    })
+    });
 
     return publicKeys;
+  };
+
+  this.getSignKeys = function() {
+    var signKeys = [];
+    var privateKeys = this.getPrivateKeys();
+
+    $.each(privateKeys, function(indexKey, key) {
+      $.each(ciphers, function(indexCipher, cipher) {
+        if (key.cipher === cipher.name && cipher.sig === true) {
+          signKeys.push(key);
+        }
+      });
+    });
+
+    return signKeys;
   };
 };
 

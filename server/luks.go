@@ -60,6 +60,10 @@ func passwordRequest(w http.ResponseWriter, r *http.Request, mode int) (res json
 }
 
 func luksOpen(volume string, password string) (err error) {
+	if traversalPattern.MatchString(volume) {
+		return errors.New("path traversal detected")
+	}
+
 	args := []string{"luksOpen", "/dev/lvmvolume/" + volume, mapping}
 	cmd := "/sbin/cryptsetup"
 
@@ -120,6 +124,10 @@ func luksClose() (err error) {
 func luksKeyOp(volume string, password string, newpassword string, mode int) (err error) {
 	var action string
 	var input string
+
+	if traversalPattern.MatchString(volume) {
+		return errors.New("path traversal detected")
+	}
 
 	switch mode {
 	case _change:

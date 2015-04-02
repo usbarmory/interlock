@@ -8,6 +8,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -58,14 +59,40 @@ func (j jsonObject) String() (s string) {
 	return
 }
 
-// FIXME: very basic validation function that needs much improvement
-func validateRequest(req jsonObject, reqAttrs []string) (err error) {
+func validateRequest(req jsonObject, reqAttrs []string) error {
 	for i := 0; i < len(reqAttrs); i++ {
-		if _, ok := req[reqAttrs[i]]; !ok {
-			err = fmt.Errorf("missing attribute %s", reqAttrs[i])
-			return
+		ok := false
+
+		args := strings.Split(reqAttrs[i], ":")
+
+		if len(args) != 2 {
+			return errors.New("unknown validation argument")
+		}
+
+		key := args[0]
+		kind := args[1]
+
+		if _, ok = req[key]; !ok {
+			return fmt.Errorf("missing attribute %s", key)
+		}
+
+		switch kind {
+		case "s":
+			_, ok = req[key].(string)
+		case "b":
+			_, ok = req[key].(bool)
+		case "n":
+			_, ok = req[key].(json.Number)
+		case "a":
+			_, ok = req[key].([]interface{})
+		default:
+			return errors.New("unknown validation kind")
+		}
+
+		if !ok {
+			return fmt.Errorf("attribute %s is not a %s", key, kind)
 		}
 	}
 
-	return
+	return nil
 }

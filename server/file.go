@@ -137,7 +137,7 @@ func fileOp(w http.ResponseWriter, r *http.Request, mode int) (res jsonObject) {
 
 	switch mode {
 	case _move, _copy:
-		err = validateRequest(req, []string{"src", "dst"})
+		err = validateRequest(req, []string{"src:s", "dst:s"})
 
 		if err != nil {
 			return errorResponse(err, "")
@@ -175,13 +175,13 @@ func fileOp(w http.ResponseWriter, r *http.Request, mode int) (res jsonObject) {
 			}
 		}
 	case _mkdir, _delete:
-		err = validateRequest(req, []string{"path"})
-
-		if err != nil {
-			return errorResponse(err, "")
-		}
-
 		if mode == _mkdir {
+			err = validateRequest(req, []string{"path:s"})
+
+			if err != nil {
+				return errorResponse(err, "")
+			}
+
 			path, err := absolutePath(req["path"].(string))
 
 			if err != nil {
@@ -190,6 +190,12 @@ func fileOp(w http.ResponseWriter, r *http.Request, mode int) (res jsonObject) {
 
 			err = os.MkdirAll(path, 0700)
 		} else { // _delete
+			err = validateRequest(req, []string{"path:a"})
+
+			if err != nil {
+				return errorResponse(err, "")
+			}
+
 			path := req["path"].([]interface{})
 
 			for _, file := range path {
@@ -231,7 +237,7 @@ func fileList(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		return errorResponse(err, "")
 	}
 
-	err = validateRequest(req, []string{"path"})
+	err = validateRequest(req, []string{"path:s"})
 
 	if err != nil {
 		return errorResponse(err, "")
@@ -361,7 +367,7 @@ func fileDownload(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		return errorResponse(err, "")
 	}
 
-	err = validateRequest(req, []string{"path"})
+	err = validateRequest(req, []string{"path:s"})
 
 	if err != nil {
 		return errorResponse(err, "")
@@ -522,7 +528,7 @@ func fileEncrypt(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		return errorResponse(err, "")
 	}
 
-	err = validateRequest(req, []string{"src", "cipher", "wipe_src", "sign", "password", "key", "sig_key"})
+	err = validateRequest(req, []string{"src:s", "cipher:s", "wipe_src:b", "sign:b", "password:s", "key:s", "sig_key:s"})
 
 	if err != nil {
 		return errorResponse(err, "")
@@ -545,6 +551,9 @@ func fileEncrypt(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 	if !ok {
 		return errorResponse(errors.New("invalid cipher"), "")
 	}
+
+	// get a fresh instance
+	cipher = cipher.New()
 
 	input, err := os.Open(src)
 
@@ -588,14 +597,11 @@ func fileEncrypt(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 			return errorResponse(err, "")
 		}
 	} else if sign && !cipher.GetInfo().Sig {
-		cipher.Reset()
 		err = errors.New("signing requested but not supported by cipher")
-
 		return errorResponse(err, "")
 	}
 
 	if password != "" {
-		cipher.Reset()
 		err = cipher.SetPassword(password)
 
 		if err != nil {
@@ -608,14 +614,12 @@ func fileEncrypt(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 
 	if err != nil {
 		output.Close()
-		cipher.Reset()
 		return errorResponse(err, "")
 	}
 
 	go func() {
 		defer input.Close()
 		defer output.Close()
-		defer cipher.Reset()
 
 		n := status.Notify(syslog.LOG_INFO, "encrypting %s", path.Base(src))
 		defer status.Remove(n)
@@ -657,7 +661,7 @@ func fileDecrypt(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		return errorResponse(err, "")
 	}
 
-	err = validateRequest(req, []string{"src", "password", "verify", "key", "sig_key"})
+	err = validateRequest(req, []string{"src:s", "password:s", "verify:b", "key:s", "sig_key:s"})
 
 	if err != nil {
 		return errorResponse(err, "")
@@ -698,6 +702,9 @@ func fileDecrypt(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		}
 	}
 
+	// get a fresh instance
+	cipher = cipher.New()
+
 	input, err := os.Open(src)
 
 	if err != nil {
@@ -717,7 +724,6 @@ func fileDecrypt(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 			err = cipher.SetKey(key)
 
 			if err != nil {
-				cipher.Reset()
 				return errorResponse(err, "")
 			}
 		}
@@ -725,7 +731,6 @@ func fileDecrypt(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		err = cipher.SetPassword(password)
 
 		if err != nil {
-			cipher.Reset()
 			return errorResponse(err, "")
 		}
 	} else {
@@ -748,7 +753,6 @@ func fileDecrypt(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 			return errorResponse(err, "")
 		}
 	} else if verify && !cipher.GetInfo().Sig {
-		cipher.Reset()
 		err = errors.New("signature verification requested but not supported by cipher")
 
 		return errorResponse(err, "")
@@ -758,14 +762,12 @@ func fileDecrypt(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 
 	if err != nil {
 		output.Close()
-		cipher.Reset()
 		return errorResponse(err, "")
 	}
 
 	go func() {
 		defer input.Close()
 		defer output.Close()
-		defer cipher.Reset()
 
 		n := status.Notify(syslog.LOG_INFO, "decrypting %s", path.Base(src))
 		defer status.Remove(n)
@@ -795,7 +797,7 @@ func fileSign(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		return errorResponse(err, "")
 	}
 
-	err = validateRequest(req, []string{"src", "cipher", "password", "key"})
+	err = validateRequest(req, []string{"src:s", "cipher:s", "password:s", "key:s"})
 
 	if err != nil {
 		return errorResponse(err, "")
@@ -815,6 +817,9 @@ func fileSign(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 	if !ok {
 		return errorResponse(errors.New("invalid cipher"), "")
 	}
+
+	// get a fresh instance
+	cipher = cipher.New()
 
 	input, err := os.Open(src)
 
@@ -837,14 +842,12 @@ func fileSign(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 			return errorResponse(err, "")
 		}
 	} else {
-		cipher.Reset()
 		err = errors.New("signing requested but not supported by cipher")
 
 		return errorResponse(err, "")
 	}
 
 	if password != "" {
-		cipher.Reset()
 		err = cipher.SetPassword(password)
 
 		if err != nil {
@@ -857,14 +860,12 @@ func fileSign(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 
 	if err != nil {
 		output.Close()
-		cipher.Reset()
 		return errorResponse(err, "")
 	}
 
 	go func() {
 		defer input.Close()
 		defer output.Close()
-		defer cipher.Reset()
 
 		n := status.Notify(syslog.LOG_INFO, "signing %s", path.Base(src))
 		defer status.Remove(n)
@@ -896,7 +897,7 @@ func fileVerify(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		return errorResponse(err, "")
 	}
 
-	err = validateRequest(req, []string{"src", "sig", "key"})
+	err = validateRequest(req, []string{"src:s", "sig:s", "key:s"})
 
 	if err != nil {
 		return errorResponse(err, "")
@@ -932,13 +933,15 @@ func fileVerify(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		}
 	}
 
+	// get a fresh instance
+	cipher = cipher.New()
+
 	input, err := os.Open(src)
 
 	if err != nil {
 		return errorResponse(err, "")
 	}
 	defer input.Close()
-	defer cipher.Reset()
 
 	if cipher.GetInfo().Sig {
 		if cipher.GetInfo().KeyFormat != "password" {
@@ -952,7 +955,6 @@ func fileVerify(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 			err = cipher.SetKey(key)
 
 			if err != nil {
-				cipher.Reset()
 				return errorResponse(err, "")
 			}
 		}

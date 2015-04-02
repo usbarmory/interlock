@@ -10,7 +10,7 @@ import (
 	"errors"
 	"log/syslog"
 	"net/http"
-	"os/user"
+	"os"
 	"syscall"
 )
 
@@ -33,10 +33,10 @@ func passwordRequest(w http.ResponseWriter, r *http.Request, mode int) (res json
 
 	switch mode {
 	case _change, _add:
-		err = validateRequest(req, []string{"volume", "password", "newpassword"})
+		err = validateRequest(req, []string{"volume:s", "password:s", "newpassword:s"})
 		newpassword = req["newpassword"].(string)
 	case _remove:
-		err = validateRequest(req, []string{"volume", "password"})
+		err = validateRequest(req, []string{"volume:s", "password:s"})
 	default:
 		err = errors.New("unsupported operation")
 	}
@@ -60,6 +60,10 @@ func passwordRequest(w http.ResponseWriter, r *http.Request, mode int) (res json
 }
 
 func luksOpen(volume string, password string) (err error) {
+	if traversalPattern.MatchString(volume) {
+		return errors.New("path traversal detected")
+	}
+
 	args := []string{"luksOpen", "/dev/lvmvolume/" + volume, mapping}
 	cmd := "/sbin/cryptsetup"
 
@@ -82,14 +86,12 @@ func luksMount() (err error) {
 		return
 	}
 
-	u, _ := user.Current()
-	uid := u.Uid
-	gid := u.Gid
+	uid := os.Getenv("UID")
 
-	args = []string{uid + ":" + gid, conf.mountPoint}
+	args = []string{uid, conf.mountPoint}
 	cmd = "/bin/chown"
 
-	status.Log(syslog.LOG_NOTICE, "setting mount point permissions to %s:%s", uid, gid)
+	status.Log(syslog.LOG_NOTICE, "setting mount point permissions for user %s", os.Getenv("USER"))
 
 	_, err = execCommand(cmd, args, true, "")
 
@@ -122,6 +124,10 @@ func luksClose() (err error) {
 func luksKeyOp(volume string, password string, newpassword string, mode int) (err error) {
 	var action string
 	var input string
+
+	if traversalPattern.MatchString(volume) {
+		return errors.New("path traversal detected")
+	}
 
 	switch mode {
 	case _change:

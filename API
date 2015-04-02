@@ -230,7 +230,7 @@ Move/rename files or directories.
 
 request:
   {
-    "src":         [string], # absolute path for files and/or directory move
+    "src":         string,   # absolute path for file and/or directory move
     "dst":         string    # absolute path for destination
   }
 
@@ -240,7 +240,7 @@ Copy files or directories.
 
 request:
   {
-    "src":         string,   # absolute path for files and/or directory copy
+    "src":         string,   # absolute path for file and/or directory copy
     "dst":         string    # absolute path for destination
   }
 
@@ -347,12 +347,6 @@ request:
     "key_format":  string,   # key format ("armor")
     "cipher":      string    # name for cipher object
     "email":       string    # email
-  }
-
-response:
-  {
-    "status":      string,   # OK | KO | INVALID_SESSION | INVALID
-    "response":    [{key}]   # key object(s)
   }
 
 ## POST api/crypto/upload_key

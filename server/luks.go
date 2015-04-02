@@ -33,10 +33,10 @@ func passwordRequest(w http.ResponseWriter, r *http.Request, mode int) (res json
 
 	switch mode {
 	case _change, _add:
-		err = validateRequest(req, []string{"volume", "password", "newpassword"})
+		err = validateRequest(req, []string{"volume:s", "password:s", "newpassword:s"})
 		newpassword = req["newpassword"].(string)
 	case _remove:
-		err = validateRequest(req, []string{"volume", "password"})
+		err = validateRequest(req, []string{"volume:s", "password:s"})
 	default:
 		err = errors.New("unsupported operation")
 	}

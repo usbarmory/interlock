@@ -111,7 +111,7 @@ func keyInfo(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		return errorResponse(err, "")
 	}
 
-	err = validateRequest(req, []string{"path"})
+	err = validateRequest(req, []string{"path:s"})
 
 	if err != nil {
 		return errorResponse(err, "")
@@ -261,7 +261,7 @@ func keys(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		return errorResponse(err, "")
 	}
 
-	err = validateRequest(req, []string{"public", "private"})
+	err = validateRequest(req, []string{"public:b", "private:b"})
 
 	if err != nil {
 		return errorResponse(err, "")
@@ -312,7 +312,7 @@ func genKey(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		return errorResponse(err, "")
 	}
 
-	err = validateRequest(req, []string{"identifier", "key_format", "cipher", "email"})
+	err = validateRequest(req, []string{"identifier:s", "key_format:s", "cipher:s", "email:s"})
 
 	if err != nil {
 		return errorResponse(err, "")
@@ -385,7 +385,7 @@ func uploadKey(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		return errorResponse(err, "")
 	}
 
-	err = validateRequest(req, []string{"key", "data"})
+	err = validateRequest(req, []string{"key:a", "data:s"})
 
 	if err != nil {
 		return errorResponse(err, "")

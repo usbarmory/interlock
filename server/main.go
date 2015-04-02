@@ -8,7 +8,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"log/syslog"
 	"net/http"
@@ -41,20 +40,13 @@ func init() {
 }
 
 func main() {
-	var err error
-
 	log.SetFlags(log.Ldate | log.Ltime)
 	log.SetOutput(os.Stdout)
 
 	log.Printf("starting INTERLOCK %s (%s)\n", InterlockVersion, InterlockBuild)
 
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
 	if *configPath != "" {
-		err = conf.Set(*configPath)
+		err := conf.Set(*configPath)
 
 		if err != nil {
 			log.Fatalf("%s", err)
@@ -63,7 +55,7 @@ func main() {
 		log.Printf("configuration file %s successfully parsed", *configPath)
 	}
 
-	err = conf.SetMountPoint()
+	err := conf.SetMountPoint()
 
 	if err != nil {
 		log.Fatalf("%s", err)

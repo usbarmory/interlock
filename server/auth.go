@@ -84,7 +84,7 @@ func login(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		return errorResponse(err, "")
 	}
 
-	err = validateRequest(req, []string{"volume", "password", "dispose"})
+	err = validateRequest(req, []string{"volume:s", "password:s", "dispose:b"})
 
 	if err != nil {
 		return errorResponse(err, "")

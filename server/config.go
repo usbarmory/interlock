@@ -144,7 +144,7 @@ func setTime(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 
 	var epoch int64
 
-	err = validateRequest(req, []string{"epoch"})
+	err = validateRequest(req, []string{"epoch:n"})
 
 	if err != nil {
 		return errorResponse(err, "")

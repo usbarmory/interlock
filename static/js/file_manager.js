@@ -413,11 +413,13 @@ Interlock.FileManager = new function() {
 
                   if ($('#sign').is(':checked') === true) {
                     $('#sig_key').show();
+                    $('#password').val('')
+                                  .attr('placeholder', 'sign key password')
+                                  .show();
                   } else {
                     $('#sig_key').hide();
+                    $('#password').val('').hide();
                   }
-
-                  $('#password').val('').hide();
 
                   break;
                 default:
@@ -439,12 +441,6 @@ Interlock.FileManager = new function() {
             };
 
             var elements = [$selectCiphers,
-                            $(document.createElement('input')).attr('id', 'password')
-                                                              .attr('name', 'password')
-                                                              .attr('value', '')
-                                                              .attr('type', 'password')
-                                                              .attr('placeholder', 'encryption password')
-                                                              .addClass('text ui-widget-content ui-corner-all'),
                             $selectKeys,
                             $(document.createElement('fieldset')).addClass('nested')
                                                                  .append(
@@ -469,8 +465,12 @@ Interlock.FileManager = new function() {
                                                                 .change(function() {
                                                                   if ($('#sign').is(':checked') === true) {
                                                                     $('#sig_key').show();
+                                                                    $('#password').val('')
+                                                                                  .attr('placeholder', 'sign key password')
+                                                                                  .show();
                                                                   } else {
                                                                     $('#sig_key').hide();
+                                                                    $('#password').val('').hide();
                                                                   }
                                                                 })
                                                                 .hide(),
@@ -480,10 +480,16 @@ Interlock.FileManager = new function() {
                                                                 .text('sign the encrypted file')
                                                                 .addClass('text ui-widget-content ui-corner-all')
                                                                 .hide()),
-                            $selectSignKeys.hide()];
-
+                            $selectSignKeys.hide(),
+                            $(document.createElement('input')).attr('id', 'password')
+                                                              .attr('name', 'password')
+                                                              .attr('value', '')
+                                                              .attr('type', 'password')
+                                                              .attr('placeholder', 'encryption password')
+                                                              .addClass('text ui-widget-content ui-corner-all')];
+ 
             Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
-              submitButton: 'Encrypt', title: 'Encrypt File' });
+              submitButton: 'Encrypt', title: 'Encrypt File', height: 380});
 
             Interlock.UI.modalFormDialog('open');
 

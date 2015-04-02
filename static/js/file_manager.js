@@ -63,15 +63,21 @@ Interlock.FileManager = new function() {
     });
 
     /* register the on 'click' event to the new key button */
-    $('#add_new_key').on('click', function() {
+    $('#upload_key').on('click', function() {
       var $selectCiphers = $(document.createElement('select')).attr('id', 'cipher')
                                                               .attr('name', 'cipher');
 
       var $availableCiphers = [$(document.createElement('option')).attr('value', '')
                                                                   .text('choose encryption cipher')];
 
-      var buttons = { 'Add key': function() { Interlock.Crypto.uploadKey(
-        {identifier: $('#identifier').val(), key_format: $('#key_format').val(), cipher: $('#cipher').val(), private: $('#private').is(':checked')}, $('#data').val())}};
+      var buttons = { 'Add key': function() {
+        Interlock.Crypto.uploadKey({ identifier: $('#identifier').val(),
+                                     key_format: $('#key_format').val(),
+                                     cipher: $('#cipher').val(),
+                                     private: $('#private').is(':checked')},
+                                   $('#data').val())
+        }
+      };
 
       Interlock.cipherList = new $.Deferred();
 
@@ -81,7 +87,7 @@ Interlock.FileManager = new function() {
       $.when(Interlock.cipherList).done(function () {
         $.each(Interlock.Crypto.getCiphers(), function(index, cipher) {
           /* adds only ciphers that support armor as key format */
-          if (cipher.key_format === 'armor') {
+          if (cipher.key_format !== 'password') {
             $availableCiphers.push($(document.createElement('option')).attr('value', cipher.name)
                                                                       .text(cipher.name));
           }
@@ -96,6 +102,13 @@ Interlock.FileManager = new function() {
                                                         .attr('placeholder', 'key identifier')
                                                         .attr('type', 'text')
                                                         .addClass('text ui-widget-content ui-corner-all'),
+                      $(document.createElement('textarea')).attr('id', 'data')
+                                                           .attr('name', 'data')
+                                                           .attr('cols', 70)
+                                                           .attr('rows', 20)
+                                                           .attr('spellcheck',false)
+                                                           .attr('placeholder', 'PGP key - armor format')
+                                                           .addClass('text ui-widget-content ui-corner-all key'),
                       $(document.createElement('input')).attr('id', 'private')
                                                         .attr('name', 'private')
                                                         .attr('placeholder', 'private')
@@ -109,17 +122,67 @@ Interlock.FileManager = new function() {
                                                         .attr('type', 'text')
                                                         .attr('value', 'armor')
                                                         .addClass('text ui-widget-content ui-corner-all')
-                                                        .hide(),
-                      $(document.createElement('textarea')).attr('id', 'data')
-                                                           .attr('name', 'data')
-                                                           .attr('cols', 70)
-                                                           .attr('rows', 20)
-                                                           .attr('spellcheck',false)
-                                                           .attr('placeholder', 'PGP key - armor format')
-                                                           .addClass('text ui-widget-content ui-corner-all key')];
+                                                        .hide()];
 
       Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
-        submitButton: 'Add key', title: 'Add a new key', height: 600, width: 550 });
+        submitButton: 'Upload key', title: 'Upload a new key', height: 600, width: 550 });
+      Interlock.UI.modalFormDialog('open');
+    });
+
+    /* register the on 'click' event to the generate new key button */
+    $('#generate_key').on('click', function() {
+      var $selectCiphers = $(document.createElement('select')).attr('id', 'cipher')
+                                                              .attr('name', 'cipher');
+
+      var $availableCiphers = [$(document.createElement('option')).attr('value', '')
+                                                                  .text('choose encryption cipher')];
+
+      var buttons = { 'Generate key': function() {
+        Interlock.Crypto.generateKey({ identifier: $('#identifier').val(),
+                                       cipher: $('#cipher').val(),
+                                       key_format: $('#key_format').val(),
+                                       email: $('#email').val() })
+        }
+      };
+
+      Interlock.cipherList = new $.Deferred();
+
+      Interlock.Crypto.cipherList();
+
+      /* waits until cipher list have been filled with the backend data */
+      $.when(Interlock.cipherList).done(function () {
+        $.each(Interlock.Crypto.getCiphers(), function(index, cipher) {
+          /* adds only ciphers that support armor as key format */
+          if (cipher.key_format !== 'password') {
+            $availableCiphers.push($(document.createElement('option')).attr('value', cipher.name)
+                                                                      .text(cipher.name));
+          }
+        });
+
+        $selectCiphers.append($availableCiphers);
+      });
+
+      var elements = [$selectCiphers,
+                      $(document.createElement('input')).attr('id', 'identifier')
+                                                        .attr('name', 'identifier')
+                                                        .attr('placeholder', 'key identifier')
+                                                        .attr('type', 'text')
+                                                        .addClass('text ui-widget-content ui-corner-all'),
+                      $(document.createElement('input')).attr('id', 'email')
+                                                        .attr('name', 'email')
+                                                        .attr('placeholder', 'email')
+                                                        .attr('type', 'text')
+                                                        .addClass('text ui-widget-content ui-corner-all'),
+                      $(document.createElement('input')).attr('id', 'key_format')
+                                                        .attr('name', 'key_format')
+                                                        .attr('placeholder', 'key format')
+                                                        .attr('type', 'text')
+                                                        .attr('value', 'armor')
+                                                        .addClass('text ui-widget-content ui-corner-all')
+                                                        .hide()];
+
+      Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
+        submitButton: 'Generate key', title: 'Generate a new key', });
       Interlock.UI.modalFormDialog('open');
     });
   };

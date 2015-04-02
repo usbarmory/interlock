@@ -278,7 +278,54 @@ Interlock.Crypto.uploadKey = function(key, data) {
   }
 };
 
+/**
+ * @function
+ * @public
+ *
+ * @description
+ * Callback function, generate a new key
+ *
+ * @param {Object} backendData
+ * @returns {}
+ */
+Interlock.Crypto.generateKeyCallback = function(backendData) {
+  try {
+    if (backendData.status === 'OK') {
+      Interlock.UI.modalFormDialog('close');
 
+      /* reload of the file list should be conditional: only if the
+         current pwd is a key path */
+      Interlock.FileManager.fileList('mainView');
+    } else {
+      Interlock.Session.createEvent({'kind': backendData.status,
+        'msg': '[Interlock.Crypto.generateKeyCallback] ' + backendData.response});
+    }
+  } catch (e) {
+    Interlock.Session.createEvent({'kind': 'critical',
+      'msg': '[Interlock.Crypto.generateKeyInfoCallback] ' + e});
+  }
+};
+
+/**
+ * @function
+ * @public
+ *
+ * @description
+ * Generate a new key
+ *
+ * @param {String} key identifier, cipher, key_format, email
+ * @returns {}
+ */
+Interlock.Crypto.generateKey = function(key) {
+  try {
+    Interlock.Backend.APIRequest(Interlock.Backend.API.crypto.generateKey, 'POST',
+      JSON.stringify({identifier: key.identifier, cipher: key.cipher, key_format: key.key_format, email: key.email}),
+        'Crypto.generateKeyCallback', null);
+  } catch (e) {
+    Interlock.Session.createEvent({'kind': 'critical',
+      'msg': '[Interlock.Crypto.generateKey] ' + e});
+  }
+};
 
 /**
  * @function

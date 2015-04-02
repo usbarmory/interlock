@@ -101,7 +101,7 @@ func (k *key) Store(cipher cipherInterface, data string) (err error) {
 		return
 	}
 
-	status.Log(syslog.LOG_INFO, "stored %s key %s (%v bytes)", cipher.GetInfo().Name, k.Identifier, written)
+	status.Log(syslog.LOG_INFO, "stored %s %s key %s (%v bytes)", subdir, cipher.GetInfo().Name, k.Identifier, written)
 
 	return
 }
@@ -323,7 +323,7 @@ func genKey(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 	identifier := req["identifier"].(string)
 	email := req["email"].(string)
 
-	cipher := conf.FindCipherByName(req["cipher_name"].(string))
+	cipher := conf.FindCipherByName(req["cipher"].(string))
 
 	if cipher == nil || cipher.GetInfo().KeyFormat == "password" {
 		err = errors.New("could not identify compatible key cipher")

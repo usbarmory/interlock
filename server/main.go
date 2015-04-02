@@ -85,7 +85,7 @@ func main() {
 	}
 
 	registerHandlers()
-	err = http.ListenAndServeTLS(conf.BindAddress, "certs/cert.pem", "certs/key.pem", nil)
+	err = http.ListenAndServeTLS(conf.BindAddress, conf.TLSCert, conf.TLSKey, nil)
 
 	if err != nil {
 		log.Fatalf("%s", err)

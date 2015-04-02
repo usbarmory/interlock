@@ -13,6 +13,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"sync"
 	"time"
 
 	"golang.org/x/crypto/openpgp"
@@ -21,6 +22,8 @@ import (
 )
 
 type openPGP struct {
+	sync.Mutex
+
 	info   cipherInfo
 	pubKey *openpgp.Entity
 	secKey *openpgp.Entity
@@ -122,6 +125,9 @@ func (o *openPGP) GetKeyInfo(k key) (info string, err error) {
 }
 
 func (o *openPGP) SetPassword(password string) (err error) {
+	o.Lock()
+	defer o.Unlock()
+
 	if o.secKey == nil {
 		err = errors.New("password cannot be set without secret key")
 		return
@@ -137,6 +143,9 @@ func (o *openPGP) SetPassword(password string) (err error) {
 }
 
 func (o *openPGP) SetKey(k key) (err error) {
+	o.Lock()
+	defer o.Unlock()
+
 	keyPath := filepath.Join(conf.mountPoint, k.Path)
 	keyFile, err := os.Open(keyPath)
 
@@ -160,8 +169,16 @@ func (o *openPGP) SetKey(k key) (err error) {
 
 	switch keyBlock.Type {
 	case openpgp.PrivateKeyType:
+		if k.Private != true {
+			return fmt.Errorf("public key detected in private key slot")
+		}
+
 		o.secKey = entity
 	case openpgp.PublicKeyType:
+		if k.Private == true {
+			return fmt.Errorf("private key detected in public key slot")
+		}
+
 		o.pubKey = entity
 	default:
 		return fmt.Errorf("key type error: %s", keyBlock.Type)
@@ -171,6 +188,9 @@ func (o *openPGP) SetKey(k key) (err error) {
 }
 
 func (o *openPGP) Encrypt(input *os.File, output *os.File, _ bool) (err error) {
+	o.Lock()
+	defer o.Unlock()
+
 	hints := &openpgp.FileHints{
 		IsBinary: true,
 		FileName: input.Name(),
@@ -193,6 +213,9 @@ func (o *openPGP) Encrypt(input *os.File, output *os.File, _ bool) (err error) {
 }
 
 func (o *openPGP) Decrypt(input *os.File, output *os.File, verify bool) (err error) {
+	o.Lock()
+	defer o.Unlock()
+
 	keyRing := openpgp.EntityList{}
 	keyRing = append(keyRing, o.secKey)
 
@@ -220,10 +243,16 @@ func (o *openPGP) Decrypt(input *os.File, output *os.File, verify bool) (err err
 }
 
 func (o *openPGP) Sign(input *os.File, output *os.File) error {
+	o.Lock()
+	defer o.Unlock()
+
 	return openpgp.ArmoredDetachSign(output, o.secKey, input, nil)
 }
 
 func (o *openPGP) Verify(input *os.File, signature *os.File) (err error) {
+	o.Lock()
+	defer o.Unlock()
+
 	keyRing := openpgp.EntityList{}
 	keyRing = append(keyRing, o.pubKey)
 
@@ -255,6 +284,11 @@ func algoName(algo packet.PublicKeyAlgorithm) (name string) {
 }
 
 func getKeyInfo(entity *openpgp.Entity) (info string) {
+	if entity == nil {
+		info += fmt.Sprintf("no entity\n")
+		return
+	}
+
 	if entity.PrivateKey != nil {
 		info += fmt.Sprintf("OpenPGP private key:\n")
 	} else {

@@ -104,10 +104,10 @@ func (c *config) SetDefaults() {
 	c.testMode = false
 }
 
-func (c *config) SetMountPoint() (error) {
+func (c *config) SetMountPoint() error {
 	c.mountPoint = filepath.Join(os.Getenv("HOME"), ".interlock-mnt")
 
-	return  os.MkdirAll(c.mountPoint, 0700)
+	return os.MkdirAll(c.mountPoint, 0700)
 }
 
 func (c *config) Set(configPath string) (err error) {

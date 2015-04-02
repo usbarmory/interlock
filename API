@@ -349,12 +349,6 @@ request:
     "email":       string    # email
   }
 
-response:
-  {
-    "status":      string,   # OK | KO | INVALID_SESSION | INVALID
-    "response":    [{key}]   # key object(s)
-  }
-
 ## POST api/crypto/upload_key
 
 Upload a key.

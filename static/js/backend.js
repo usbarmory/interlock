@@ -26,7 +26,8 @@ Interlock.Backend = new function() {
                               'mkdir':    'file/mkdir',
                               'encrypt':  'file/encrypt',
                               'decrypt':  'file/decrypt',
-                              'verify':   'file/verify' },
+                              'verify':   'file/verify',
+                              'sign':     'file/sign' },
 
                'crypto':    { 'ciphers':     'crypto/ciphers',
                               'keys':        'crypto/keys',

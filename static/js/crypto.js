@@ -88,6 +88,18 @@ Interlock.Crypto = new function() {
 
     return signKeys;
   };
+
+  this.getKeyCipher = function(identifier) {
+   var cipher = '';
+
+    $.each(keys, function(indexKey, key) {
+      if (key.identifier === identifier) {
+        cipher = key.cipher;
+      }
+    });
+
+    return cipher;
+  };
 };
 
 /**

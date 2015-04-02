@@ -591,6 +591,51 @@ Interlock.FileManager = new function() {
             });
           });
         }));
+
+        menuEntries.push($(document.createElement('li')).text('Sign')
+                                                        .click(function() {
+          var $selectSignKeys = $(document.createElement('select')).attr('id', 'sig_key')
+                                                                   .attr('name', 'sig_key');
+
+          var $availableSignKeys = [$(document.createElement('option')).attr('value', '')
+                                                                       .text('choose signing key')];
+
+          Interlock.keyList = new $.Deferred();
+          Interlock.cipherList = new $.Deferred();
+
+          Interlock.Crypto.cipherList();
+          Interlock.Crypto.keyList();
+
+          /* waits until cipher and key lists have been filled with the backend data */
+          $.when(Interlock.cipherList, Interlock.keyList).done(function () {
+            $.each(Interlock.Crypto.getSignKeys(), function(index, key) {
+              $availableSignKeys.push($(document.createElement('option')).attr('value', key.path)
+                                                                         .text(key.identifier));
+            });
+
+            $selectSignKeys.append($availableSignKeys);
+
+            var buttons = { 'Sign': function() {
+              Interlock.FileManager.fileSign({cipher: Interlock.Crypto.getKeyCipher($('#sig_key option:selected').text()),
+                                              password: $('#password').val(),
+                                              key: $('#sig_key').val(), src: path});
+              }
+            };
+
+            var elements = [$selectSignKeys,
+                            $(document.createElement('input')).attr('id', 'password')
+                                                              .attr('name', 'password')
+                                                              .attr('value', '')
+                                                              .attr('type', 'password')
+                                                              .attr('placeholder', 'encryption password')
+                                                              .addClass('text ui-widget-content ui-corner-all')];
+ 
+            Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
+              submitButton: 'Sign', title: 'Sign File'});
+
+            Interlock.UI.modalFormDialog('open');
+          });
+        }));
       }
 
       menuEntries.push($(document.createElement('li')).text('Verify')
@@ -1165,6 +1210,52 @@ Interlock.FileManager.fileDecrypt = function(path, args) {
   } catch (e) {
     Interlock.Session.createEvent({'kind': 'critical',
       'msg': '[Interlock.FileManager.fileDencrypt] ' + e});
+  }
+};
+
+/**
+ * @function
+ * @public
+ *
+ * @description
+ * Callback function file sign
+ *
+ * @param {Object} backendData
+ * @returns {}
+ */
+Interlock.FileManager.fileSignCallback = function(backendData, args) {
+  try {
+    if (backendData.status === 'OK') {
+      Interlock.UI.modalFormDialog('close');
+      Interlock.FileManager.fileList('mainView');
+    } else {
+      Interlock.Session.createEvent({'kind': backendData.status,
+        'msg': '[Interlock.FileManager.fileSign] ' + backendData.response});
+    }
+  } catch (e) {
+    Interlock.Session.createEvent({'kind': 'critical',
+      'msg': '[Interlock.FileManager.fileSign] ' + e});
+  }
+};
+
+/**
+ * @function
+ * @public
+ *
+ * @description
+ * Sign one file
+ *
+ * @param {Object} commandArguments src, cipher, password, key
+ * @returns {}
+ */
+Interlock.FileManager.fileSign = function(args) {
+  try {
+    Interlock.Backend.APIRequest(Interlock.Backend.API.file.sign, 'POST',
+      JSON.stringify({src: args.src, cipher: args.cipher, password: args.password,
+        key: (args.key === undefined ? '' : args.key)}), 'FileManager.fileSignCallback');
+  } catch (e) {
+    Interlock.Session.createEvent({'kind': 'critical',
+      'msg': '[Interlock.FileManager.fileSign] ' + e});
   }
 };
 

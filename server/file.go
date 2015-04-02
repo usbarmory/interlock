@@ -259,14 +259,15 @@ func fileList(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 	totalSpace := stat.Blocks * uint64(stat.Bsize)
 	freeSpace := stat.Bavail * uint64(stat.Bsize)
 
-	inKeyPath, _ := detectKeyPath(path)
-
 	inodes := []inode{}
 
 	for _, file := range fileInfo {
 		if file.Name() == "lost+found" {
 			continue
 		}
+
+		filePath := filepath.Join(path, file.Name())
+		inKeyPath, _ := detectKeyPath(filePath)
 
 		inode := inode{
 			Name:    file.Name(),
@@ -277,7 +278,7 @@ func fileList(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		}
 
 		if !file.IsDir() && inKeyPath {
-			key, _, err := getKey(filepath.Join(path, file.Name()))
+			key, _, err := getKey(filePath)
 
 			if err == nil {
 				inode.Key = &key

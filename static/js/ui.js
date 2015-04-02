@@ -38,8 +38,8 @@ Interlock.UI = new function() {
                                                    .appendTo($modalForm.form);
     $modalForm.dialog({
       autoOpen: false,
-      height: 500,
-      width: 450,
+      height: 350,
+      width: 350,
       modal: true,
       buttons: { Cancel: function() { $modalForm.dialog('close'); } }
     });
@@ -74,8 +74,8 @@ Interlock.UI = new function() {
   this.modalFormConfigure = function(options) {
     $modalForm.dialog({
       autoOpen: false,
-      height: 500,
-      width: 450,
+      height: options.height ? options.height : 350,
+      width: options.width ? options.width : 350,
       modal: true,
       title: options.title ? options.title : '',
       buttons: options.noCancelButton ? options.buttons :

@@ -198,7 +198,7 @@ Interlock.Crypto.keyInfoCallback = function(backendData) {
         elements.push(pEl.text(line));
       });
 
-      Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons, title: 'Key Info', noCancelButton: true });
+      Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons, title: 'Key Info', noCancelButton: true, height: 500, width: 500 });
       Interlock.UI.modalFormDialog('open');
     } else {
       Interlock.Session.createEvent({'kind': backendData.status,

@@ -112,13 +112,14 @@ Interlock.FileManager = new function() {
                                                         .hide(),
                       $(document.createElement('textarea')).attr('id', 'data')
                                                            .attr('name', 'data')
-                                                           .attr('cols', 45)
-                                                           .attr('rows', 10)
+                                                           .attr('cols', 70)
+                                                           .attr('rows', 20)
+                                                           .attr('spellcheck',false)
                                                            .attr('placeholder', 'PGP key - armor format')
-                                                           .addClass('text ui-widget-content ui-corner-all')];
+                                                           .addClass('text ui-widget-content ui-corner-all key')];
 
       Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
-        submitButton: 'Add key', title: 'Add a new encryption key' });
+        submitButton: 'Add key', title: 'Add a new key', height: 600, width: 550 });
       Interlock.UI.modalFormDialog('open');
     });
   };

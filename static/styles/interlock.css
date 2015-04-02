@@ -480,6 +480,15 @@ h1 {
   transition: border 0.3s
 }
 
+.ui-widget-content textarea.key {
+  font-family: monospace;
+}
+
+.ui-widget-content textarea.key::-webkit-input-placeholder { font-family: 'Arial', sans-serif }
+.ui-widget-content textarea.key:-moz-placeholder { font-family: 'Arial', sans-serif }
+.ui-widget-content textarea.key::-moz-placeholder { font-family: 'Arial', sans-serif }
+.ui-widget-content textarea.key:-ms-input-placeholder { font-family: 'Arial', sans-serif }
+
 .ui-widget-content input[type="text"]:focus { border: 1px dotted black }
 
 ::-webkit-input-placeholder { color: gray }

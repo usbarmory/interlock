@@ -13,7 +13,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"sync"
 	"time"
 
 	"golang.org/x/crypto/openpgp"
@@ -22,8 +21,6 @@ import (
 )
 
 type openPGP struct {
-	sync.Mutex
-
 	info   cipherInfo
 	pubKey *openpgp.Entity
 	secKey *openpgp.Entity
@@ -49,9 +46,9 @@ func (o *openPGP) Init() (c cipherInterface) {
 	return o
 }
 
-func (o *openPGP) Reset() {
-	o.secKey = nil
-	o.pubKey = nil
+func (o *openPGP) New() (c cipherInterface) {
+	c = new(openPGP)
+	return c.Init()
 }
 
 func (o *openPGP) GetInfo() cipherInfo {
@@ -125,9 +122,6 @@ func (o *openPGP) GetKeyInfo(k key) (info string, err error) {
 }
 
 func (o *openPGP) SetPassword(password string) (err error) {
-	o.Lock()
-	defer o.Unlock()
-
 	if o.secKey == nil {
 		err = errors.New("password cannot be set without secret key")
 		return
@@ -143,9 +137,6 @@ func (o *openPGP) SetPassword(password string) (err error) {
 }
 
 func (o *openPGP) SetKey(k key) (err error) {
-	o.Lock()
-	defer o.Unlock()
-
 	keyPath := filepath.Join(conf.mountPoint, k.Path)
 	keyFile, err := os.Open(keyPath)
 
@@ -188,9 +179,6 @@ func (o *openPGP) SetKey(k key) (err error) {
 }
 
 func (o *openPGP) Encrypt(input *os.File, output *os.File, _ bool) (err error) {
-	o.Lock()
-	defer o.Unlock()
-
 	hints := &openpgp.FileHints{
 		IsBinary: true,
 		FileName: input.Name(),
@@ -213,9 +201,6 @@ func (o *openPGP) Encrypt(input *os.File, output *os.File, _ bool) (err error) {
 }
 
 func (o *openPGP) Decrypt(input *os.File, output *os.File, verify bool) (err error) {
-	o.Lock()
-	defer o.Unlock()
-
 	keyRing := openpgp.EntityList{}
 	keyRing = append(keyRing, o.secKey)
 
@@ -243,16 +228,10 @@ func (o *openPGP) Decrypt(input *os.File, output *os.File, verify bool) (err err
 }
 
 func (o *openPGP) Sign(input *os.File, output *os.File) error {
-	o.Lock()
-	defer o.Unlock()
-
 	return openpgp.ArmoredDetachSign(output, o.secKey, input, nil)
 }
 
 func (o *openPGP) Verify(input *os.File, signature *os.File) (err error) {
-	o.Lock()
-	defer o.Unlock()
-
 	keyRing := openpgp.EntityList{}
 	keyRing = append(keyRing, o.pubKey)
 

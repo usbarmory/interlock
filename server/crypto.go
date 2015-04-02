@@ -37,6 +37,10 @@ type cipherInfo struct {
 }
 
 type cipherInterface interface {
+	// returns a fresh cipher instance
+	New() cipherInterface
+	// initializes cipher instance
+	Init() cipherInterface
 	// provides cipher information
 	GetInfo() cipherInfo
 	// generate key
@@ -55,8 +59,6 @@ type cipherInterface interface {
 	Sign(src *os.File, dst *os.File) error
 	// signature verification method
 	Verify(src *os.File, sig *os.File) error
-	// clears previously set key material and password
-	Reset()
 }
 
 func ciphers(w http.ResponseWriter) (res jsonObject) {

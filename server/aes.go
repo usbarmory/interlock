@@ -15,7 +15,6 @@ import (
 	"errors"
 	"io"
 	"os"
-	"sync"
 
 	"golang.org/x/crypto/pbkdf2"
 )
@@ -28,8 +27,6 @@ import (
  * salt (8 bytes) || iv (16 bytes) || ciphertext || hmac (32 bytes) */
 
 type aes256OFB struct {
-	sync.Mutex
-
 	info     cipherInfo
 	password string
 
@@ -54,11 +51,9 @@ func (a *aes256OFB) Init() (c cipherInterface) {
 	return a
 }
 
-func (a *aes256OFB) Reset() {
-	a.Lock()
-	defer a.Unlock()
-
-	a.password = ""
+func (a *aes256OFB) New() (c cipherInterface) {
+	c = new(aes256OFB)
+	return c.Init()
 }
 
 func (a *aes256OFB) GetInfo() cipherInfo {
@@ -76,9 +71,6 @@ func (a *aes256OFB) GetKeyInfo(k key) (i string, err error) {
 }
 
 func (a *aes256OFB) SetPassword(password string) (err error) {
-	a.Lock()
-	defer a.Unlock()
-
 	if len(password) < 8 {
 		err = errors.New("password < 8 characters")
 		return
@@ -94,9 +86,6 @@ func (a *aes256OFB) SetKey(k key) error {
 }
 
 func (a *aes256OFB) Encrypt(input *os.File, output *os.File, sign bool) (err error) {
-	a.Lock()
-	defer a.Unlock()
-
 	if sign {
 		err = errors.New("symmetric cipher does not support signing")
 		return
@@ -174,9 +163,6 @@ func (a *aes256OFB) Encrypt(input *os.File, output *os.File, sign bool) (err err
 }
 
 func (a *aes256OFB) Decrypt(input *os.File, output *os.File, verify bool) (err error) {
-	a.Lock()
-	defer a.Unlock()
-
 	if verify {
 		err = errors.New("symmetric cipher does not support signature verification")
 		return

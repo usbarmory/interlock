@@ -213,6 +213,13 @@ button[disabled] {
   background: rgb(160,160,160)
 }
 
+a#add_password,
+a#remove_password,
+a#change_password {
+  text-decoration: none;
+  color: gray;
+}
+
 button#shellinabox,
 button#logout {
   font-size: 9pt;

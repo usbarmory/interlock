@@ -387,7 +387,7 @@ h1 {
   margin-top: -2px;
 }
 
-#status ul#notifications li span.timestamp { color: white }
+#status ul#notifications li span.timestamp { color: black }
 #status ul#logs li span.timestamp { color: silver }
 
 #status ul#logs li:before {

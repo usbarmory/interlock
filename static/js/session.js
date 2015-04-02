@@ -57,6 +57,8 @@ Interlock.Session = new function() {
     $.each(notifications, function(index, notification) {
       var timestamp =  Date(notification.epoch * 1000);
       $statusDiv.notifications.append($(document.createElement('li')).text(notification.msg)
+                                                                     .css({backgroundPosition:
+                                                                           Math.floor((Math.random() * 100) + 1) + '% 0'})
                                                                      .addClass('severity_' + notification.code)
         .append($(document.createElement('span')).text(Interlock.UI.convertToTimeString(notification.epoch, true))
                                                  .addClass('timestamp'))

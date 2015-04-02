@@ -218,7 +218,7 @@ Interlock.FileManager = new function() {
     /* updates the pwd browsing links */
     $.each(sessionStorage[view + 'Pwd'].split('/'), function(index, directory) {
       if (directory) {
-        traversingPath += directory + '/';
+        traversingPath += directory;
         var $pwdNested = $(document.createElement('span'));
         var path = traversingPath;
 
@@ -228,6 +228,8 @@ Interlock.FileManager = new function() {
                   .click(function() {
                     Interlock.FileManager.fileList(view, path);
                   });
+
+        traversingPath += '/';
       }
     });
 

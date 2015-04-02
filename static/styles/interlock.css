@@ -123,6 +123,11 @@ html, body, img, h1, div {
   cursor: pointer;
 }
 
+.actions ul li#upload_key,
+.actions ul li#generate_key {
+  float: right
+}
+
 .actions.resize_text {
   position: fixed;
   bottom: 1%;

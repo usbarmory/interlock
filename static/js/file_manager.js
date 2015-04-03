@@ -50,7 +50,7 @@ Interlock.FileManager = new function() {
 
     /* register the on 'click' event to the new directory button */
     $('#add_new_directory').on('click', function() {
-      var buttons = { 'Add directory': function() { Interlock.FileManager.mkdir($('#directory').val());} };
+      var buttons = { 'Create directory': function() { Interlock.FileManager.mkdir($('#directory').val());} };
       var elements = [$(document.createElement('input')).attr('id', 'directory')
                                                         .attr('name', 'directory')
                                                         .attr('placeholder', 'directory name')
@@ -58,7 +58,7 @@ Interlock.FileManager = new function() {
                                                         .addClass('text ui-widget-content ui-corner-all')];
 
       Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
-        submitButton: 'Add directory', title: 'Create new directory' });
+        submitButton: 'Create directory', title: 'Create new directory' });
       Interlock.UI.modalFormDialog('open');
     });
 
@@ -241,7 +241,7 @@ Interlock.FileManager = new function() {
         return;
       }
 
-      var size = inode.size || '-';
+      var size = Interlock.UI.formatSize(inode.size) || '-';
       var mtime = inode.mtime || 0;
       var path = sessionStorage[view + 'Pwd'] + (sessionStorage[view + 'Pwd'].slice(-1) === '/' ? '' : '/') + inode.name;
 
@@ -552,7 +552,7 @@ Interlock.FileManager = new function() {
 
                   break;
                 case 'OpenPGP':
-                  $('#password').attr('placeholder', 'GPG key password');
+                  $('#password').attr('placeholder', 'key password');
 
                   $('#key').show();
                   $('#password').show();

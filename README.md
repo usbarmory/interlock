@@ -125,6 +125,15 @@ make
 This compiles the 'interlock' binary that can be executed with options
 illustrated in the next section.
 
+When cross compiling from a non-arm host for an arm target ensure that the
+following compilation variables are set:
+
+```
+GOARCH=arm
+CC=<path_to_cross_compiler>/arm-linux-gnueabihf-gcc
+CGO_ENABLED=1
+```
+
 Options
 =======
 

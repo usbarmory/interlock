@@ -10,8 +10,7 @@ import (
 	"errors"
 	"log/syslog"
 	"net/http"
-	"os"
-	"strconv"
+	"os/user"
 	"syscall"
 )
 
@@ -87,11 +86,16 @@ func luksMount() (err error) {
 		return
 	}
 
-	uid := strconv.Itoa(os.Geteuid())
-	args = []string{uid, conf.mountPoint}
+	u, err := user.Current()
+
+	if err != nil {
+		return
+	}
+
+	args = []string{u.Username, conf.mountPoint}
 	cmd = "/bin/chown"
 
-	status.Log(syslog.LOG_NOTICE, "setting mount point permissions for user %s (%s)", os.Getenv("USER"), uid)
+	status.Log(syslog.LOG_NOTICE, "setting mount point permissions for user %s", u.Username)
 
 	_, err = execCommand(cmd, args, true, "")
 

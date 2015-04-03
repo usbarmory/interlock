@@ -387,7 +387,7 @@ func uploadKey(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		return errorResponse(err, "")
 	}
 
-	err = validateRequest(req, []string{"key:a", "data:s"})
+	err = validateRequest(req, []string{"key:i", "data:s"})
 
 	if err != nil {
 		return errorResponse(err, "")

@@ -85,12 +85,14 @@ func validateRequest(req jsonObject, reqAttrs []string) error {
 			_, ok = req[key].(json.Number)
 		case "a":
 			_, ok = req[key].([]interface{})
+		case "i":
+			_, ok = req[key].(interface{})
 		default:
 			return errors.New("unknown validation kind")
 		}
 
 		if !ok {
-			return fmt.Errorf("attribute %s is not a %s", key, kind)
+			return fmt.Errorf("invalid attribute %s (%s)", key, kind)
 		}
 	}
 

@@ -225,34 +225,21 @@ button[disabled] {
 
 a#add_password,
 a#remove_password,
-a#change_password {
+a#change_password,
+a#logout,
+a#poweroff,
+a#shellinabox {
   text-decoration: none;
-  color: gray;
+  color: black;
 }
 
 a#add_password:hover,
 a#remove_password:hover,
-a#change_password:hover {
-  color: black;
-}
-
-button#shellinabox,
-button#logout,
-button#poweroff {
-  font-size: 9pt;
-  display: block-inline;
-  background: white;
+a#change_password:hover,
+a#logout:hover,
+a#poweroff:hover,
+a#shellinabox:hover {
   color: gray;
-  margin-top: -2px;
-  margin-left: 6px;
-  padding: 2px;
-  font-weight: bold;
-}
-
-button#shellinabox:hover,
-button#logout:hover,
-button#poweroff:hover {
-  color: black;
 }
 
 fieldset { border: none }
@@ -321,6 +308,12 @@ h1 {
 h1#interlock_version {
   text-align: left;
   float: left;
+  color: gray;
+}
+
+h1#interlock_version span,
+h1 {
+  color: gray
 }
 
 #status h1 { margin: 0 }

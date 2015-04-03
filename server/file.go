@@ -968,25 +968,6 @@ func fileVerify(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		return errorResponse(err, "")
 	}
 
-	if cipher.GetInfo().Sig {
-		sigKeyPath = filepath.Join(conf.mountPoint, sigKeyPath)
-		key, _, err := getKey(sigKeyPath)
-
-		if err != nil {
-			return errorResponse(err, "")
-		}
-
-		err = cipher.SetKey(key)
-
-		if err != nil {
-			return errorResponse(err, "")
-		}
-	} else {
-		err = errors.New("signature verification requested but not supported by cipher")
-
-		return errorResponse(err, "")
-	}
-
 	sig, err := os.Open(sigPath)
 
 	if err != nil {

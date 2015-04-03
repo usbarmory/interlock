@@ -86,6 +86,9 @@ func luksMount() (err error) {
 		return
 	}
 
+	// user.Current() would work better but when cross compiling without
+	// CGO_ENABLED it is not included, to avoid issues with use the
+	// environment variable
 	uid := os.Getenv("UID")
 
 	args = []string{uid, conf.mountPoint}

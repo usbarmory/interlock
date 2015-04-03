@@ -37,6 +37,7 @@ type inode struct {
 	Size    int64  `json:"size"`
 	Mtime   int64  `json:"mtime"`
 	KeyPath bool   `json:"key_path"`
+	Private bool   `json:"private"`
 	Key     *key   `json:"key"`
 }
 
@@ -103,10 +104,11 @@ func detectKeyPath(path string) (inKeyPath bool, private bool) {
 
 	if strings.HasPrefix(path, absoluteKeyPath) {
 		inKeyPath = true
-	}
-
-	if inKeyPath && strings.HasSuffix(filepath.Dir(path), "private") {
 		private = true
+
+		if strings.HasSuffix(filepath.Dir(path), "public") {
+			private = false
+		}
 	}
 
 	return
@@ -149,10 +151,10 @@ func fileOp(w http.ResponseWriter, r *http.Request, mode int) (res jsonObject) {
 			return errorResponse(err, "")
 		}
 
-		inKeyPath, _ := detectKeyPath(src)
+		inKeyPath, private := detectKeyPath(src)
 
-		if inKeyPath {
-			return errorResponse(errors.New("cannot move or copy key(s)"), "")
+		if inKeyPath && private {
+			return errorResponse(errors.New("cannot move or copy private key(s)"), "")
 		}
 
 		dst, err := absolutePath(req["dst"].(string))
@@ -272,7 +274,7 @@ func fileList(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		}
 
 		filePath := filepath.Join(path, file.Name())
-		inKeyPath, _ := detectKeyPath(filePath)
+		inKeyPath, private := detectKeyPath(filePath)
 
 		inode := inode{
 			Name:    file.Name(),
@@ -280,6 +282,7 @@ func fileList(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 			Size:    file.Size(),
 			Mtime:   file.ModTime().Unix(),
 			KeyPath: inKeyPath,
+			Private: private,
 		}
 
 		if !file.IsDir() && inKeyPath {
@@ -378,10 +381,10 @@ func fileDownload(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		return errorResponse(err, "")
 	}
 
-	inKeyPath, _ := detectKeyPath(osPath)
+	inKeyPath, private := detectKeyPath(osPath)
 
-	if inKeyPath {
-		return errorResponse(errors.New("cannot download key(s)"), "")
+	if inKeyPath && private {
+		return errorResponse(errors.New("cannot download private key(s)"), "")
 	}
 
 	_, err = os.Stat(osPath)

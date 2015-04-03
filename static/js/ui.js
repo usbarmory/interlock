@@ -330,7 +330,7 @@ Interlock.UI.currentTime = function() {
 Interlock.UI.formatSize = function(size) {
   var k = parseFloat(size/1024).toFixed(1);
   var m = parseFloat(size/(1024*1024)).toFixed(1);
-  var g = parseFloat(size/(1024*1024*1024)).toFixed(1);
+  var g = parseFloat(size/(1024*1024*1024)).toFixed(1); 
 
   var formattedSize = size + '';
 

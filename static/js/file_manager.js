@@ -107,14 +107,14 @@ Interlock.FileManager = new function() {
                                                            .attr('cols', 70)
                                                            .attr('rows', 20)
                                                            .attr('spellcheck',false)
-                                                           .attr('placeholder', 'PGP key - armor format')
+                                                           .attr('placeholder', 'key - armor format')
                                                            .addClass('text ui-widget-content ui-corner-all key'),
                       $(document.createElement('input')).attr('id', 'private')
                                                         .attr('name', 'private')
                                                         .attr('placeholder', 'private')
                                                         .attr('type', 'checkbox')
                                                         .addClass('text ui-widget-content ui-corner-all'),
-                      $(document.createElement('label')).text('private (leave it blank for public key)')
+                      $(document.createElement('label')).text('private (leave it unchecked for public key)')
                                                         .attr('for', 'private'),
                       /* FIXME: armor hardcoded in key_format */
                       $(document.createElement('input')).attr('id', 'key_format')
@@ -241,7 +241,7 @@ Interlock.FileManager = new function() {
         return;
       }
 
-      var size = Interlock.UI.formatSize(inode.size) || '-';
+      var size = Interlock.UI.formatSize(inode.size) || 0;
       var mtime = inode.mtime || 0;
       var path = sessionStorage[view + 'Pwd'] + (sessionStorage[view + 'Pwd'].slice(-1) === '/' ? '' : '/') + inode.name;
 
@@ -281,7 +281,7 @@ Interlock.FileManager = new function() {
                                                      .css({top: e.pageY + 'px', left: e.pageX + 'px'});
 
     /* disable move/copy for every key file or directory */
-    if (inode.key || inode.key_path) {
+    if (inode.private) {
       menuEntries.push($(document.createElement('li')).text('Copy to')
                                                       .addClass('disabled'));
 
@@ -326,7 +326,7 @@ Interlock.FileManager = new function() {
                                                       Interlock.FileManager.fileDelete([path]);
                                                     }));
     if (inode.dir) {
-      if (inode.key_path) {
+      if (inode.private) {
         menuEntries.push($(document.createElement('li')).text('Download (zip archive)')
                                                         .addClass('disabled'));
       } else {
@@ -336,365 +336,354 @@ Interlock.FileManager = new function() {
                                                         }));
       }
     } else {
-      if (inode.key && inode.key !== 'password') {
-        menuEntries.push($(document.createElement('li')).text('Encrypt')
-                                                        .addClass('disabled'));
-        menuEntries.push($(document.createElement('li')).text('Decrypt')
-                                                        .addClass('disabled'));
-        menuEntries.push($(document.createElement('li')).text('Sign')
-                                                        .addClass('disabled'));
-        menuEntries.push($(document.createElement('li')).text('Verify')
-                                                        .addClass('disabled'));
-      } else {
-        /* file encrypt */
-        menuEntries.push($(document.createElement('li')).text('Encrypt')
-                                                        .click(function() {
+      /* file encrypt */
+      menuEntries.push($(document.createElement('li')).text('Encrypt')
+                                                      .click(function() {
 
-          var $selectCiphers = $(document.createElement('select')).attr('id', 'cipher')
-                                                                  .attr('name', 'cipher');
+        var $selectCiphers = $(document.createElement('select')).attr('id', 'cipher')
+                                                                .attr('name', 'cipher');
 
-          var $selectKeys = $(document.createElement('select')).attr('id', 'key')
-                                                               .attr('name', 'key');
+        var $selectKeys = $(document.createElement('select')).attr('id', 'key')
+                                                             .attr('name', 'key');
 
-          var $selectSignKeys = $(document.createElement('select')).attr('id', 'sig_key')
-                                                                   .attr('name', 'sig_key');
+        var $selectSignKeys = $(document.createElement('select')).attr('id', 'sig_key')
+                                                                 .attr('name', 'sig_key');
 
-          var $availableCiphers = [$(document.createElement('option')).attr('value', '')
-                                                                      .text('choose encryption cipher')];
+        var $availableCiphers = [$(document.createElement('option')).attr('value', '')
+                                                                    .text('choose encryption cipher')];
 
-          var $availableKeys = [$(document.createElement('option')).attr('value', '')
-                                                                   .text('choose encryption key')];
+        var $availableKeys = [$(document.createElement('option')).attr('value', '')
+                                                                 .text('choose encryption key')];
 
-          var $availableSignKeys = [$(document.createElement('option')).attr('value', '')
-                                                                       .text('choose signing key')];
+        var $availableSignKeys = [$(document.createElement('option')).attr('value', '')
+                                                                     .text('choose signing key')];
 
-          Interlock.keyList = new $.Deferred();
-          Interlock.cipherList = new $.Deferred();
+        Interlock.keyList = new $.Deferred();
+        Interlock.cipherList = new $.Deferred();
 
-          Interlock.Crypto.cipherList();
-          Interlock.Crypto.keyList();
+        Interlock.Crypto.cipherList();
+        Interlock.Crypto.keyList();
 
-          /* waits until cipher and key lists have been filled with the backend data */
-          $.when(Interlock.cipherList, Interlock.keyList).done(function () {
-            $.each(Interlock.Crypto.getCiphers(), function(index, cipher) {
-              $availableCiphers.push($(document.createElement('option')).attr('value', cipher.name)
-                                                                        .text(cipher.name));
-            });
+        /* waits until cipher and key lists have been filled with the backend data */
+        $.when(Interlock.cipherList, Interlock.keyList).done(function () {
+          $.each(Interlock.Crypto.getCiphers(), function(index, cipher) {
+            $availableCiphers.push($(document.createElement('option')).attr('value', cipher.name)
+                                                                      .text(cipher.name));
+          });
 
-            $.each(Interlock.Crypto.getPublicKeys(), function(index, key) {
-              $availableKeys.push($(document.createElement('option')).attr('value', key.path)
-                                                                     .text(key.identifier));
-            });
+          $.each(Interlock.Crypto.getPublicKeys(), function(index, key) {
+            $availableKeys.push($(document.createElement('option')).attr('value', key.path)
+                                                                   .text(key.identifier));
+          });
 
-            $.each(Interlock.Crypto.getSignKeys(), function(index, key) {
-              $availableSignKeys.push($(document.createElement('option')).attr('value', key.path)
-                                                                         .text(key.identifier));
-            });
+          $.each(Interlock.Crypto.getSignKeys(), function(index, key) {
+            $availableSignKeys.push($(document.createElement('option')).attr('value', key.path)
+                                                                       .text(key.identifier));
+          });
 
-            $selectCiphers.append($availableCiphers);
-            $selectKeys.append($availableKeys);
-            $selectSignKeys.append($availableSignKeys);
+          $selectCiphers.append($availableCiphers);
+          $selectKeys.append($availableKeys);
+          $selectSignKeys.append($availableSignKeys);
 
-            $selectCiphers.change(function() {
-              var selectedCipher = $('#cipher > option:selected').val();
+          $selectCiphers.change(function() {
+            var selectedCipher = $('#cipher > option:selected').val();
 
-              switch (selectedCipher) {
-                case 'AES-256-OFB':
-                  $('#password').attr('placeholder', 'encryption password').show();
-                  $('#wipe_src').show();
-                  $('#wipe_src_label').show();
+            switch (selectedCipher) {
+              case 'AES-256-OFB':
+                $('#password').attr('placeholder', 'encryption password').show();
+                $('#wipe_src').show();
+                $('#wipe_src_label').show();
 
-                  $('#key').hide();
+                $('#key').hide();
+                $('#sig_key').hide();
+                $('#sign').prop('checked', false).hide();
+                $('#sign_label').hide();
+
+                break;
+              case 'OpenPGP':
+                $('#key').show();
+                $('#sign').show();
+                $('#sign_label').show();
+                $('#wipe_src').show();
+                $('#wipe_src_label').show();
+
+                if ($('#sign').is(':checked') === true) {
+                  $('#sig_key').show();
+                  $('#password').val('')
+                                .attr('placeholder', 'key password')
+                                .show();
+                } else {
                   $('#sig_key').hide();
-                  $('#sign').prop('checked', false).hide();
-                  $('#sign_label').hide();
-
-                  break;
-                case 'OpenPGP':
-                  $('#key').show();
-                  $('#sign').show();
-                  $('#sign_label').show();
-                  $('#wipe_src').show();
-                  $('#wipe_src_label').show();
-
-                  if ($('#sign').is(':checked') === true) {
-                    $('#sig_key').show();
-                    $('#password').val('')
-                                  .attr('placeholder', 'key password')
-                                  .show();
-                  } else {
-                    $('#sig_key').hide();
-                    $('#password').val('').hide();
-                  }
-
-                  break;
-                default:
                   $('#password').val('').hide();
-                  $('#key').val('').hide();
-                  $('#sig_key').val('').hide();
-                  $('#sign').prop('checked', false).hide();
-                  $('#sign_label').hide();
-                  $('#wipe_src').prop('checked', false).hide();
-                  $('#wipe_src_label').hide();
-              }
-            });
+                }
 
-            var buttons = { 'Encrypt': function() {
-              Interlock.FileManager.fileEncrypt( path,
-                  {cipher: $('#cipher').val(), password: $('#password').val(), key: $('#key').val(),
-                   sign: $('#sign').is(':checked'), sig_key: $('#sig_key').val(), wipe_src: $('#wipe_src').is(':checked')});
-              }
-            };
+                break;
+              default:
+                $('#password').val('').hide();
+                $('#key').val('').hide();
+                $('#sig_key').val('').hide();
+                $('#sign').prop('checked', false).hide();
+                $('#sign_label').hide();
+                $('#wipe_src').prop('checked', false).hide();
+                $('#wipe_src_label').hide();
+            }
+          });
 
-            var elements = [$selectCiphers,
-                            $selectKeys,
-                            $(document.createElement('fieldset')).addClass('nested')
-                                                                 .append(
-                              $(document.createElement('input')).attr('id', 'wipe_src')
-                                                                .attr('name', 'wipe_src')
-                                                                .attr('type', 'checkbox')
-                                                                .addClass('text ui-widget-content ui-corner-all')
-                                                                .hide(),
-                              $(document.createElement('label')).attr('id', 'wipe_src_label')
-                                                                .attr('name', 'wipe_src_label')
-                                                                .attr('for', 'wipe_src')
-                                                                .text('delete the original file after encryption')
-                                                                .addClass('text ui-widget-content ui-corner-all')
-                                                                .hide()),
-                            $(document.createElement('fieldset')).addClass('nested')
-                                                                 .css({'margin-bottom': '15px'})
-                                                                 .append(
-                              $(document.createElement('input')).attr('id', 'sign')
-                                                                .attr('name', 'sign')
-                                                                .attr('type', 'checkbox')
-                                                                .addClass('text ui-widget-content ui-corner-all')
-                                                                .change(function() {
-                                                                  if ($('#sign').is(':checked') === true) {
-                                                                    $('#sig_key').show();
-                                                                    $('#password').val('')
-                                                                                  .attr('placeholder', 'sign key password')
-                                                                                  .show();
-                                                                  } else {
-                                                                    $('#sig_key').hide();
-                                                                    $('#password').val('').hide();
-                                                                  }
-                                                                })
-                                                                .hide(),
-                              $(document.createElement('label')).attr('id', 'sign_label')
-                                                                .attr('name', 'sign_label')
-                                                                .attr('for', 'sign')
-                                                                .text('sign the encrypted file')
-                                                                .addClass('text ui-widget-content ui-corner-all')
-                                                                .hide()),
-                            $selectSignKeys.hide(),
-                            $(document.createElement('input')).attr('id', 'password')
-                                                              .attr('name', 'password')
-                                                              .attr('value', '')
-                                                              .attr('type', 'password')
-                                                              .attr('placeholder', 'encryption password')
-                                                              .addClass('text ui-widget-content ui-corner-all')];
+          var buttons = { 'Encrypt': function() {
+            Interlock.FileManager.fileEncrypt( path,
+                {cipher: $('#cipher').val(), password: $('#password').val(), key: $('#key').val(),
+                 sign: $('#sign').is(':checked'), sig_key: $('#sig_key').val(), wipe_src: $('#wipe_src').is(':checked')});
+            }
+          };
+
+          var elements = [$selectCiphers,
+                          $selectKeys,
+                          $(document.createElement('fieldset')).addClass('nested')
+                                                               .append(
+                            $(document.createElement('input')).attr('id', 'wipe_src')
+                                                              .attr('name', 'wipe_src')
+                                                              .attr('type', 'checkbox')
+                                                              .addClass('text ui-widget-content ui-corner-all')
+                                                              .hide(),
+                            $(document.createElement('label')).attr('id', 'wipe_src_label')
+                                                              .attr('name', 'wipe_src_label')
+                                                              .attr('for', 'wipe_src')
+                                                              .text('delete the original file after encryption')
+                                                              .addClass('text ui-widget-content ui-corner-all')
+                                                              .hide()),
+                          $(document.createElement('fieldset')).addClass('nested')
+                                                               .css({'margin-bottom': '15px'})
+                                                               .append(
+                            $(document.createElement('input')).attr('id', 'sign')
+                                                              .attr('name', 'sign')
+                                                              .attr('type', 'checkbox')
+                                                              .addClass('text ui-widget-content ui-corner-all')
+                                                              .change(function() {
+                                                                if ($('#sign').is(':checked') === true) {
+                                                                  $('#sig_key').show();
+                                                                  $('#password').val('')
+                                                                                .attr('placeholder', 'sign key password')
+                                                                                .show();
+                                                                } else {
+                                                                  $('#sig_key').hide();
+                                                                   $('#password').val('').hide();
+                                                                }
+                                                              })
+                                                              .hide(),
+                            $(document.createElement('label')).attr('id', 'sign_label')
+                                                              .attr('name', 'sign_label')
+                                                              .attr('for', 'sign')
+                                                              .text('sign the encrypted file')
+                                                              .addClass('text ui-widget-content ui-corner-all')
+                                                              .hide()),
+                          $selectSignKeys.hide(),
+                          $(document.createElement('input')).attr('id', 'password')
+                                                            .attr('name', 'password')
+                                                            .attr('value', '')
+                                                            .attr('type', 'password')
+                                                            .attr('placeholder', 'encryption password')
+                                                            .addClass('text ui-widget-content ui-corner-all')];
+
+          Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
+            submitButton: 'Encrypt', title: 'Encrypt File', height: 380});
+
+          Interlock.UI.modalFormDialog('open');
+
+          $('#password').hide();
+          $('#key').hide();
+        });
+      }));
+
+      /* file decrypt */
+      menuEntries.push($(document.createElement('li')).text('Decrypt')
+                                                      .click(function() {
+        var $selectCiphers = $(document.createElement('select')).attr('id', 'cipher')
+                                                                .attr('name', 'cipher');
+
+        var $selectKeys = $(document.createElement('select')).attr('id', 'key')
+                                                             .attr('name', 'key');
+
+        var $availableCiphers = [$(document.createElement('option')).attr('value', '')
+                                                                    .text('choose decryption cipher')];
+
+        var $availableKeys = [$(document.createElement('option')).attr('value', '')
+                                                                 .text('choose decryption key')];
+
+        Interlock.keyList = new $.Deferred();
+        Interlock.cipherList = new $.Deferred();
+
+        Interlock.Crypto.cipherList();
+        Interlock.Crypto.keyList();
+
+        /* waits until cipher and key lists have been filled with the backend data */
+        $.when(Interlock.cipherList, Interlock.keyList).done(function () {
+          $.each(Interlock.Crypto.getCiphers(), function(index, cipher) {
+            $availableCiphers.push($(document.createElement('option')).attr('value', cipher.name)
+                                                                      .text(cipher.name));
+          });
+
+          $.each(Interlock.Crypto.getPrivateKeys(), function(index, key) {
+            $availableKeys.push($(document.createElement('option')).attr('value', key.path)
+                                                                   .text(key.identifier));
+          });
+
+          $selectCiphers.append($availableCiphers);
+          $selectKeys.append($availableKeys);
+
+          $selectCiphers.change(function() {
+            var selectedCipher = $('#cipher > option:selected').val();
+
+            switch (selectedCipher) {
+              case 'AES-256-OFB':
+                $('#password').attr('placeholder', 'decryption password');
+
+                $('#key').hide();
+                $('#password').show();
+
+                break;
+              case 'OpenPGP':
+                $('#password').attr('placeholder', 'key password');
+
+                $('#key').show();
+                $('#password').show();
+
+                break;
+              default:
+                $('#password').value = '';
+                $('#key').value = '';
+
+                $('#password').hide();
+                $('#key').hide();
+            }
+          });
+
+          var buttons = { 'Decrypt': function() {
+              Interlock.FileManager.fileDecrypt( path, {cipher: $('#cipher').val(),
+              password: $('#password').val(), key: $('#key').val() })
+            }
+          };
+
+          var elements = [$selectCiphers,
+                          $selectKeys,
+                          $(document.createElement('input')).attr('id', 'password')
+                                                            .attr('name', 'password')
+                                                            .attr('value', '')
+                                                            .attr('type', 'password')
+                                                            .attr('placeholder', 'decryption password')
+                                                            .addClass('text ui-widget-content ui-corner-all')];
+
+          Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
+            submitButton: 'Decrypt', title: 'Decrypt File' });
+
+          Interlock.UI.modalFormDialog('open');
+
+          $('#password').hide();
+          $('#key').hide();
+
+          /* pre-select the cipher based on the file extension */
+          $.each(Interlock.Crypto.getCiphers(), function(index, cipher) {
+            if (path.split('.').pop() === cipher.ext) {
+              $('#cipher').val(cipher.name).change();
+            }
+          });
+        });
+      }));
+
+      /* file sign */
+      menuEntries.push($(document.createElement('li')).text('Sign')
+                                                      .click(function() {
+
+        var $selectSignKeys = $(document.createElement('select')).attr('id', 'sig_key')
+                                                                 .attr('name', 'sig_key');
+
+        var $availableSignKeys = [$(document.createElement('option')).attr('value', '')
+                                                                     .text('choose signing key')];
+        Interlock.keyList = new $.Deferred();
+        Interlock.cipherList = new $.Deferred();
+
+        Interlock.Crypto.cipherList();
+        Interlock.Crypto.keyList();
+
+        /* waits until cipher and key lists have been filled with the backend data */
+        $.when(Interlock.cipherList, Interlock.keyList).done(function () {
+          $.each(Interlock.Crypto.getSignKeys(), function(index, key) {
+            $availableSignKeys.push($(document.createElement('option')).attr('value', key.path)
+                                                                       .text(key.identifier));
+          });
+
+          $selectSignKeys.append($availableSignKeys);
+
+          var buttons = { 'Sign': function() {
+            Interlock.FileManager.fileSign({cipher: Interlock.Crypto.getKeyCipher($('#sig_key option:selected').text()),
+                                            password: $('#password').val(),
+                                            key: $('#sig_key').val(), src: path});
+            }
+          };
+
+          var elements = [$selectSignKeys,
+                          $(document.createElement('input')).attr('id', 'password')
+                                                            .attr('name', 'password')
+                                                            .attr('value', '')
+                                                            .attr('type', 'password')
+                                                            .attr('placeholder', 'key password')
+                                                            .addClass('text ui-widget-content ui-corner-all')];
  
-            Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
-              submitButton: 'Encrypt', title: 'Encrypt File', height: 380});
+          Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
+            submitButton: 'Sign', title: 'Sign File'});
+          Interlock.UI.modalFormDialog('open');
+        });
+      }));
 
-            Interlock.UI.modalFormDialog('open');
+      /* file verify */
+      menuEntries.push($(document.createElement('li')).text('Verify')
+                                                      .click(function() {
 
-            $('#password').hide();
-            $('#key').hide();
-          });
-        }));
+        var $selectVerifyKeys = $(document.createElement('select')).attr('id', 'verify_key')
+                                                                   .attr('name', 'verify_key');
 
-        /* file decrypt */
-        menuEntries.push($(document.createElement('li')).text('Decrypt')
-                                                        .click(function() {
-          var $selectCiphers = $(document.createElement('select')).attr('id', 'cipher')
-                                                                  .attr('name', 'cipher');
+        var $availableVerifyKeys = [$(document.createElement('option')).attr('value', '')
+                                                                       .text('choose a signature verification key')];
+        Interlock.keyList = new $.Deferred();
+        Interlock.cipherList = new $.Deferred();
 
-          var $selectKeys = $(document.createElement('select')).attr('id', 'key')
-                                                               .attr('name', 'key');
+        Interlock.Crypto.cipherList();
+        Interlock.Crypto.keyList();
 
-          var $availableCiphers = [$(document.createElement('option')).attr('value', '')
-                                                                      .text('choose decryption cipher')];
-
-          var $availableKeys = [$(document.createElement('option')).attr('value', '')
-                                                                   .text('choose decryption key')];
-
-          Interlock.keyList = new $.Deferred();
-          Interlock.cipherList = new $.Deferred();
-
-          Interlock.Crypto.cipherList();
-          Interlock.Crypto.keyList();
-
-          /* waits until cipher and key lists have been filled with the backend data */
-          $.when(Interlock.cipherList, Interlock.keyList).done(function () {
-            $.each(Interlock.Crypto.getCiphers(), function(index, cipher) {
-              $availableCiphers.push($(document.createElement('option')).attr('value', cipher.name)
-                                                                        .text(cipher.name));
-            });
-
-            $.each(Interlock.Crypto.getPrivateKeys(), function(index, key) {
-              $availableKeys.push($(document.createElement('option')).attr('value', key.path)
-                                                                     .text(key.identifier));
-            });
-
-            $selectCiphers.append($availableCiphers);
-            $selectKeys.append($availableKeys);
-
-            $selectCiphers.change(function() {
-              var selectedCipher = $('#cipher > option:selected').val();
-
-              switch (selectedCipher) {
-                case 'AES-256-OFB':
-                  $('#password').attr('placeholder', 'decryption password');
-
-                  $('#key').hide();
-                  $('#password').show();
-
-                  break;
-                case 'OpenPGP':
-                  $('#password').attr('placeholder', 'key password');
-
-                  $('#key').show();
-                  $('#password').show();
-
-                  break;
-                default:
-                  $('#password').value = '';
-                  $('#key').value = '';
-
-                  $('#password').hide();
-                  $('#key').hide();
-              }
-            });
-
-            var buttons = { 'Decrypt': function() {
-                Interlock.FileManager.fileDecrypt( path, {cipher: $('#cipher').val(),
-                password: $('#password').val(), key: $('#key').val() })
-              }
-            };
-
-            var elements = [$selectCiphers,
-                            $selectKeys,
-                            $(document.createElement('input')).attr('id', 'password')
-                                                              .attr('name', 'password')
-                                                              .attr('value', '')
-                                                              .attr('type', 'password')
-                                                              .attr('placeholder', 'decryption password')
-                                                              .addClass('text ui-widget-content ui-corner-all')];
-
-            Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
-              submitButton: 'Decrypt', title: 'Decrypt File' });
-
-            Interlock.UI.modalFormDialog('open');
-
-            $('#password').hide();
-            $('#key').hide();
-
-            /* pre-select the cipher based on the file extension */
-            $.each(Interlock.Crypto.getCiphers(), function(index, cipher) {
-              if (path.split('.').pop() === cipher.ext) {
-                $('#cipher').val(cipher.name).change();
-              }
-            });
-          });
-        }));
-
-        /* file sign */
-        menuEntries.push($(document.createElement('li')).text('Sign')
-                                                        .click(function() {
-
-          var $selectSignKeys = $(document.createElement('select')).attr('id', 'sig_key')
-                                                                   .attr('name', 'sig_key');
-
-          var $availableSignKeys = [$(document.createElement('option')).attr('value', '')
-                                                                       .text('choose signing key')];
-          Interlock.keyList = new $.Deferred();
-          Interlock.cipherList = new $.Deferred();
-
-          Interlock.Crypto.cipherList();
-          Interlock.Crypto.keyList();
-
-          /* waits until cipher and key lists have been filled with the backend data */
-          $.when(Interlock.cipherList, Interlock.keyList).done(function () {
-            $.each(Interlock.Crypto.getSignKeys(), function(index, key) {
-              $availableSignKeys.push($(document.createElement('option')).attr('value', key.path)
+        /* waits until cipher and key lists have been filled with the backend data */
+        $.when(Interlock.cipherList, Interlock.keyList).done(function () {
+          $.each(Interlock.Crypto.getVerifyKeys(), function(index, key) {
+            $availableVerifyKeys.push($(document.createElement('option')).attr('value', key.path)
                                                                          .text(key.identifier));
-            });
-
-            $selectSignKeys.append($availableSignKeys);
-
-            var buttons = { 'Sign': function() {
-              Interlock.FileManager.fileSign({cipher: Interlock.Crypto.getKeyCipher($('#sig_key option:selected').text()),
-                                              password: $('#password').val(),
-                                              key: $('#sig_key').val(), src: path});
-              }
-            };
-
-            var elements = [$selectSignKeys,
-                            $(document.createElement('input')).attr('id', 'password')
-                                                              .attr('name', 'password')
-                                                              .attr('value', '')
-                                                              .attr('type', 'password')
-                                                              .attr('placeholder', 'key password')
-                                                              .addClass('text ui-widget-content ui-corner-all')];
- 
-            Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
-              submitButton: 'Sign', title: 'Sign File'});
-            Interlock.UI.modalFormDialog('open');
           });
-        }));
 
-        /* file verify */
-        menuEntries.push($(document.createElement('li')).text('Verify')
-                                                        .click(function() {
+          $selectVerifyKeys.append($availableVerifyKeys);
 
-          var $selectVerifyKeys = $(document.createElement('select')).attr('id', 'verify_key')
-                                                                     .attr('name', 'verify_key');
+          var buttons = { 'Verify': function() {
+              Interlock.FileManager.fileVerify({src: $('#src').val(), sig_path: $('#sig_path').val(),
+                                                key: $('#verify_key').val(),
+                                                cipher: Interlock.Crypto.getKeyCipher($('#verify_key option:selected').text()) });
+            }
+          };
 
-          var $availableVerifyKeys = [$(document.createElement('option')).attr('value', '')
-                                                                         .text('choose a signature verification key')];
-          Interlock.keyList = new $.Deferred();
-          Interlock.cipherList = new $.Deferred();
+          var elements = [$(document.createElement('input')).attr('id', 'src')
+                                                            .attr('name', 'src')
+                                                            .attr('value', path)
+                                                            .attr('type', 'text')
+                                                            .attr('placeholder', 'file to verify')
+                                                            .addClass('text ui-widget-content ui-corner-all'),
+                          $selectVerifyKeys,
+                          $(document.createElement('input')).attr('id', 'sig_path')
+                                                            .attr('name', 'sig_path')
+                                                            .attr('value', '')
+                                                            .attr('type', 'text')
+                                                            .attr('placeholder', 'signature file')
+                                                            .addClass('text ui-widget-content ui-corner-all')];
 
-          Interlock.Crypto.cipherList();
-          Interlock.Crypto.keyList();
-
-          /* waits until cipher and key lists have been filled with the backend data */
-          $.when(Interlock.cipherList, Interlock.keyList).done(function () {
-            $.each(Interlock.Crypto.getVerifyKeys(), function(index, key) {
-              $availableVerifyKeys.push($(document.createElement('option')).attr('value', key.path)
-                                                                           .text(key.identifier));
-            });
-
-            $selectVerifyKeys.append($availableVerifyKeys);
-
-            var buttons = { 'Verify': function() {
-                Interlock.FileManager.fileVerify({src: $('#src').val(), sig_path: $('#sig_path').val(),
-                                                  key: $('#verify_key').val(),
-                                                  cipher: Interlock.Crypto.getKeyCipher($('#verify_key option:selected').text()) });
-              }
-            };
-
-            var elements = [$(document.createElement('input')).attr('id', 'src')
-                                                              .attr('name', 'src')
-                                                              .attr('value', path)
-                                                              .attr('type', 'text')
-                                                              .attr('placeholder', 'file to verify')
-                                                              .addClass('text ui-widget-content ui-corner-all'),
-                            $selectVerifyKeys,
-                            $(document.createElement('input')).attr('id', 'sig_path')
-                                                              .attr('name', 'sig_path')
-                                                              .attr('value', '')
-                                                              .attr('type', 'text')
-                                                              .attr('placeholder', 'signature file')
-                                                              .addClass('text ui-widget-content ui-corner-all')];
-
-            Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
-              submitButton: 'Verify', title: 'Verify File Signature'});
-            Interlock.UI.modalFormDialog('open');
-          });
-        }));
-      }
+          Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
+            submitButton: 'Verify', title: 'Verify File Signature'});
+          Interlock.UI.modalFormDialog('open');
+        });
+      }));
 
       /* add 'Key Info' menu - except for password. Reduntant check password
          keys cannot be uploaded in first place.
@@ -706,6 +695,9 @@ Interlock.FileManager = new function() {
                                                             Interlock.Crypto.keyInfo(inode.key.path);
                                                           }));
         }
+      }
+
+      if (inode.private) {
         menuEntries.push($(document.createElement('li')).text('Download')
                                                         .addClass('disabled'));
       } else {

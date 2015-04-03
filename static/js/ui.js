@@ -319,3 +319,28 @@ Interlock.UI.currentTime = function() {
   return (pad.substring(hours.length) + hours + ':' +
           pad.substring(min.length) + min);
 };
+
+/**
+  * @function
+  * @public
+  *
+  * @description
+  * @returns the inode size string formatted as (12, 1.2K, 1.2M, 1.2G)
+ */
+Interlock.UI.formatSize = function(size) {
+  var k = parseFloat(size/1024).toFixed(1);
+  var m = parseFloat(size/(1024*1024)).toFixed(1);
+  var g = parseFloat(size/(1024*1024*1024)).toFixed(1);
+
+  var formattedSize = size + '';
+
+  if (g >= 1.0) {
+    formattedSize = g + 'G';
+  } else if (m >= 1.0) {
+    formattedSize = m + 'M';
+  } else if (k >= 1.0) {
+    formattedSize = k + 'K'
+  }
+
+  return formattedSize;
+};

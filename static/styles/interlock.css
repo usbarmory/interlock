@@ -177,8 +177,18 @@ input, textarea {
   margin-bottom: 10px
 }
 
+legend { display: block }
+
+fieldset.nested {
+  margin: 0;
+  padding: 0;
+  display: block;
+  clear: both
+}
+
 select {
   float: right;
+  display: block;
   margin-top: 10px;
   margin-bottom: 10px;
   border: 0 !important;
@@ -218,6 +228,12 @@ a#remove_password,
 a#change_password {
   text-decoration: none;
   color: gray;
+}
+
+a#add_password:hover,
+a#remove_password:hover,
+a#change_password:hover {
+  color: black;
 }
 
 button#shellinabox,

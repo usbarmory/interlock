@@ -66,7 +66,7 @@ func authenticate(volume string, password string, dispose bool) (err error) {
 	return
 }
 
-func refreshXSRFToken(w http.ResponseWriter) (res jsonObject) {
+func refresh(w http.ResponseWriter) (res jsonObject) {
 	res = jsonObject{
 		"status": "OK",
 		"response": map[string]interface{}{

@@ -20,20 +20,17 @@ func registerHandlers() {
 }
 
 func apiHandler(w http.ResponseWriter, r *http.Request) {
-	var res jsonObject
-
 	if conf.Debug {
 		log.Printf("%s %s %s", r.RemoteAddr, r.Method, r.RequestURI)
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 
-	if r.RequestURI == "/api/auth/login" {
+	switch r.RequestURI {
+	case "/api/auth/login":
 		if validSessionID, _, _ := session.Validate(r); validSessionID {
-			// The session is validated using a single session cookie, we re-send the
-			// XSRF token if authenticated user lands again on login page (e.g. different
-			// tab).
-			res = refreshXSRFToken(w)
+			// TODO: backward compatibility until client implements /api/auth/refresh
+			sendResponse(w, refresh(w))
 		} else {
 			// On a successful login the "Interlock-Token" is returned as cookie via the
 			// "Set-Cookie" header in HTTP response.
@@ -41,11 +38,18 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 			// The XSRF protection token "X-SRFToken" is returned in the response payload.
 			// This token must be included by the client as HTTP header in every request to
 			// the backend.
-			res = login(w, r)
+			sendResponse(w, login(w, r))
 		}
-
-		sendResponse(w, res)
-	} else {
+	case "/api/auth/refresh":
+		if validSessionID, _, err := session.Validate(r); validSessionID {
+			// The session is validated using a single session cookie, we re-send the
+			// XSRF token if authenticated user lands again on login page (e.g. different
+			// tab).
+			sendResponse(w, refresh(w))
+		} else {
+			sendResponse(w, errorResponse(err, "INVALID_SESSION"))
+		}
+	default:
 		if validSessionID, validXSRFToken, err := session.Validate(r); !(validSessionID && validXSRFToken) {
 			u, _ := url.Parse(r.RequestURI)
 
@@ -66,8 +70,7 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 				if conf.testMode {
 					handleRequest(w, r)
 				} else {
-					res = errorResponse(err, "INVALID_SESSION")
-					sendResponse(w, res)
+					sendResponse(w, errorResponse(err, "INVALID_SESSION"))
 				}
 			}
 		} else {

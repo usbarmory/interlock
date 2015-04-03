@@ -58,7 +58,7 @@ error response:
 # API Methods (* == currently not implemented)
 
   api/
-    auth/           login, logout, poweroff
+    auth/           login, refesh, logout, poweroff
     luks/           change, add, remove
     file/           list, upload, delete, move, copy, mkdir
     file/           encrypt, decrypt, verify
@@ -99,6 +99,19 @@ response:
 'Set-Cookie' header example:
 Set-Cookie: Interlock-Token=DQAAAK...Eaem_vYg; Path=/;
             Expires=Wed, 30 Jan 2015 22:23:01 GMT; Secure; HttpOnly
+
+## GET api/auth/refresh
+
+Return the XSRF protection token for the authenticated session.
+
+response:
+  {
+    "status":        string, # OK | KO | INVALID_SESSION | INVALID
+    "response": {
+      "volume":      string, # encrypted volume name
+      "XSRFToken":   string
+    }
+  }
 
 ## POST api/auth/logout
 

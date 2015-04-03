@@ -89,10 +89,10 @@ request:
 
 response:
   {
-    "status":        string, # OK | KO | INVALID_SESSION | INVALID
+    "status":      string,   # OK | KO | INVALID_SESSION | INVALID
     "response": {
-      "volume":      string, # encrypted volume name
-      "XSRFToken":   string
+      "volume":    string,   # encrypted volume name
+      "XSRFToken": string
     }
   }
 
@@ -106,10 +106,10 @@ Return the XSRF protection token for the authenticated session.
 
 response:
   {
-    "status":        string, # OK | KO | INVALID_SESSION | INVALID
+    "status":      string,   # OK | KO | INVALID_SESSION | INVALID
     "response": {
-      "volume":      string, # encrypted volume name
-      "XSRFToken":   string
+      "volume":    string,   # encrypted volume name
+      "XSRFToken": string
     }
   }
 
@@ -291,9 +291,8 @@ request:
     "password":    string,   # symmetric cipher or key password
     "verify":      boolean,  # verify the file signature (default: false)
     "key":         string,   # key path, only for asymmetric ciphers
-    "sig_key":     string    # signature key identifier
-     ############  optional: ############
-    "cipher":      string,   # name for cipher object, use ext if empty
+    "sig_key":     string,   # signature key identifier
+    "cipher":      string    # name for cipher object, use ext if empty
   }
 
 ## POST api/file/sign
@@ -305,7 +304,7 @@ request:
     "src":         string,   # absolute path for file to sign
     "cipher":      string,   # name for cipher object
     "password":    string,   # key password
-    "key":         string,   # key path
+    "key":         string    # key path
   }
 
 ## POST api/file/verify
@@ -316,9 +315,8 @@ request:
   {
     "src":         string,   # absolute path for file to verify
     "sig":         string,   # absolute path for signature file
-    "key":         string    # signature key identifier
-     ############  optional: ############
-    "cipher":      string,   # name for cipher object, use ext if empty
+    "key":         string,   # signature key identifier
+    "cipher":      string    # name for cipher object
   }
 
 ## GET api/crypto/ciphers
@@ -358,7 +356,7 @@ request:
   {
     "identifier":  string,   # key identifier
     "key_format":  string,   # key format ("armor")
-    "cipher":      string    # name for cipher object
+    "cipher":      string,   # name for cipher object
     "email":       string    # email
   }
 
@@ -398,7 +396,7 @@ response:
     "status":      string,   # OK | KO | INVALID_SESSION | INVALID
     "response": {
       "version" :  string,   # Interlock version
-      "build":     string,   # Interlock build information
+      "build":     string    # Interlock build information
     }
   }
 

@@ -14,6 +14,7 @@ import (
 	"log/syslog"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 )
@@ -87,8 +88,15 @@ func (k *key) Store(cipher cipherInterface, data string) (err error) {
 		subdir = "public"
 	}
 
-	path := filepath.Join(conf.mountPoint, conf.KeyPath, cipher.GetInfo().Extension, subdir, fileName)
-	output, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_EXCL|os.O_TRUNC, 0600)
+	keyPath := filepath.Join(conf.mountPoint, conf.KeyPath, cipher.GetInfo().Extension, subdir, fileName)
+
+	err = os.MkdirAll(path.Dir(keyPath), 0700)
+
+	if err != nil {
+		return
+	}
+
+	output, err := os.OpenFile(keyPath, os.O_WRONLY|os.O_CREATE|os.O_EXCL|os.O_TRUNC, 0600)
 
 	if err != nil {
 		return

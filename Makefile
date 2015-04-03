@@ -3,7 +3,7 @@
 GO ?= go
 BUILD_USER = $(shell whoami)
 BUILD_HOST = $(shell hostname)
-BUILD_DATE = $(shell /bin/date -u +%Y/%m/%d-%H:%M:%S)
+BUILD_DATE = $(shell /bin/date -u "+%Y-%m-%d %H:%M:%S")
 
 all: build
 

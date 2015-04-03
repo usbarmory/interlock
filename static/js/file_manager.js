@@ -63,14 +63,14 @@ Interlock.FileManager = new function() {
     });
 
     /* register the on 'click' event to the new key button */
-    $('#upload_key').on('click', function() {
+    $('#import_key').on('click', function() {
       var $selectCiphers = $(document.createElement('select')).attr('id', 'cipher')
                                                               .attr('name', 'cipher');
 
       var $availableCiphers = [$(document.createElement('option')).attr('value', '')
                                                                   .text('choose encryption cipher')];
 
-      var buttons = { 'Add key': function() {
+      var buttons = { 'Import key': function() {
         Interlock.Crypto.uploadKey({ identifier: $('#identifier').val(),
                                      key_format: $('#key_format').val(),
                                      cipher: $('#cipher').val(),
@@ -126,7 +126,7 @@ Interlock.FileManager = new function() {
                                                         .hide()];
 
       Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
-        submitButton: 'Upload key', title: 'Upload a new key', height: 600, width: 550 });
+        submitButton: 'Import key', title: 'Import a new key', height: 600, width: 550 });
       Interlock.UI.modalFormDialog('open');
     });
 
@@ -1372,8 +1372,55 @@ Interlock.FileManager.fileVerify = function(args) {
  */
 Interlock.FileManager.sortInodes = function(inodes) {
   try {
-    /* FIXME: implement sorting */
-    return inodes;
+    var directories = [];
+    var files = [];
+    var directoriesKeys = [];
+    var filesKeys = [];
+
+    var sortedDirectories = [];
+    var sortedFiles = [];
+
+    var sortAttr = 'name';
+
+    /* FIXME: optimize sorting algorithm */
+    if (sessionStorage.mainViewSortAttribute !== 'name' ||
+        sessionStorage.mainViewSortAttribute !== 'size' ||
+        sessionStorage.mainViewSortAttribute !== 'mtime') {
+      sessionStorage.mainViewSortAttribute = 'name';
+    }
+
+    sortAttr = sessionStorage.mainViewSortAttribute;
+
+    $.each(inodes, function(index, inode) {
+      if (inode.dir) {
+        directories.push(inode);
+        directoriesKeys.push(inode[sortAttr]);
+      } else {
+        files.push(inode);
+        filesKeys.push(inode[sortAttr]);
+      }
+    });
+
+    directoriesKeys = directoriesKeys.sort();
+    filesKeys = filesKeys.sort();
+
+    $.each(directoriesKeys, function(dirKeyIndex, dirKey) {
+      $.grep(directories, function(e) {
+        if (e[sortAttr] === dirKey) {
+          sortedDirectories.push(e);
+        }
+      });
+    });
+
+    $.each(filesKeys, function(fileKeyIndex, fileKey) {
+      $.grep(files, function(e) {
+        if (e[sortAttr] === fileKey) {
+          sortedFiles.push(e);
+        }
+      });
+    });
+
+    return $.merge(sortedDirectories, sortedFiles);
   } catch (e) {
     Interlock.Session.createEvent({'kind': 'critical',
       'msg': '[Interlock.FileManager.sortInodes] unable to sort file list' + e});

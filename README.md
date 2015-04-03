@@ -49,8 +49,7 @@ Design goals:
 * Support for additional symmetric/asymmetric encryption on individual
   files/directories.
 
-* Support for disposable authentication passwords, emergency self destruct
-  (LUKS nuke)
+* Support for disposable authentication passwords
 
 * Minimal footprint (single statically linked binary + supporting static files)
   to ease integration with USB armory secure booted initrd ramdisk.
@@ -69,6 +68,25 @@ Asymmetric ciphers:
 Symmetric ciphers:
 
 * AES-256-OFB w/ PBKDF2 password derivation (SHA256, 4096 rounds) and HMAC (SHA256)
+
+Key Storage
+===========
+
+A pre-defined directory, stored on the encrypted filesystem, is assigned to
+public and private key storage (see Configuration section for related
+settings).
+
+The keys can be uploaded using the file manager, imported as free text or
+generated server-side.
+
+The key storage directory structure is the following:
+
+```
+<key_path>/<private|public>/<cipher_name>/<key_identifier>.<key_format>
+```
+
+Once uploaded in their respective directory, private keys can only be deleted
+or overwritten, they cannot be downloaded, moved or copied.
 
 Requirements & Operation
 ========================
@@ -129,9 +147,9 @@ When cross compiling from a non-arm host for an arm target ensure that the
 following compilation variables are set:
 
 ```
-GOARCH=arm
-CC=<path_to_cross_compiler>/arm-linux-gnueabihf-gcc
-CGO_ENABLED=1
+make GOARCH=arm \
+     CC=<path_to_cross_compiler>/arm-linux-gnueabihf-gcc \
+     CGO_ENABLED=1
 ```
 
 Options

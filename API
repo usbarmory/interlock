@@ -18,6 +18,7 @@ inode:
     "size":        number,   # size in bytes
     "mtime":       number    # modify time in epoch
     "key_path":    boolean,  # true if path is within key storage
+    "private":     boolean,  # true if path contains private keys
      ############  optional: ############
     "key":         key       # key object
   }

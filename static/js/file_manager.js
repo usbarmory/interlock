@@ -331,9 +331,9 @@ Interlock.FileManager = new function() {
                                                         .addClass('disabled'));
       } else {
         menuEntries.push($(document.createElement('li')).text('Download (zip archive)')
-                                                      .click(function() {
-                                                        Interlock.FileManager.fileDownload(path);
-                                                      }));
+                                                        .click(function() {
+                                                          Interlock.FileManager.fileDownload(path);
+                                                        }));
       }
     } else {
       if (inode.key && inode.key !== 'password') {
@@ -341,9 +341,15 @@ Interlock.FileManager = new function() {
                                                         .addClass('disabled'));
         menuEntries.push($(document.createElement('li')).text('Decrypt')
                                                         .addClass('disabled'));
+        menuEntries.push($(document.createElement('li')).text('Sign')
+                                                        .addClass('disabled'));
+        menuEntries.push($(document.createElement('li')).text('Verify')
+                                                        .addClass('disabled'));
       } else {
+        /* file encrypt */
         menuEntries.push($(document.createElement('li')).text('Encrypt')
                                                         .click(function() {
+
           var $selectCiphers = $(document.createElement('select')).attr('id', 'cipher')
                                                                   .attr('name', 'cipher');
 
@@ -498,6 +504,7 @@ Interlock.FileManager = new function() {
           });
         }));
 
+        /* file decrypt */
         menuEntries.push($(document.createElement('li')).text('Decrypt')
                                                         .click(function() {
           var $selectCiphers = $(document.createElement('select')).attr('id', 'cipher')
@@ -592,14 +599,15 @@ Interlock.FileManager = new function() {
           });
         }));
 
+        /* file sign */
         menuEntries.push($(document.createElement('li')).text('Sign')
                                                         .click(function() {
+
           var $selectSignKeys = $(document.createElement('select')).attr('id', 'sig_key')
                                                                    .attr('name', 'sig_key');
 
           var $availableSignKeys = [$(document.createElement('option')).attr('value', '')
                                                                        .text('choose signing key')];
-
           Interlock.keyList = new $.Deferred();
           Interlock.cipherList = new $.Deferred();
 
@@ -632,14 +640,61 @@ Interlock.FileManager = new function() {
  
             Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
               submitButton: 'Sign', title: 'Sign File'});
+            Interlock.UI.modalFormDialog('open');
+          });
+        }));
 
+        /* file verify */
+        menuEntries.push($(document.createElement('li')).text('Verify')
+                                                        .click(function() {
+
+          var $selectVerifyKeys = $(document.createElement('select')).attr('id', 'verify_key')
+                                                                     .attr('name', 'verify_key');
+
+          var $availableVerifyKeys = [$(document.createElement('option')).attr('value', '')
+                                                                         .text('choose a signature verification key')];
+          Interlock.keyList = new $.Deferred();
+          Interlock.cipherList = new $.Deferred();
+
+          Interlock.Crypto.cipherList();
+          Interlock.Crypto.keyList();
+
+          /* waits until cipher and key lists have been filled with the backend data */
+          $.when(Interlock.cipherList, Interlock.keyList).done(function () {
+            $.each(Interlock.Crypto.getPublicKeys(), function(index, key) {
+              $availableVerifyKeys.push($(document.createElement('option')).attr('value', key.path)
+                                                                           .text(key.identifier));
+            });
+
+            $selectVerifyKeys.append($availableVerifyKeys);
+
+            var buttons = { 'Verify': function() {
+                Interlock.FileManager.fileVerify({src: $('#src').val(), sig_path: $('#sig_path').val(),
+                                                  key: $('#verify_key').val(),
+                                                  cipher: Interlock.Crypto.getKeyCipher($('#verify_key option:selected').text()) });
+              }
+            };
+
+            var elements = [$(document.createElement('input')).attr('id', 'src')
+                                                              .attr('name', 'src')
+                                                              .attr('value', path)
+                                                              .attr('type', 'text')
+                                                              .attr('placeholder', 'file to verify')
+                                                              .addClass('text ui-widget-content ui-corner-all'),
+                            $selectVerifyKeys,
+                            $(document.createElement('input')).attr('id', 'sig_path')
+                                                              .attr('name', 'sig_path')
+                                                              .attr('value', '')
+                                                              .attr('type', 'text')
+                                                              .attr('placeholder', 'signature file')
+                                                              .addClass('text ui-widget-content ui-corner-all')];
+
+            Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
+              submitButton: 'Verify', title: 'Verify File Signature'});
             Interlock.UI.modalFormDialog('open');
           });
         }));
       }
-
-      menuEntries.push($(document.createElement('li')).text('Verify')
-                                                      .addClass('disabled'));
 
       /* add 'Key Info' menu - except for password. Reduntant check password
          keys cannot be uploaded in first place.
@@ -1230,11 +1285,11 @@ Interlock.FileManager.fileSignCallback = function(backendData, args) {
       Interlock.FileManager.fileList('mainView');
     } else {
       Interlock.Session.createEvent({'kind': backendData.status,
-        'msg': '[Interlock.FileManager.fileSign] ' + backendData.response});
+        'msg': '[Interlock.FileManager.fileSignCallback] ' + backendData.response});
     }
   } catch (e) {
     Interlock.Session.createEvent({'kind': 'critical',
-      'msg': '[Interlock.FileManager.fileSign] ' + e});
+      'msg': '[Interlock.FileManager.fileSignCallback] ' + e});
   }
 };
 
@@ -1256,6 +1311,51 @@ Interlock.FileManager.fileSign = function(args) {
   } catch (e) {
     Interlock.Session.createEvent({'kind': 'critical',
       'msg': '[Interlock.FileManager.fileSign] ' + e});
+  }
+};
+
+/**
+ * @function
+ * @public
+ *
+ * @description
+ * Callback function file verify
+ *
+ * @param {Object} backendData
+ * @returns {}
+ */
+Interlock.FileManager.fileVerifyCallback = function(backendData, args) {
+  try {
+    if (backendData.status === 'OK') {
+      Interlock.UI.modalFormDialog('close');
+    } else {
+      Interlock.Session.createEvent({'kind': backendData.status,
+        'msg': '[Interlock.FileManager.fileVerifyCallback] ' + backendData.response});
+    }
+  } catch (e) {
+    Interlock.Session.createEvent({'kind': 'critical',
+      'msg': '[Interlock.FileManager.fileVerifyCallback] ' + e});
+  }
+};
+
+/**
+ * @function
+ * @public
+ *
+ * @description
+ * Verify one file
+ *
+ * @param {Object} commandArguments src, sig, key, cipher
+ * @returns {}
+ */
+Interlock.FileManager.fileVerify = function(args) {
+  try {
+    Interlock.Backend.APIRequest(Interlock.Backend.API.file.verify, 'POST',
+      JSON.stringify({src: args.src, sig: args.sig_path, key: args.key, cipher: args.cipher}),
+        'FileManager.fileVerifyCallback');
+  } catch (e) {
+    Interlock.Session.createEvent({'kind': 'critical',
+      'msg': '[Interlock.FileManager.fileVerify] ' + e});
   }
 };
 

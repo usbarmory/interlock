@@ -54,7 +54,7 @@ Interlock.Crypto = new function() {
     var privateKeys = [];
 
     $.each(keys, function(index, key) {
-      if (key.private) {
+      if (key.private === true) {
         privateKeys.push(key);
       }
     });
@@ -66,7 +66,7 @@ Interlock.Crypto = new function() {
     var publicKeys = [];
 
     $.each(keys, function(index, key) {
-      if (!key.private) {
+      if (key.private === false) {
         publicKeys.push(key);
       }
     });

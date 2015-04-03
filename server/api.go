@@ -40,13 +40,13 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 			sendResponse(w, login(w, r))
 		}
 	case "/api/auth/refresh":
-		if validSessionID, _, err := session.Validate(r); validSessionID {
+		if validSessionID, _, _ := session.Validate(r); validSessionID {
 			// The session is validated using a single session cookie, we re-send the
 			// XSRF token if authenticated user lands again on login page (e.g. different
 			// tab).
 			sendResponse(w, refresh(w))
 		} else {
-			sendResponse(w, errorResponse(err, "INVALID_SESSION"))
+			sendResponse(w, jsonObject{"status": "INVALID_SESSION", "response": nil})
 		}
 	default:
 		if validSessionID, validXSRFToken, err := session.Validate(r); !(validSessionID && validXSRFToken) {
@@ -69,7 +69,7 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 				if conf.testMode {
 					handleRequest(w, r)
 				} else {
-					sendResponse(w, errorResponse(err, "INVALID_SESSION"))
+					sendResponse(w, jsonObject{"status": "INVALID_SESSION", "response": nil})
 				}
 			}
 		} else {

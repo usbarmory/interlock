@@ -10,7 +10,7 @@ Copyright (c) 2015 Inverse Path S.r.l.
 The INTERLOCK application is a file encryption front-end developed, but not
 limited to, usage with the [USB armory](http://inversepath.com/usbarmory).
 
-The goal of the package is to expose a simple file manager for an encrypted
+The goal of the package is to expose a web-based file manager for an encrypted
 partition running on the device hosting the JSON application server (i.e. USB
 armory).
 
@@ -82,12 +82,16 @@ assumed to have been previously created with fdisk using the desired size and
 the Linux LVM type (8e).
 
 ```
-pvcreate /dev/mmcblk0p2
-vgcreate lvmvolume /dev/mmcblk0p2
-lvcreate -L 20G -n encryptedfs lvmvolume
-cryptsetup -y --cipher aes-xts-plain64 --key-size 256 --hash sha1 luksFormat /dev/lvmvolume/encryptedfs
+pvcreate /dev/mmcblk0p2                   # initialize physical volume
+vgcreate lvmvolume /dev/mmcblk0p2         # create volume group
+lvcreate -L 20G -n encryptedfs lvmvolume  # create logical volume of 20 GB
+
+cryptsetup -y --cipher aes-xts-plain64  \ # set-up encrypted partition
+  --key-size 256 --hash sha1 luksFormat \ # with default cryptsetup
+  /dev/lvmvolume/encryptedfs              # settings
+
 cryptsetup luksOpen /dev/lvmvolume/encryptedfs interlockfs
-mkfs.ext4 /dev/mapper/interlockfs
+mkfs.ext4 /dev/mapper/interlockfs         # create ext4 filesystem
 cryptsetup luksClose interlockfs
 ```
 
@@ -98,9 +102,9 @@ A successful login unlocks the encrypted partition, a successful logout locks
 it back.
 
 Once logged in users can change, add, remove LUKS passwords within INTERLOCK.
-Any login password can be disposed of using a dedicated boolean during login,
-this deletes the password from its LUKS key slot right after encrypted
-partition unlocking.
+Any login password can be disposed of using a dedicated flag during login, this
+deletes the password from its LUKS key slot right after encrypted partition
+unlocking.
 
 **WARNING**: removing the last remaining password makes the LUKS encrypted
 container permanently inaccessible. This is a feature, not a bug.

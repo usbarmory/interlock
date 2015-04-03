@@ -88,7 +88,8 @@ func (k *key) Store(cipher cipherInterface, data string) (err error) {
 		subdir = "public"
 	}
 
-	keyPath := filepath.Join(conf.mountPoint, conf.KeyPath, cipher.GetInfo().Extension, subdir, fileName)
+	k.Path = filepath.Join(conf.KeyPath, cipher.GetInfo().Extension, subdir, fileName)
+	keyPath := filepath.Join(conf.mountPoint, k.Path)
 
 	err = os.MkdirAll(path.Dir(keyPath), 0700)
 
@@ -191,10 +192,9 @@ func getKey(path string) (k key, cipher cipherInterface, err error) {
 		return
 	}
 
-	cipher = conf.FindCipherByExt(cipherExt)
+	cipher, err = conf.GetCipherByExt(cipherExt)
 
-	if cipher == nil {
-		err = errors.New("could not identify compatible key cipher")
+	if err != nil {
 		return
 	}
 
@@ -330,12 +330,12 @@ func genKey(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 
 	identifier := req["identifier"].(string)
 	email := req["email"].(string)
+	cipherName := req["cipher"].(string)
 
-	cipher := conf.FindCipherByName(req["cipher"].(string))
+	cipher, err := conf.GetCipher(cipherName)
 
-	if cipher == nil || cipher.GetInfo().KeyFormat == "password" {
-		err = errors.New("could not identify compatible key cipher")
-		return errorResponse(err, "")
+	if err != nil || cipher.GetInfo().KeyFormat == "password" {
+		return errorResponse(errors.New("could not identify compatible key cipher"), "")
 	}
 
 	go func() {
@@ -412,17 +412,23 @@ func uploadKey(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		return errorResponse(err, "")
 	}
 
-	cipher := conf.FindCipherByName(k.Cipher)
+	cipher, err := conf.GetCipher(k.Cipher)
 
-	if cipher == nil || cipher.GetInfo().KeyFormat == "password" {
-		err = errors.New("could not identify compatible key cipher")
-		return errorResponse(err, "")
+	if err != nil || cipher.GetInfo().KeyFormat == "password" {
+		return errorResponse(errors.New("could not identify compatible key cipher"), "")
 	}
 
 	err = k.Store(cipher, req["data"].(string))
 
 	if err != nil {
 		return errorResponse(err, "")
+	}
+
+	// test the key
+	err = cipher.SetKey(k)
+
+	if err != nil {
+		return errorResponse(fmt.Errorf("saved key is unusable: %s", err.Error()), "")
 	}
 
 	res = jsonObject{

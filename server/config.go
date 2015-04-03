@@ -38,26 +38,6 @@ type config struct {
 
 var conf config
 
-func (c *config) FindCipherByExt(ext string) (cipher cipherInterface) {
-	for _, value := range c.enabledCiphers {
-		if value.GetInfo().Extension == ext {
-			return value
-		}
-	}
-
-	return
-}
-
-func (c *config) FindCipherByName(name string) (cipher cipherInterface) {
-	for _, value := range c.enabledCiphers {
-		if value.GetInfo().Name == name {
-			return value
-		}
-	}
-
-	return
-}
-
 func (c *config) SetAvailableCipher(cipher cipherInterface) {
 	if c.availableCiphers == nil {
 		c.availableCiphers = make(map[string]cipherInterface)
@@ -76,6 +56,19 @@ func (c *config) GetCipher(cipherName string) (cipher cipherInterface, err error
 
 	// get a fresh instance
 	cipher = cipher.New()
+
+	return
+}
+
+func (c *config) GetCipherByExt(ext string) (cipher cipherInterface, err error) {
+	for _, value := range c.enabledCiphers {
+		if value.GetInfo().Extension == ext {
+			cipher = value
+			return
+		}
+	}
+
+	err = errors.New("invalid cipher")
 
 	return
 }

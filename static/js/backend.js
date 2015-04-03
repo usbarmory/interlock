@@ -10,8 +10,9 @@ Interlock.Backend = new function() {
 
   /** @protected */
   this.API = {
-               'auth':      { 'login':  'auth/login',
-                              'logout': 'auth/logout' },
+               'auth':      { 'login':    'auth/login',
+                              'logout':   'auth/logout',
+                              'powerOff': 'auth/poweroff'},
 
                'LUKS':      { 'addPwd':    'luks/add',
                               'changePwd': 'luks/change',

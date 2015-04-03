@@ -308,6 +308,65 @@ Interlock.Session.logout = function() {
  * @public
  *
  * @description
+ * Callback function, clear the XSRF token and the current mounted volume
+ *
+ * @param {Object} backendData
+ * @returns {}
+ */
+Interlock.Session.powerOffCallback = function(backendData) {
+  try {
+    if (backendData.status === 'OK') {
+      sessionStorage.removeItem('XSRFToken');
+      sessionStorage.removeItem('volume');
+
+      Interlock.Session.createEvent({'kind': 'info', 'msg':
+        '[Interlock.Session.powerOffCallback] session closed, device is shutting down.'});
+    } else {
+      Interlock.Session.createEvent({'kind': backendData.status,
+                                     'msg': '[Interlock.Session.powerOffCallback] ' + backendData.response});
+    }
+  } catch (e) {
+    Interlock.Session.createEvent({'kind': 'critical', 'msg':
+      '[Interlock.Session.powerOffCallback] ' + e});
+  }
+};
+
+/**
+ * @function
+ * @public
+ *
+ * @description
+ * Interlock poweroff: logout and shutdown the device
+ *
+ */
+Interlock.Session.powerOff = function() {
+  try {
+    var buttons = { 'Power Off': function() {
+      Interlock.Backend.APIRequest(Interlock.Backend.API.auth.powerOff, 'POST',
+        null, 'Session.powerOffCallback')
+      }
+    };
+
+    var elements = [$(document.createElement('p')).text('Press "Power Off" to close all the active Interlock ' +
+                                                        'session(s) and power off the device.')];
+
+    Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
+      submitButton: 'Power Off', title: 'Lock and Poweroff' });
+    Interlock.UI.modalFormDialog('open');
+
+    Interlock.Session.createEvent({'kind': 'info', 'msg':
+      '[Interlock.Session.powerOff] closing current session and shutting down'});
+  } catch (e) {
+    Interlock.Session.createEvent({'kind': 'critical',
+      'msg': '[Interlock.Session.powerOff] ' + e});
+  }
+};
+
+/**
+ * @function
+ * @public
+ *
+ * @description
  * Callback function, parse the notifications and the logs retrieved
  * polling the backend and fill the UI status area
  *

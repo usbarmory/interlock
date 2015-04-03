@@ -12,13 +12,12 @@ import (
 	"log/syslog"
 	"net/http"
 	"os"
-	"syscall"
 )
 
 var configPath = flag.String("c", "", "configuration file path")
 
 func init() {
-	if syscall.Geteuid() == 0 {
+	if os.Geteuid() == 0 {
 		log.Fatal("Please do not run this application with administrative privileges")
 	}
 

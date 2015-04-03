@@ -11,6 +11,7 @@ import (
 	"log/syslog"
 	"net/http"
 	"os"
+	"strconv"
 	"syscall"
 )
 
@@ -86,15 +87,11 @@ func luksMount() (err error) {
 		return
 	}
 
-	// user.Current() would work better but when cross compiling without
-	// CGO_ENABLED it is not included, to avoid issues with use the
-	// environment variable
-	uid := os.Getenv("UID")
-
+	uid := strconv.Itoa(os.Geteuid())
 	args = []string{uid, conf.mountPoint}
 	cmd = "/bin/chown"
 
-	status.Log(syslog.LOG_NOTICE, "setting mount point permissions for user %s", os.Getenv("USER"))
+	status.Log(syslog.LOG_NOTICE, "setting mount point permissions for user %s (%s)", os.Getenv("USER"), uid)
 
 	_, err = execCommand(cmd, args, true, "")
 

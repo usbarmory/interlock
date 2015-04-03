@@ -79,7 +79,7 @@ Interlock.Session = new function() {
 
       /* triggers a fileList refresh when necessary: async operations like file
          encryption/decryption */
-      if (log.epoch > sessionStorage.lastAsyncOperation && log.msg.match(/completed/)) {
+      if (log.epoch > sessionStorage.lastAsyncOperation && log.msg.match(/completed|generated/)) {
         sessionStorage.lastAsyncOperation = log.epoch;
         Interlock.FileManager.fileList('mainView');
       }

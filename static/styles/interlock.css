@@ -318,6 +318,11 @@ h1 {
   margin-left: 20px
 }
 
+h1#interlock_version {
+  text-align: left;
+  float: left;
+}
+
 #status h1 { margin: 0 }
 
 #status ul#dynamic_status {

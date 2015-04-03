@@ -420,7 +420,7 @@ Interlock.FileManager = new function() {
                   if ($('#sign').is(':checked') === true) {
                     $('#sig_key').show();
                     $('#password').val('')
-                                  .attr('placeholder', 'sign key password')
+                                  .attr('placeholder', 'key password')
                                   .show();
                   } else {
                     $('#sig_key').hide();
@@ -635,7 +635,7 @@ Interlock.FileManager = new function() {
                                                               .attr('name', 'password')
                                                               .attr('value', '')
                                                               .attr('type', 'password')
-                                                              .attr('placeholder', 'encryption password')
+                                                              .attr('placeholder', 'key password')
                                                               .addClass('text ui-widget-content ui-corner-all')];
  
             Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,

@@ -10,6 +10,7 @@ Interlock.Session = new function() {
   var MAX_SESSION_LOGS = 1000;
   var logs = [];
 
+  sessionStorage.InterlockVersion = sessionStorage.InterlockVersion ? sessionStorage.InterlockVersion : '';
   sessionStorage.lastAsyncOperation = 0;
   sessionStorage.lastLog = sessionStorage.lastLog ? sessionStorage.lastLog : 0;
   sessionStorage.logs = sessionStorage.logs ? sessionStorage.logs : JSON.stringify(logs);
@@ -37,6 +38,7 @@ Interlock.Session = new function() {
 
   this.refreshStatus = function(status) {
     var $statusDiv = $('#status');
+    var $versionSpan = $('#interlock_version > span');
 
     var uptime = status.uptime;
     var freeram = status.freeram;
@@ -46,6 +48,8 @@ Interlock.Session = new function() {
 
     var notifications = status.notification || [];
     var logs = status.log || [];
+
+    $versionSpan.text(sessionStorage.InterlockVersion);
 
     $.extend($statusDiv,
       {uploads: $('#uploads'), logs: $('#logs'), notifications: $('#notifications'), dynamicStatus: $('#dynamic_status')});
@@ -205,6 +209,7 @@ Interlock.Session.loginCallback = function(backendData, hideErrors) {
         $('body').html(data);
         document.title = 'Interlock File Manager';
 
+        Interlock.Session.getVersion();
         Interlock.Session.statusPoller();
       });
 
@@ -267,6 +272,7 @@ Interlock.Session.logoutCallback = function(backendData) {
     if (backendData.status === 'OK') {
       sessionStorage.removeItem('XSRFToken');
       sessionStorage.removeItem('volume');
+      sessionStorage.removeItem('InterlockVersion');
 
       $.get("/templates/login.html", function(data) {
         $('body').html(data);
@@ -318,6 +324,7 @@ Interlock.Session.powerOffCallback = function(backendData) {
     if (backendData.status === 'OK') {
       sessionStorage.removeItem('XSRFToken');
       sessionStorage.removeItem('volume');
+      sessionStorage.removeItem('InterlockVersion');
 
       Interlock.Session.createEvent({'kind': 'info', 'msg':
         '[Interlock.Session.powerOffCallback] session closed, device is shutting down.'});
@@ -359,6 +366,49 @@ Interlock.Session.powerOff = function() {
   } catch (e) {
     Interlock.Session.createEvent({'kind': 'critical',
       'msg': '[Interlock.Session.powerOff] ' + e});
+  }
+};
+
+
+/**
+ * @function
+ * @public
+ *
+ * @description
+ * Callback function, parse the Interlock version and store it in the sessionStorage
+ *
+ * @param {Object} backendData
+ * @returns {}
+ */
+Interlock.Session.getVersionCallback = function(backendData) {
+  try {
+    if (backendData.status === 'OK' && backendData.response.version && backendData.response.build) {
+      sessionStorage.InterlockVersion = backendData.response.version + ' | ' + backendData.response.build;
+    } else {
+      Interlock.Session.createEvent({'kind': backendData.status,
+                                     'msg': '[Interlock.Session.getVersionCallback] ' + backendData.response});
+    }
+  } catch (e) {
+    Interlock.Session.createEvent({'kind': 'critical',
+      'msg': '[Interlock.Session.getVersionCallback] ' + e});
+  }
+};
+
+/**
+ * @function
+ * @public
+ *
+ * @description
+ * Interlock getVersion, retrieves Interlock version from the backend
+ *
+ */
+Interlock.Session.getVersion = function() {
+  try {
+    Interlock.Backend.APIRequest(Interlock.Backend.API.status.version, 'GET',
+        null, 'Session.getVersionCallback');
+  } catch (e) {
+    Interlock.Session.createEvent({'kind': 'critical',
+      'msg': '[Interlock.Session.getVersion] ' + e});
   }
 };
 

@@ -9,7 +9,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"log/syslog"
 	"net/http"
 	"net/url"
 )
@@ -158,7 +157,7 @@ func sendResponse(w http.ResponseWriter, res jsonObject) {
 }
 
 func errorResponse(err error, statusCode string) (res jsonObject) {
-	status.Log(syslog.LOG_ERR, err.Error())
+	status.Error(err)
 
 	if statusCode == "" {
 		statusCode = "KO"

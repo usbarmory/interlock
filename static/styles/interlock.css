@@ -237,9 +237,10 @@ a#change_password:hover {
 }
 
 button#shellinabox,
-button#logout {
+button#logout,
+button#poweroff {
   font-size: 9pt;
-  display: inline-block;
+  display: block-inline;
   background: white;
   color: gray;
   margin-top: -2px;
@@ -249,11 +250,10 @@ button#logout {
 }
 
 button#shellinabox:hover,
-button#logout:hover {
+button#logout:hover,
+button#poweroff:hover {
   color: black;
 }
-
-button#logout { margin-right: -15px }
 
 fieldset { border: none }
 

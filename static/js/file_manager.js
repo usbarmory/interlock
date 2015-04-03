@@ -661,7 +661,7 @@ Interlock.FileManager = new function() {
 
           /* waits until cipher and key lists have been filled with the backend data */
           $.when(Interlock.cipherList, Interlock.keyList).done(function () {
-            $.each(Interlock.Crypto.getPublicKeys(), function(index, key) {
+            $.each(Interlock.Crypto.getVerifyKeys(), function(index, key) {
               $availableVerifyKeys.push($(document.createElement('option')).attr('value', key.path)
                                                                            .text(key.identifier));
             });

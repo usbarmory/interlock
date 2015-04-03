@@ -89,6 +89,21 @@ Interlock.Crypto = new function() {
     return signKeys;
   };
 
+  this.getVerifyKeys = function() {
+    var verifyKeys = [];
+    var publicKeys = this.getPublicKeys();
+
+    $.each(publicKeys, function(indexKey, key) {
+      $.each(ciphers, function(indexCipher, cipher) {
+        if (key.cipher === cipher.name && cipher.sig === true) {
+          verifyKeys.push(key);
+        }
+      });
+    });
+
+    return verifyKeys;
+  };
+
   this.getKeyCipher = function(identifier) {
    var cipher = '';
 

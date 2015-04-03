@@ -12,6 +12,7 @@ Interlock.Backend = new function() {
   this.API = {
                'auth':      { 'login':    'auth/login',
                               'logout':   'auth/logout',
+                              'refresh':  'auth/refresh',
                               'powerOff': 'auth/poweroff'},
 
                'LUKS':      { 'addPwd':    'luks/add',

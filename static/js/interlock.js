@@ -116,10 +116,13 @@ if (sessionStorageSupported() && fileAPISupported()) {
         $('body').html(data);
         document.title = 'Interlock File Manager';
 
+        Interlock.Session.getVersion();
         Interlock.Session.statusPoller();
       });
     } else {
-      Interlock.Session.login('', '', false, true);
+      /* try to refresh the XSRFToken, it will succeed only if a valid
+         session cookie is present inthe browser - multiple tabs */
+      Interlock.Session.refresh();
     }
   });
 } else {

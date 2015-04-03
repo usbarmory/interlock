@@ -192,10 +192,9 @@ Interlock.Session.createEvent = function(data) {
  * the mounted volume
  *
  * @param {Object} backendData
- * @param {boolean} hideErrors
  * @returns {}
  */
-Interlock.Session.loginCallback = function(backendData, hideErrors) {
+Interlock.Session.loginCallback = function(backendData) {
   try {
     if (backendData.status === 'OK') {
       /* load the file manager view on success */
@@ -220,13 +219,8 @@ Interlock.Session.loginCallback = function(backendData, hideErrors) {
         $('body').html(data);
         document.title = 'Interlock Login';
 
-        if (hideErrors) {
-          Interlock.Session.createEvent({'kind': 'info',
-                                         'msg': '[Interlock.Session.loginCallback] ' + backendData.response});
-        } else {
-          Interlock.Session.createEvent({'kind': 'critical',
-                                         'msg': '[Interlock.Session.loginCallback] ' + backendData.response});
-        }
+        Interlock.Session.createEvent({'kind': 'critical',
+                                       'msg': '[Interlock.Session.loginCallback] ' + backendData.response});
       });
     }
   } catch (e) {
@@ -244,14 +238,13 @@ Interlock.Session.loginCallback = function(backendData, hideErrors) {
  * @param {String} volume
  * @param {String} password
  * @param {String} dispose password after login
- * @param {boolean} showErrors on login
  * @returns {}
  */
-Interlock.Session.login = function(volume, pwd, dispose, showErrors) {
+Interlock.Session.login = function(volume, pwd, dispose) {
   try {
     Interlock.Backend.APIRequest(Interlock.Backend.API.auth.login, 'POST',
       JSON.stringify({ volume: volume, password: pwd, dispose: dispose }),
-      'Session.loginCallback', null, showErrors);
+      'Session.loginCallback');
   } catch (e) {
     Interlock.Session.createEvent({'kind': 'critical', 'msg': '[Interlock.Session.login] ' + e});
   }
@@ -369,6 +362,64 @@ Interlock.Session.powerOff = function() {
   }
 };
 
+/**
+ * @function
+ * @public
+ *
+ * @description
+ * Callback function, store a valid XSRFToken or re-load the login page
+ *
+ * @param {Object} backendData
+ * @returns {}
+ */
+Interlock.Session.refreshCallback = function(backendData) {
+  try {
+    if (backendData.status === 'OK' &&
+        backendData.response.volume && backendData.response.XSRFToken) {
+      sessionStorage.volume = backendData.response.volume;
+      sessionStorage.XSRFToken = backendData.response.XSRFToken;
+
+      $.get('/templates/file_manager.html', function(data) {
+        $('body').html(data);
+        document.title = 'Interlock File Manager';
+
+        Interlock.Session.getVersion();
+        Interlock.Session.statusPoller();
+      });
+    } else {
+      /* re-load the login page and present the error dialog on failures */
+      $.get("/templates/login.html", function(data) {
+        $('body').html(data);
+        document.title = 'Interlock Login';
+
+        Interlock.Session.createEvent({'kind': backendData.status,
+                                       'msg': '[Interlock.Session.refreshCallback] ' + backendData.response});
+
+      });
+    }
+  } catch (e) {
+    Interlock.Session.createEvent({'kind': 'critical',
+      'msg': '[Interlock.Session.refreshCallback] ' + e});
+  }
+};
+
+/**
+ * @function
+ * @public
+ *
+ * @description
+ * get a new XSRFToken to the backend
+ *
+ */
+Interlock.Session.refresh = function() {
+  try {
+    Interlock.Backend.APIRequest(Interlock.Backend.API.auth.refresh, 'GET',
+        null, 'Session.refreshCallback');
+  } catch (e) {
+    Interlock.Session.createEvent({'kind': 'critical',
+      'msg': '[Interlock.Session.refresh] ' + e});
+  }
+};
 
 /**
  * @function
@@ -382,8 +433,10 @@ Interlock.Session.powerOff = function() {
  */
 Interlock.Session.getVersionCallback = function(backendData) {
   try {
-    if (backendData.status === 'OK' && backendData.response.version && backendData.response.build) {
-      sessionStorage.InterlockVersion = backendData.response.version + ' | ' + backendData.response.build;
+    if (backendData.status === 'OK' &&
+        backendData.response.version && backendData.response.build) {
+      sessionStorage.InterlockVersion = backendData.response.version + ' | ' +
+                                        backendData.response.build;
     } else {
       Interlock.Session.createEvent({'kind': backendData.status,
                                      'msg': '[Interlock.Session.getVersionCallback] ' + backendData.response});

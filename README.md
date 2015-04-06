@@ -127,6 +127,30 @@ unlocking.
 **WARNING**: removing the last remaining password makes the LUKS encrypted
 container permanently inaccessible. This is a feature, not a bug.
 
+The following sudo configuration (meant to be included in /etc/sudoers)
+illustrates the permission requirements for the user running the INTERLOCK
+server. The example assumes username 'interlock' with home directory
+'/home/interlock'.
+
+```
+interlock ALL=(root) NOPASSWD:							\
+	/bin/date -s @*,							\
+	/sbin/poweroff,								\
+	/bin/mount /dev/mapper/interlockfs /home/interlock/.interlock-mnt,	\
+	/bin/umount /home/interlock/.interlock-mnt,				\
+	/bin/chown interlock /home/interlock/.interlock-mnt,			\
+	/sbin/cryptsetup luksOpen /dev/lvmvolume/* interlockfs,			\
+	!/sbin/cryptsetup luksOpen /dev/lvmvolume/*.* *,			\
+	/sbin/cryptsetup luksClose /dev/mapper/interlockfs,			\
+	!/sbin/cryptsetup luksClose /dev/mapper/*.*,				\
+	/sbin/cryptsetup luksChangeKey /dev/lvmvolume/*,			\
+	!/sbin/cryptsetup luksChangeKey /dev/lvmvolume/*.*,			\
+	/sbin/cryptsetup luksRemoveKey /dev/lvmvolume/*,			\
+	!/sbin/cryptsetup luksRemoveKey /dev/lvmvolume/*.*,			\
+	/sbin/cryptsetup luksAddKey /dev/lvmvolume/*,				\
+	!/sbin/cryptsetup luksAddKey /dev/lvmvolume/*.*
+```
+
 Compiling
 =========
 

@@ -61,7 +61,7 @@ error response:
   api/
     auth/           login, refesh, logout, poweroff
     luks/           change, add, remove
-    file/           list, upload, delete, move, copy, mkdir
+    file/           list, upload, delete, move, copy, mkdir, extract
     file/           encrypt, decrypt, verify
     crypto/         ciphers, keys, gen_key, upload_key, key_info
     config/         time
@@ -265,6 +265,18 @@ Create a new directory, path creation can include parent directories.
 request:
   {
     "path":        string    # absolute path for directory creation
+  }
+
+## POST api/file/extract
+
+Extract an archive file in the specified destination directory, which gets
+created for decompressing the archive contents. Currently supported formats:
+zip.
+
+request:
+  {
+    "src":         string,   # absolute path for archive file
+    "dst":         string    # absolute path for destination directory
   }
 
 ## POST api/file/encrypt

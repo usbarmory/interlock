@@ -7,7 +7,6 @@
 package main
 
 import (
-	"archive/zip"
 	"errors"
 	"fmt"
 	"io"
@@ -28,6 +27,7 @@ const (
 	_move = iota
 	_copy
 	_mkdir
+	_extract
 	_delete
 )
 
@@ -126,6 +126,10 @@ func fileMkdir(w http.ResponseWriter, r *http.Request) jsonObject {
 	return fileOp(w, r, _mkdir)
 }
 
+func fileExtract(w http.ResponseWriter, r *http.Request) jsonObject {
+	return fileOp(w, r, _extract)
+}
+
 func fileDelete(w http.ResponseWriter, r *http.Request) jsonObject {
 	return fileOp(w, r, _delete)
 }
@@ -138,7 +142,7 @@ func fileOp(w http.ResponseWriter, r *http.Request, mode int) (res jsonObject) {
 	}
 
 	switch mode {
-	case _move, _copy:
+	case _move, _copy, _extract:
 		err = validateRequest(req, []string{"src:s", "dst:s"})
 
 		if err != nil {
@@ -163,16 +167,20 @@ func fileOp(w http.ResponseWriter, r *http.Request, mode int) (res jsonObject) {
 			return errorResponse(err, "")
 		}
 
-		if mode == _move {
+		switch mode {
+		case _move:
 			err = os.Rename(src, dst)
-		} else { // _copy
+		case _copy:
 			args := []string{"-ra", src, dst}
 			cmd := "/bin/cp"
 
 			_, err = execCommand(cmd, args, false, "")
-
-			if err != nil {
-				return errorResponse(err, "")
+		case _extract:
+			switch filepath.Ext(src) {
+			case ".zip":
+				err = unzipFile(src, dst)
+			default:
+				err = errors.New("unsupported archive format")
 			}
 		}
 	case _mkdir, _delete:
@@ -464,62 +472,6 @@ func fileDownloadByID(w http.ResponseWriter, id string) {
 	}
 
 	status.Log(syslog.LOG_INFO, "downloaded %s (%v bytes)", fileName, written)
-}
-
-func zipDir(w http.ResponseWriter, dirPath string) (written int64, err error) {
-	zw := zip.NewWriter(w)
-	defer zw.Close()
-
-	walkFn := func(osPath string, info os.FileInfo, e error) (err error) {
-		var w int64
-		var f io.Writer
-
-		if info == nil {
-			return
-		}
-
-		if info.IsDir() {
-			return
-		}
-
-		n := status.Notify(syslog.LOG_NOTICE, "adding %s to archive", path.Base(osPath))
-		defer status.Remove(n)
-
-		relPath, err := relativePath(osPath)
-
-		if err != nil {
-			return
-		}
-
-		f, err = zw.Create(relPath)
-
-		if err != nil {
-			return
-		}
-
-		input, err := os.Open(osPath)
-
-		if err != nil {
-			return
-		}
-		defer input.Close()
-
-		w, err = io.Copy(f, input)
-		written += w
-
-		if err != nil {
-			return
-		}
-
-		return
-	}
-
-	n := status.Notify(syslog.LOG_NOTICE, "zipping %s", path.Base(dirPath))
-	defer status.Remove(n)
-
-	err = filepath.Walk(dirPath, walkFn)
-
-	return
 }
 
 func fileEncrypt(w http.ResponseWriter, r *http.Request) (res jsonObject) {

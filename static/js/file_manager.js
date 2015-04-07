@@ -282,15 +282,15 @@ Interlock.FileManager = new function() {
 
     /* disable move/copy for every key file or directory */
     if (inode.private) {
-      menuEntries.push($(document.createElement('li')).text('Copy to')
+      menuEntries.push($(document.createElement('li')).text('Copy')
                                                       .addClass('disabled'));
 
-      menuEntries.push($(document.createElement('li')).text('Move to')
+      menuEntries.push($(document.createElement('li')).text('Move')
                                                       .addClass('disabled'));
     } else {
-      menuEntries.push($(document.createElement('li')).text('Copy to')
+      menuEntries.push($(document.createElement('li')).text('Copy')
                                                       .click(function() {
-        var buttons = { 'Copy to': function() { Interlock.FileManager.fileCopy({ src: path, dst: $('#dst').val() }) } };
+        var buttons = { 'Copy': function() { Interlock.FileManager.fileCopy({ src: path, dst: $('#dst').val() }) } };
 
         var elements = [$(document.createElement('input')).attr('id', 'dst')
                                                           .attr('name', 'dst')
@@ -300,13 +300,13 @@ Interlock.FileManager = new function() {
                                                           .addClass('text ui-widget-content ui-corner-all')];
 
         Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
-          submitButton: 'Copy to', title: 'Copy to' });
+          submitButton: 'Copy', title: 'Copy' });
         Interlock.UI.modalFormDialog('open');
       }));
 
-      menuEntries.push($(document.createElement('li')).text('Move to')
+      menuEntries.push($(document.createElement('li')).text('Move')
                                                       .click(function() {
-        var buttons = { 'Move to': function() { Interlock.FileManager.fileMove({ src: path, dst: $('#dst').val() }) } };
+        var buttons = { 'Move': function() { Interlock.FileManager.fileMove({ src: path, dst: $('#dst').val() }) } };
 
         var elements = [$(document.createElement('input')).attr('id', 'dst')
                                                           .attr('name', 'dst')
@@ -316,7 +316,7 @@ Interlock.FileManager = new function() {
                                                           .addClass('text ui-widget-content ui-corner-all')];
 
         Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
-          submitButton: 'Move to', title: 'Move to' });
+          submitButton: 'Move', title: 'Move' });
         Interlock.UI.modalFormDialog('open');
       }));
     }

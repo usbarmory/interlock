@@ -108,6 +108,8 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 		res = fileCopy(w, r)
 	case "/api/file/mkdir":
 		res = fileMkdir(w, r)
+	case "/api/file/extract":
+		res = fileExtract(w, r)
 	case "/api/file/encrypt":
 		res = fileEncrypt(w, r)
 	case "/api/file/decrypt":

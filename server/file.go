@@ -177,7 +177,7 @@ func fileOp(w http.ResponseWriter, r *http.Request, mode int) (res jsonObject) {
 			_, err = execCommand(cmd, args, false, "")
 		case _extract:
 			switch filepath.Ext(src) {
-			case ".zip":
+			case ".zip", ".ZIP":
 				err = unzipFile(src, dst)
 			default:
 				err = errors.New("unsupported archive format")

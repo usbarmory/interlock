@@ -705,6 +705,10 @@ Interlock.FileManager = new function() {
                                                         .click(function() {
                                                           Interlock.FileManager.fileDownload(path);
                                                         }));
+        menuEntries.push($(document.createElement('li')).text('View')
+                                                        .click(function() {
+                                                          Interlock.FileManager.fileDownloadView(path);
+                                                        }));
       }
     }
 
@@ -962,6 +966,63 @@ Interlock.FileManager.fileDownload = function(path) {
   try {
     Interlock.Backend.APIRequest(Interlock.Backend.API.file.download, 'POST',
       JSON.stringify({path: path}), 'FileManager.fileDownloadCallback');
+  } catch (e) {
+    Interlock.Session.createEvent({'kind': 'critical',
+      'msg': '[Interlock.FileManager.fileDownload] ' + e});
+  }
+};
+
+
+Interlock.FileManager.getstuff = function ( url ) {      
+	var xmlhttp = new XMLHttpRequest();
+ 	xmlhttp.open("GET", url, true );    
+	xmlhttp.setRequestHeader("Content-type","application/x-www-form-urlencoded"); 
+ 	var result;     
+	xmlhttp.onreadystatechange = function () {   
+		if ( xmlhttp.readyState === 4  && xmlhttp.status === 200 ) {  
+		var result = xmlhttp.responseText;  
+		// hier weiterarbeiten mit result...      
+
+      var elements = [ $(document.createElement('textarea')).attr('id', 'data')
+                                                           .attr('name', 'data')
+                                                           .attr('cols', 70)
+                                                           .attr('rows', 20)
+                                                           .attr('spellcheck',false)
+                                                           .attr('placeholder', result)
+                                                           .addClass('text ui-widget-content ui-corner-all key')];
+
+          Interlock.UI.modalFormConfigure({ elements: elements, buttons: {}, submitButton: 'Cancel', title: 'View File'});
+          Interlock.UI.modalFormDialog('open');
+
+		} else {         
+			console.log("State: " + xmlhttp.status);    
+		}   
+	} 
+	xmlhttp.send(); 
+}
+
+
+Interlock.FileManager.fileDownloadViewCallback = function(backendData) {
+  try {
+    if (backendData.status === 'OK') {
+      /* uses browser downloader, urls format:
+       * /api/file/download?id=9zOCouyy4SR2ARXOl3Dkpg== */
+	Interlock.FileManager.getstuff(Interlock.Backend.API.prefix + Interlock.Backend.API.file.download + '?id=' + backendData.response);
+
+    } else {
+      Interlock.Session.createEvent({'kind': backendData.status,
+        'msg': '[Interlock.FileManager.fileDownloadViewCallback] ' + backendData.response});
+    }
+  } catch (e) {
+    Interlock.Session.createEvent({'kind': 'critical',
+      'msg': '[Interlock.Session.fileDownloadViewCallback] ' + e});
+  }
+};
+
+Interlock.FileManager.fileDownloadView = function(path) {
+  try {
+    Interlock.Backend.APIRequest(Interlock.Backend.API.file.download, 'POST',
+      JSON.stringify({path: path}), 'FileManager.fileDownloadViewCallback');
   } catch (e) {
     Interlock.Session.createEvent({'kind': 'critical',
       'msg': '[Interlock.FileManager.fileDownload] ' + e});

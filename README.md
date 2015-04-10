@@ -154,7 +154,9 @@ interlock ALL=(root) NOPASSWD:							\
 Compiling
 =========
 
-The INTERLOCK app requires a working Go (>= 1.4.2) environment to be compiled.
+The INTERLOCK app requires a working Go (>= 1.4.2) environment to be compiled,
+or cross-compiled, under Linux (it is not supported by or designed for other
+OSes at this time).
 
 ```
 go get -u golang.org/x/crypto/pbkdf2

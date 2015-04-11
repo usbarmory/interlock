@@ -506,7 +506,8 @@ h1 {
   transition: border 0.3s
 }
 
-.ui-widget-content textarea.key {
+.ui-widget-content textarea.key,
+.monospace {
   font-family: monospace;
 }
 

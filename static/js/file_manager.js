@@ -9,6 +9,8 @@ Interlock.FileManager = new function() {
   /** @private */
   var cache = { 'mainView': [], 'browsingView': [] };
 
+  var SUPPORTED_ARCHIVE_EXTENSIONS = ['zip'];
+
   /* set default pwd and sorting rule for the main file manager
      and the browsing view */
   sessionStorage.mainViewPwd = sessionStorage.mainViewPwd || '/';
@@ -697,6 +699,26 @@ Interlock.FileManager = new function() {
         }
       }
 
+      /* add the extract action for the supported archive files */
+      if ($.inArray((inode.name.split('.').pop() || ''), SUPPORTED_ARCHIVE_EXTENSIONS) >= 0) {
+        menuEntries.push($(document.createElement('li')).text('Extract Archive')
+                                                        .click(function() {
+          var buttons = { 'Extract': function() { Interlock.FileManager.fileExtract({ src: path, dst: $('#dst').val() }) } };
+
+          var elements = [$(document.createElement('p')).text('Destination directory (absolute path):')
+                                                        .addClass('text ui-widget-content ui-corner-all'),
+                          $(document.createElement('input')).attr('id', 'dst')
+                                                            .attr('name', 'dst')
+                                                            .attr('value', sessionStorage.mainViewPwd)
+                                                            .attr('type', 'text')
+                                                            .attr('placeholder', 'destination directory')
+                                                            .addClass('text ui-widget-content ui-corner-all')];
+          Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
+            submitButton: 'Extract', title: 'Extract Archive' });
+          Interlock.UI.modalFormDialog('open');
+                                                        }));
+      }
+
       if (inode.private) {
         menuEntries.push($(document.createElement('li')).text('Download')
                                                         .addClass('disabled'));
@@ -1348,6 +1370,55 @@ Interlock.FileManager.fileVerify = function(args) {
   } catch (e) {
     Interlock.Session.createEvent({'kind': 'critical',
       'msg': '[Interlock.FileManager.fileVerify] ' + e});
+  }
+};
+
+/**
+ * @function
+ * @public
+ *
+ * @description
+ * Callback function, fileExtract callback
+ *
+ * @param {Object} commandArguments: destination directory
+ * @returns {}
+ */
+Interlock.FileManager.fileExtractCallback = function(backendData, dst) {
+  try {
+    if (backendData.status === 'OK') {
+      Interlock.UI.modalFormDialog('close');
+
+      if (sessionStorage.mainViewPwd === dst) {
+        Interlock.FileManager.fileList('mainView');
+      }
+    } else {
+      Interlock.Session.createEvent({'kind': backendData.status,
+        'msg': '[Interlock.FileManager.fileExtractCallback] ' + backendData.response});
+    }
+  } catch (e) {
+    Interlock.Session.createEvent({'kind': 'critical',
+      'msg': '[Interlock.FileManager.fileExtractCallback] ' + e});
+  }
+};
+
+/**
+ * @function
+ * @public
+ *
+ * @description
+ * Copy a file or directory
+ *
+ * @param {Object} extract options: archive path and destination directory
+ * @returns {}
+ */
+Interlock.FileManager.fileExtract = function(args){
+  try {
+    Interlock.Backend.APIRequest(Interlock.Backend.API.file.extract, 'POST',
+      JSON.stringify({src: args.src, dst: args.dst}),
+      'FileManager.fileExtractCallback', null, args.dst);
+  } catch (e) {
+    Interlock.Session.createEvent({'kind': 'critical',
+      'msg': '[Interlock.FileManager.fileExtract] ' + e});
   }
 };
 

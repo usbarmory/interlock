@@ -29,7 +29,8 @@ Interlock.Backend = new function() {
                               'encrypt':  'file/encrypt',
                               'decrypt':  'file/decrypt',
                               'verify':   'file/verify',
-                              'sign':     'file/sign' },
+                              'sign':     'file/sign',
+                              'extract':  'file/extract'},
 
                'crypto':    { 'ciphers':     'crypto/ciphers',
                               'keys':        'crypto/keys',

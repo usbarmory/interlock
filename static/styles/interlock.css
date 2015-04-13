@@ -507,7 +507,7 @@ h1 {
 }
 
 .ui-widget-content textarea.key,
-.monospace {
+.file_contents {
   font-family: monospace;
 }
 

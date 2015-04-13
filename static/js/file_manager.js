@@ -990,7 +990,6 @@ Interlock.FileManager.fileDownloadCallback = function(backendData) {
  * @param {string} path fullpath of the file/directory to download
  * @returns {}
  */
-
 Interlock.FileManager.fileDownload = function(path) {
   try {
     Interlock.Backend.APIRequest(Interlock.Backend.API.file.download, 'POST',
@@ -1001,41 +1000,39 @@ Interlock.FileManager.fileDownload = function(path) {
   }
 };
 
-
-Interlock.FileManager.getFileContents = function ( url ) {      
-	var xmlhttp = new XMLHttpRequest();
- 	xmlhttp.open("GET", url, true );    
-	xmlhttp.setRequestHeader("Content-type","application/x-www-form-urlencoded"); 
- 	var result;     
-	xmlhttp.onreadystatechange = function () {   
-		if ( xmlhttp.readyState === 4 ) {
-			if ( xmlhttp.status === 200 ) {  
-				var result = xmlhttp.responseText;  
-				var elements = [$(document.createElement('p')).append($(document.createElement('pre')).text(result)
-                                                                                            .attr('id', 'data')
-                                                                                            .attr('spellcheck',false)
-                                                                                            .addClass('monospace'))];
-
-		          Interlock.UI.modalFormConfigure({elements: elements, buttons: {}, submitButton: 'Cancel',
-                                           title: 'File Contents', height: 600, width: 800});
-				Interlock.UI.modalFormDialog('open');
-			} else {
-				Interlock.Session.createEvent({'kind': 'critical',
-    'msg': '[Interlock.FileManager.getFileContents] download failed'});
-			}   
-		} 
-	}
-	xmlhttp.send(); 
-}
-
-
+/**
+ * @function
+ * @public
+ *
+ * @description
+ * Callback function, download and display the file content in text inside a dialog
+ *
+ * @param {Object} backendData
+ * @returns {}
+ */
 Interlock.FileManager.fileDownloadViewCallback = function(backendData) {
   try {
     if (backendData.status === 'OK') {
       /* uses browser downloader, urls format:
        * /api/file/download?id=9zOCouyy4SR2ARXOl3Dkpg== */
-	Interlock.FileManager.getFileContents(Interlock.Backend.API.prefix + Interlock.Backend.API.file.download + '?id=' + backendData.response);
+      $.get(Interlock.Backend.API.prefix + Interlock.Backend.API.file.download, {id: backendData.response})
+        .done(function(data) {
+          var buttons = {'Close': function() { Interlock.UI.modalFormDialog('close'); } };
+          var elements = [$(document.createElement('p')).append($(document.createElement('pre')).text(data)
+                                                                                                .attr('id', 'data')
+                                                                                                .attr('spellcheck',false)
+                                                                                                .addClass('file_contents'))];
 
+          Interlock.UI.modalFormConfigure({elements: elements, buttons: buttons,
+                                           noCancelButton: true, submitButton: 'Close',
+                                           title: 'File Contents', height: 600, width: 800});
+
+          Interlock.UI.modalFormDialog('open');
+        })
+        .fail(function() {
+          Interlock.Session.createEvent({'kind': 'critical',
+            'msg': '[Interlock.FileManager.getDownloadViewCallback] file download failed'});
+        });
     } else {
       Interlock.Session.createEvent({'kind': backendData.status,
         'msg': '[Interlock.FileManager.fileDownloadViewCallback] ' + backendData.response});
@@ -1046,6 +1043,16 @@ Interlock.FileManager.fileDownloadViewCallback = function(backendData) {
   }
 };
 
+/**
+ * @function
+ * @public
+ *
+ * @description
+ * Download a file and display its content in text inside a dialog
+ *
+ * @param {Object} path of the file
+ * @returns {}
+ */
 Interlock.FileManager.fileDownloadView = function(path) {
   try {
     Interlock.Backend.APIRequest(Interlock.Backend.API.file.download, 'POST',

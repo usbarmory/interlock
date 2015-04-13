@@ -20,7 +20,7 @@ import (
 )
 
 type config struct {
-	// exported settings
+	// exported
 	Debug       bool     `json:"debug"`
 	SetTime     bool     `json:"set_time"`
 	BindAddress string   `json:"bind_address"`
@@ -29,11 +29,12 @@ type config struct {
 	KeyPath     string   `json:"key_path"`
 	Ciphers     []string `json:"ciphers"`
 
-	// internal settings
+	// internal
 	availableCiphers map[string]cipherInterface
 	enabledCiphers   map[string]cipherInterface
 	mountPoint       string
 	testMode         bool
+	logFile          *os.File
 }
 
 var conf config

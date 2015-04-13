@@ -124,9 +124,13 @@ func login(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 	XSRFToken, err := randomString(cookieSize)
 
 	if err != nil {
+		_ = luksUnmount()
+		_ = luksClose()
 		return errorResponse(err, "")
 	}
 
+	// switch logging to encrypted partition
+	enableFilelog()
 	session.Set(req["volume"].(string), sessionID, XSRFToken)
 
 	res = jsonObject{
@@ -140,7 +144,9 @@ func login(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 }
 
 func logout(w http.ResponseWriter) (res jsonObject) {
-	defer session.Clear()
+	session.Clear()
+	// restore logging to syslog before unmounting encrypted partition
+	enableSyslog()
 
 	sessionCookie := &http.Cookie{
 		Name:     "Interlock-Token",

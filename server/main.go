@@ -8,10 +8,12 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"log/syslog"
 	"net/http"
 	"os"
+	"path/filepath"
 )
 
 var configPath = flag.String("c", "", "configuration file path")
@@ -36,6 +38,40 @@ func init() {
 	if conf.testMode {
 		log.Println("*** WARNING *** authentication disabled (test mode switch enabled)")
 	}
+}
+
+func enableSyslog() {
+	if conf.logFile != nil {
+		conf.logFile.Close()
+	}
+
+	log.Println("switching to syslog")
+	logwriter, err := syslog.New(syslog.LOG_INFO, "interlock")
+
+	if err != nil {
+		log.Fatalf("%s", err)
+	}
+
+	log.SetFlags(0)
+	log.SetOutput(logwriter)
+}
+
+func enableFilelog() {
+	if conf.logFile != nil {
+		conf.logFile.Close()
+	}
+
+	logPath := filepath.Join(conf.mountPoint, ".interlock.log")
+	log.Printf("switching to log file %s", logPath)
+	logwriter, err := os.OpenFile(logPath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
+
+	if err != nil {
+		status.Error(fmt.Errorf("could not switch to log file %s: %s", logPath, err.Error()))
+	}
+
+	conf.logFile = logwriter
+	log.SetFlags(log.Ldate | log.Ltime)
+	log.SetOutput(conf.logFile)
 }
 
 func main() {
@@ -63,25 +99,14 @@ func main() {
 	conf.EnableCiphers()
 	conf.Print()
 
-	log.Printf("starting server on %s", conf.BindAddress)
-
 	if conf.Debug {
 		log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
 		log.Println("debug mode enabled")
 	} else {
-		log.Println("switching to syslog")
-
-		logwriter, err := syslog.New(syslog.LOG_INFO, "interlock")
-
-		if err != nil {
-			log.Fatalf("%s", err)
-			return
-		}
-
-		log.SetFlags(0)
-		log.SetOutput(logwriter)
-		log.Printf("starting server on %s", conf.BindAddress)
+		enableSyslog()
 	}
+
+	log.Printf("starting server on %s", conf.BindAddress)
 
 	registerHandlers()
 	err = http.ListenAndServeTLS(conf.BindAddress, conf.TLSCert, conf.TLSKey, nil)

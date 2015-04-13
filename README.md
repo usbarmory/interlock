@@ -49,7 +49,10 @@ Design goals:
 * Support for additional symmetric/asymmetric encryption on individual
   files/directories.
 
-* Support for disposable authentication passwords
+* Minimize exposure of sensitive data to the client with support for disposable
+  authentication passwords, server-side operations (key generation,
+  encryption/decryption, archive creation/extraction) and locking of private
+  keys.
 
 * Minimal footprint (single statically linked binary + supporting static files)
   to ease integration with USB armory secure booted initrd ramdisk.
@@ -228,6 +231,26 @@ and defaults.
 
 At startup the interlock server dumps the applied configuration in its file
 format.
+
+Logging
+=======
+
+The application generates debug, audit, notification and error logs.
+
+Debugging logs are only generated when "debug" is set to true in the
+configuration file (or command line switch). In debug mode all logs are printed
+on standard output and never saved.
+
+Audit and error logs are shown live in a dedicated area on the web client
+('Application logs') and saved on the root directory of the encrypted partition
+in the '.interlock.log' file.
+
+Notifications are shown live in a dedicated area on the web client ('Current
+activity'), they are only kept in memory in a circular buffer and never stored
+on disk.
+
+Any non-debug log generated outside an unauthenticated session is issued
+through standard syslog facility.
 
 Authors
 =======

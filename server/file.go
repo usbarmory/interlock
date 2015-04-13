@@ -358,7 +358,7 @@ func fileUpload(w http.ResponseWriter, r *http.Request) {
 	}
 	defer osFile.Close()
 
-	n := status.Notify(syslog.LOG_NOTICE, "uploading to %s", path.Base(osPath))
+	n := status.Notify(syslog.LOG_NOTICE, "uploading %s", path.Base(osPath))
 	defer status.Remove(n)
 
 	written, err := io.Copy(osFile, r.Body)
@@ -367,7 +367,7 @@ func fileUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	status.Log(syslog.LOG_INFO, "uploaded %v bytes to %s", written, path.Base(osPath))
+	status.Log(syslog.LOG_INFO, "uploaded %s (%v bytes)", path.Base(osPath), written)
 }
 
 func fileDownload(w http.ResponseWriter, r *http.Request) (res jsonObject) {

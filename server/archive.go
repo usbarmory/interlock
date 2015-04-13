@@ -74,9 +74,6 @@ func zipDir(w http.ResponseWriter, dirPath string) (written int64, err error) {
 }
 
 func unzipFile(src string, dst string) (err error) {
-	n := status.Notify(syslog.LOG_NOTICE, "extracting %s", path.Base(src))
-	defer status.Remove(n)
-
 	zr, err := zip.OpenReader(src)
 
 	if err != nil {
@@ -92,6 +89,9 @@ func unzipFile(src string, dst string) (err error) {
 
 	go func() {
 		defer zr.Close()
+
+		n := status.Notify(syslog.LOG_NOTICE, "extracting %s", path.Base(src))
+		defer status.Remove(n)
 
 		for _, f := range zr.Reader.File {
 			if traversalPattern.MatchString(f.Name) {
@@ -109,6 +109,16 @@ func unzipFile(src string, dst string) (err error) {
 					return
 				}
 			} else {
+				err = os.MkdirAll(path.Dir(dstPath), 0700)
+
+				if err != nil {
+					status.Error(err)
+					return
+				}
+
+				n := status.Notify(syslog.LOG_NOTICE, "extracting %s from archive", f.Name)
+				defer status.Remove(n)
+
 				output, err := os.OpenFile(dstPath, os.O_WRONLY|os.O_CREATE|os.O_EXCL|os.O_TRUNC, f.Mode())
 
 				if err != nil {

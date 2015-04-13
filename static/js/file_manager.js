@@ -18,6 +18,7 @@ Interlock.FileManager = new function() {
   sessionStorage.browsingViewPwd = '/';
   sessionStorage.browsingViewSortAttribute = 'name';
   sessionStorage.browsingViewSortAsc = true;
+  var MAX_VIEW_SIZE = 1 * 1024 * 1024;
 
   /** @protected */
   /* FileManager mainView initialization: register drag and drop and
@@ -705,10 +706,16 @@ Interlock.FileManager = new function() {
                                                         .click(function() {
                                                           Interlock.FileManager.fileDownload(path);
                                                         }));
-        menuEntries.push($(document.createElement('li')).text('View')
-                                                        .click(function() {
-                                                          Interlock.FileManager.fileDownloadView(path);
-                                                        }));
+        if (inode.size <= MAX_VIEW_SIZE) {
+          menuEntries.push($(document.createElement('li')).text('View')
+                                                          .click(function() {
+                                                            Interlock.FileManager.fileDownloadView(path);
+                                                          }));
+        } else {
+          menuEntries.push($(document.createElement('li')).text('View')
+                                                          .addClass('disabled'));
+        }
+
       }
     }
 
@@ -973,31 +980,29 @@ Interlock.FileManager.fileDownload = function(path) {
 };
 
 
-Interlock.FileManager.getstuff = function ( url ) {      
+Interlock.FileManager.getFileContents = function ( url ) {      
 	var xmlhttp = new XMLHttpRequest();
  	xmlhttp.open("GET", url, true );    
 	xmlhttp.setRequestHeader("Content-type","application/x-www-form-urlencoded"); 
  	var result;     
 	xmlhttp.onreadystatechange = function () {   
-		if ( xmlhttp.readyState === 4  && xmlhttp.status === 200 ) {  
-		var result = xmlhttp.responseText;  
-		// hier weiterarbeiten mit result...      
+		if ( xmlhttp.readyState === 4 ) {
+			if ( xmlhttp.status === 200 ) {  
+				var result = xmlhttp.responseText;  
+				var elements = [$(document.createElement('p')).append($(document.createElement('pre')).text(result)
+                                                                                            .attr('id', 'data')
+                                                                                            .attr('spellcheck',false)
+                                                                                            .addClass('monospace'))];
 
-      var elements = [ $(document.createElement('textarea')).attr('id', 'data')
-                                                           .attr('name', 'data')
-                                                           .attr('cols', 70)
-                                                           .attr('rows', 20)
-                                                           .attr('spellcheck',false)
-                                                           .attr('placeholder', result)
-                                                           .addClass('text ui-widget-content ui-corner-all key')];
-
-          Interlock.UI.modalFormConfigure({ elements: elements, buttons: {}, submitButton: 'Cancel', title: 'View File'});
-          Interlock.UI.modalFormDialog('open');
-
-		} else {         
-			console.log("State: " + xmlhttp.status);    
-		}   
-	} 
+		          Interlock.UI.modalFormConfigure({elements: elements, buttons: {}, submitButton: 'Cancel',
+                                           title: 'File Contents', height: 600, width: 800});
+				Interlock.UI.modalFormDialog('open');
+			} else {
+				Interlock.Session.createEvent({'kind': 'critical',
+    'msg': '[Interlock.FileManager.getFileContents] download failed'});
+			}   
+		} 
+	}
 	xmlhttp.send(); 
 }
 
@@ -1007,7 +1012,7 @@ Interlock.FileManager.fileDownloadViewCallback = function(backendData) {
     if (backendData.status === 'OK') {
       /* uses browser downloader, urls format:
        * /api/file/download?id=9zOCouyy4SR2ARXOl3Dkpg== */
-	Interlock.FileManager.getstuff(Interlock.Backend.API.prefix + Interlock.Backend.API.file.download + '?id=' + backendData.response);
+	Interlock.FileManager.getFileContents(Interlock.Backend.API.prefix + Interlock.Backend.API.file.download + '?id=' + backendData.response);
 
     } else {
       Interlock.Session.createEvent({'kind': backendData.status,

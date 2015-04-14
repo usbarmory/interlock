@@ -319,6 +319,16 @@ Interlock.Session.powerOffCallback = function(backendData) {
       sessionStorage.removeItem('volume');
       sessionStorage.removeItem('InterlockVersion');
 
+      var elements = [$(document.createElement('p')).text('The device is shutting down, please allow a few seconds before removal.')];
+
+      Interlock.UI.modalFormDialog('close');
+
+      Interlock.UI.modalFormConfigure({ elements: elements, buttons: {},
+        noCancelButton: true, title: 'Lock and Poweroff' });
+
+      /* test if necessary */
+      Interlock.UI.modalFormDialog('open');
+
       Interlock.Session.createEvent({'kind': 'info', 'msg':
         '[Interlock.Session.powerOffCallback] session closed, device is shutting down.'});
     } else {
@@ -508,8 +518,12 @@ Interlock.Session.statusPollerCallback = function(backendData) {
  */
 Interlock.Session.statusPoller = function() {
   try {
-    Interlock.Backend.APIRequest(Interlock.Backend.API.status.running, 'POST',
-      null, 'Session.statusPollerCallback');
+    /* re-bounce Interlock.Session.statusPoller
+     * if the XSFRToken is not present the poller exits */
+    if (sessionStorage.XSRFToken) {
+      Interlock.Backend.APIRequest(Interlock.Backend.API.status.running, 'POST',
+        null, 'Session.statusPollerCallback');
+    }
   } catch (e) {
     Interlock.Session.createEvent({'kind': 'critical', 'msg': '[Interlock.Session.statusPoller] ' + e});
   }

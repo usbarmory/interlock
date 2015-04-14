@@ -701,7 +701,8 @@ Interlock.FileManager = new function() {
       }
 
       /* add the extract action for the supported archive files */
-      if ($.inArray((inode.name.split('.').pop() || ''), SUPPORTED_ARCHIVE_EXTENSIONS) >= 0) {
+      if ($.inArray((inode.name.split('.').pop() || ''),
+          SUPPORTED_ARCHIVE_EXTENSIONS) >= 0) {
         menuEntries.push($(document.createElement('li')).text('Extract Archive')
                                                         .click(function() {
           var buttons = { 'Extract': function() { Interlock.FileManager.fileExtract({ src: path, dst: $('#dst').val() }) } };

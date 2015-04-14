@@ -64,7 +64,7 @@ func zipWriter(src string, dst io.Writer) (written int64, err error) {
 		return
 	}
 
-	n := status.Notify(syslog.LOG_NOTICE, "zipping %s", path.Base(src))
+	n := status.Notify(syslog.LOG_NOTICE, "compressing %s", path.Base(src))
 	defer status.Remove(n)
 
 	err = filepath.Walk(src, walkFn)
@@ -81,9 +81,6 @@ func zipPath(src string, dst string) (err error) {
 
 	go func() {
 		defer output.Close()
-
-		n := status.Notify(syslog.LOG_NOTICE, "compressing %s", path.Base(src))
-		defer status.Remove(n)
 
 		_, err = zipWriter(src, output)
 

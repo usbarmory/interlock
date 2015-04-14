@@ -175,6 +175,12 @@ func fileOp(w http.ResponseWriter, r *http.Request, mode int) (res jsonObject) {
 
 		switch mode {
 		case _move:
+			stat, err := os.Stat(dst)
+
+			if err == nil && stat.IsDir() {
+				dst = filepath.Join(dst, path.Base(src))
+			}
+
 			err = os.Rename(src, dst)
 		case _copy:
 			args := []string{"-ra", src, dst}

@@ -336,7 +336,7 @@ Interlock.FileManager = new function() {
       var buttons = { 'Delete': function() { Interlock.FileManager.fileDelete([path]) } };
 
       var elements = [$(document.createElement('p')).text('Are you sure you want to delete the following ' +
-                                                         (inode.dir ? 'directory' : 'file') + '(s):')
+                                                         (inode.dir ? 'directories:' : 'files:'))
                                                     .addClass('text ui-widget-content ui-corner-all'),
                       $(document.createElement('p')).text(inode.name)
                                                     .addClass('text ui-widget-content ui-corner-all')];

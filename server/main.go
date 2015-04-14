@@ -13,6 +13,7 @@ import (
 	"log/syslog"
 	"net/http"
 	"os"
+	"path"
 	"path/filepath"
 )
 
@@ -75,6 +76,12 @@ func enableFilelog() {
 }
 
 func main() {
+	err := os.Chdir(path.Dir(os.Args[0]))
+
+	if err != nil {
+		log.Fatalf("%s", err)
+	}
+
 	log.SetFlags(log.Ldate | log.Ltime)
 	log.SetOutput(os.Stdout)
 
@@ -90,7 +97,7 @@ func main() {
 		log.Printf("configuration file %s successfully parsed", *configPath)
 	}
 
-	err := conf.SetMountPoint()
+	err = conf.SetMountPoint()
 
 	if err != nil {
 		log.Fatalf("%s", err)

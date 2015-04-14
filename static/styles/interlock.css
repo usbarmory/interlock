@@ -125,7 +125,9 @@ html, body, img, h1, div {
 
 .actions ul li#import_key,
 .actions ul li#generate_key {
-  float: right
+  float: right;
+  margin-left: 5px;
+  margin-right: 0px;
 }
 
 .actions.resize_text {

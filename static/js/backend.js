@@ -13,11 +13,11 @@ Interlock.Backend = new function() {
                'auth':      { 'login':    'auth/login',
                               'logout':   'auth/logout',
                               'refresh':  'auth/refresh',
-                              'powerOff': 'auth/poweroff'},
+                              'powerOff': 'auth/poweroff' },
 
                'LUKS':      { 'addPwd':    'luks/add',
                               'changePwd': 'luks/change',
-                              'removePwd': 'luks/remove' },
+                              'removePwd': 'luks/remove'  },
 
                'file':      { 'list':     'file/list',
                               'upload':   'file/upload',
@@ -30,13 +30,14 @@ Interlock.Backend = new function() {
                               'decrypt':  'file/decrypt',
                               'verify':   'file/verify',
                               'sign':     'file/sign',
-                              'extract':  'file/extract'},
+                              'extract':  'file/extract',
+                              'compress': 'file/compress' },
 
                'crypto':    { 'ciphers':     'crypto/ciphers',
                               'keys':        'crypto/keys',
                               'generateKey': 'crypto/gen_key',
                               'uploadKey':   'crypto/upload_key',
-                              'keyInfo':     'crypto/key_info'},
+                              'keyInfo':     'crypto/key_info' },
 
                'config':    { 'time': 'config/time' },
 

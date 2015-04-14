@@ -290,16 +290,21 @@ Interlock.FileManager = new function() {
 
       menuEntries.push($(document.createElement('li')).text('Move')
                                                       .addClass('disabled'));
+
+      menuEntries.push($(document.createElement('li')).text('Compress')
+                                                      .addClass('disabled'));
     } else {
       menuEntries.push($(document.createElement('li')).text('Copy')
                                                       .click(function() {
         var buttons = { 'Copy': function() { Interlock.FileManager.fileCopy({ src: path, dst: $('#dst').val() }) } };
 
-        var elements = [$(document.createElement('input')).attr('id', 'dst')
+        var elements = [$(document.createElement('p')).text('Destination file or directory (absolute path):')
+                                                      .addClass('text ui-widget-content ui-corner-all'),
+                        $(document.createElement('input')).attr('id', 'dst')
                                                           .attr('name', 'dst')
                                                           .attr('value', path + '.copy')
                                                           .attr('type', 'text')
-                                                          .attr('placeholder', 'destination')
+                                                          .attr('placeholder', 'destination file or directory')
                                                           .addClass('text ui-widget-content ui-corner-all')];
 
         Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
@@ -311,11 +316,13 @@ Interlock.FileManager = new function() {
                                                       .click(function() {
         var buttons = { 'Move': function() { Interlock.FileManager.fileMove({ src: path, dst: $('#dst').val() }) } };
 
-        var elements = [$(document.createElement('input')).attr('id', 'dst')
+        var elements = [$(document.createElement('p')).text('Destination file or directory (absolute path):')
+                                                      .addClass('text ui-widget-content ui-corner-all'),
+                        $(document.createElement('input')).attr('id', 'dst')
                                                           .attr('name', 'dst')
                                                           .attr('value', path + '.moved')
                                                           .attr('type', 'text')
-                                                          .attr('placeholder', 'destination')
+                                                          .attr('placeholder', 'destination file or directory')
                                                           .addClass('text ui-widget-content ui-corner-all')];
 
         Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
@@ -328,11 +335,34 @@ Interlock.FileManager = new function() {
                                                     .click(function() {
                                                       Interlock.FileManager.fileDelete([path]);
                                                     }));
+
     if (inode.dir) {
       if (inode.private) {
+        menuEntries.push($(document.createElement('li')).text('Compress')
+                                                        .addClass('disabled'));
         menuEntries.push($(document.createElement('li')).text('Download (zip archive)')
                                                         .addClass('disabled'));
       } else {
+        /* add the compress action for directories */
+        /* FIXME: the context menu actions should be conditionally appended
+           in a more clean way in order to avoid code repetition */
+        menuEntries.push($(document.createElement('li')).text('Compress')
+                                                        .click(function() {
+          var buttons = { 'Compress': function() { Interlock.FileManager.fileCompress({ src: path, dst: $('#dst').val() }) } };
+
+          var elements = [$(document.createElement('p')).text('Destination archive (absolute path):')
+                                                        .addClass('text ui-widget-content ui-corner-all'),
+                          $(document.createElement('input')).attr('id', 'dst')
+                                                            .attr('name', 'dst')
+                                                            .attr('value', path + '.zip')
+                                                            .attr('type', 'text')
+                                                            .attr('placeholder', 'destination archive')
+                                                            .addClass('text ui-widget-content ui-corner-all')];
+          Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
+            submitButton: 'Compress', title: 'Compress' });
+          Interlock.UI.modalFormDialog('open');
+        }));
+
         menuEntries.push($(document.createElement('li')).text('Download (zip archive)')
                                                         .click(function() {
                                                           Interlock.FileManager.fileDownload(path);
@@ -700,35 +730,55 @@ Interlock.FileManager = new function() {
         }
       }
 
-      /* add the extract action for the supported archive files */
-      if ($.inArray((inode.name.split('.').pop() || ''),
-          SUPPORTED_ARCHIVE_EXTENSIONS) >= 0) {
-        menuEntries.push($(document.createElement('li')).text('Extract Archive')
-                                                        .click(function() {
-          var buttons = { 'Extract': function() { Interlock.FileManager.fileExtract({ src: path, dst: $('#dst').val() }) } };
-
-          var elements = [$(document.createElement('p')).text('Destination directory (absolute path):')
-                                                        .addClass('text ui-widget-content ui-corner-all'),
-                          $(document.createElement('input')).attr('id', 'dst')
-                                                            .attr('name', 'dst')
-                                                            .attr('value', (path.split('.')[0] || sessionStorage.mainViewPwd))
-                                                            .attr('type', 'text')
-                                                            .attr('placeholder', 'destination directory')
-                                                            .addClass('text ui-widget-content ui-corner-all')];
-          Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
-            submitButton: 'Extract', title: 'Extract Archive' });
-          Interlock.UI.modalFormDialog('open');
-                                                        }));
-      }
-
       if (inode.private) {
+        menuEntries.push($(document.createElement('li')).text('Extract')
+                                                        .addClass('disabled'));
+        menuEntries.push($(document.createElement('li')).text('Compress')
+                                                        .addClass('disabled'));
+        menuEntries.push($(document.createElement('li')).text('View')
+                                                        .addClass('disabled'));
         menuEntries.push($(document.createElement('li')).text('Download')
                                                         .addClass('disabled'));
       } else {
-        menuEntries.push($(document.createElement('li')).text('Download')
+        /* add the extract action for the supported archive files */
+        if ($.inArray((inode.name.split('.').pop() || ''),
+            SUPPORTED_ARCHIVE_EXTENSIONS) >= 0) {
+          menuEntries.push($(document.createElement('li')).text('Extract')
                                                         .click(function() {
-                                                          Interlock.FileManager.fileDownload(path);
-                                                        }));
+            var buttons = { 'Extract': function() { Interlock.FileManager.fileExtract({ src: path, dst: $('#dst').val() }) } };
+
+            var elements = [$(document.createElement('p')).text('Destination directory (absolute path):')
+                                                          .addClass('text ui-widget-content ui-corner-all'),
+                            $(document.createElement('input')).attr('id', 'dst')
+                                                              .attr('name', 'dst')
+                                                              .attr('value', (path.split('.')[0] || sessionStorage.mainViewPwd))
+                                                              .attr('type', 'text')
+                                                              .attr('placeholder', 'destination directory')
+                                                              .addClass('text ui-widget-content ui-corner-all')];
+            Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
+              submitButton: 'Extract', title: 'Extract' });
+            Interlock.UI.modalFormDialog('open');
+                                                          }));
+        }
+
+        /* add the compress action for files */
+        menuEntries.push($(document.createElement('li')).text('Compress')
+                                                        .click(function() {
+          var buttons = { 'Compress': function() { Interlock.FileManager.fileCompress({ src: path, dst: $('#dst').val() }) } };
+
+          var elements = [$(document.createElement('p')).text('Destination archive (absolute path):')
+                                                        .addClass('text ui-widget-content ui-corner-all'),
+                          $(document.createElement('input')).attr('id', 'dst')
+                                                            .attr('name', 'dst')
+                                                            .attr('value', path + '.zip')
+                                                            .attr('type', 'text')
+                                                            .attr('placeholder', 'destination archive')
+                                                            .addClass('text ui-widget-content ui-corner-all')];
+          Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
+            submitButton: 'Compress', title: 'Compress' });
+          Interlock.UI.modalFormDialog('open');
+        }));
+
         if (inode.size <= MAX_VIEW_SIZE) {
           menuEntries.push($(document.createElement('li')).text('View')
                                                           .click(function() {
@@ -739,6 +789,10 @@ Interlock.FileManager = new function() {
                                                           .addClass('disabled'));
         }
 
+        menuEntries.push($(document.createElement('li')).text('Download')
+                                                        .click(function() {
+                                                          Interlock.FileManager.fileDownload(path);
+                                                        }));
       }
     }
 
@@ -1480,7 +1534,7 @@ Interlock.FileManager.fileExtractCallback = function(backendData, dst) {
  * @public
  *
  * @description
- * Copy a file or directory
+ * Extract an archive file
  *
  * @param {Object} extract options: archive path and destination directory
  * @returns {}
@@ -1493,6 +1547,55 @@ Interlock.FileManager.fileExtract = function(args){
   } catch (e) {
     Interlock.Session.createEvent({'kind': 'critical',
       'msg': '[Interlock.FileManager.fileExtract] ' + e});
+  }
+};
+
+/**
+ * @function
+ * @public
+ *
+ * @description
+ * Callback function, fileCompress callback
+ *
+ * @param {Object} commandArguments: destination directory
+ * @returns {}
+ */
+Interlock.FileManager.fileCompressCallback = function(backendData, dst) {
+  try {
+    if (backendData.status === 'OK') {
+      Interlock.UI.modalFormDialog('close');
+
+      if (sessionStorage.mainViewPwd === dst) {
+        Interlock.FileManager.fileList('mainView');
+      }
+    } else {
+      Interlock.Session.createEvent({'kind': backendData.status,
+        'msg': '[Interlock.FileManager.fileCompressCallback] ' + backendData.response});
+    }
+  } catch (e) {
+    Interlock.Session.createEvent({'kind': 'critical',
+      'msg': '[Interlock.FileManager.fileCompressCallback] ' + e});
+  }
+};
+
+/**
+ * @function
+ * @public
+ *
+ * @description
+ * Compress a file or directory
+ *
+ * @param {Object} compress options: source path and destination archive
+ * @returns {}
+ */
+Interlock.FileManager.fileCompress = function(args){
+  try {
+    Interlock.Backend.APIRequest(Interlock.Backend.API.file.compress, 'POST',
+      JSON.stringify({src: args.src, dst: args.dst}),
+      'FileManager.fileCompressCallback', null, args.dst);
+  } catch (e) {
+    Interlock.Session.createEvent({'kind': 'critical',
+      'msg': '[Interlock.FileManager.fileCompress] ' + e});
   }
 };
 

@@ -52,7 +52,7 @@ Interlock.UI = new function() {
       height: 350,
       width: 350,
       modal: true,
-      title: 'Interlock error',
+      title: 'INTERLOCK error',
       buttons: { OK: function() { $errorForm.dialog('close'); } },
       open: function() {
         $errorForm.html('');

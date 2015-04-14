@@ -62,7 +62,7 @@ func (s *sessionData) Set(volume string, sessionID string, XSRFToken string) {
 		log.Printf("invalidating session opened at %v", session.createdAt)
 	}
 
-	log.Printf("new session")
+	log.Printf("new session for volume %s", volume)
 
 	now := time.Now()
 	session.Volume = volume

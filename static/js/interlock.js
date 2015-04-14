@@ -114,7 +114,7 @@ if (sessionStorageSupported() && fileAPISupported()) {
     if (sessionStorage.XSRFToken && sessionStorage.volume) {
       $.get('/templates/file_manager.html', function(data) {
         $('body').html(data);
-        document.title = 'Interlock File Manager';
+        document.title = 'INTERLOCK';
 
         Interlock.Session.getVersion();
         Interlock.Session.statusPoller();
@@ -129,6 +129,6 @@ if (sessionStorageSupported() && fileAPISupported()) {
   /* don't load anything if the user browser does not support
      HTML5 file API and/or session storage. Interlock.Session
      notifications are not available here: use alert() */
-  alert('Interlock application cannot run properly on your browser,\n' +
+  alert('INTERLOCK cannot run properly on your browser,\n' +
         'HTML5 file API and/or sessionStorage is not supported.');
 }

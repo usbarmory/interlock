@@ -140,7 +140,7 @@ Interlock.Session.createEvent = function(data) {
 
       $.get("/templates/login.html", function(data) {
         $('body').html(data);
-        document.title = 'Interlock Login';
+        document.title = 'INTERLOCK Login';
       });
 
       break;
@@ -206,7 +206,7 @@ Interlock.Session.loginCallback = function(backendData) {
 
       $.get("/templates/file_manager.html", function(data) {
         $('body').html(data);
-        document.title = 'Interlock File Manager';
+        document.title = 'INTERLOCK';
 
         Interlock.Session.getVersion();
         Interlock.Session.statusPoller();
@@ -217,7 +217,7 @@ Interlock.Session.loginCallback = function(backendData) {
        /* re-load the login page and present the error dialog on failures */
        $.get("/templates/login.html", function(data) {
         $('body').html(data);
-        document.title = 'Interlock Login';
+        document.title = 'INTERLOCK Login';
 
         Interlock.Session.createEvent({'kind': 'critical',
                                        'msg': '[Interlock.Session.loginCallback] ' + backendData.response});
@@ -269,7 +269,7 @@ Interlock.Session.logoutCallback = function(backendData) {
 
       $.get("/templates/login.html", function(data) {
         $('body').html(data);
-        document.title = 'Interlock Login';
+        document.title = 'INTERLOCK Login';
       });
 
       Interlock.Session.createEvent({'kind': 'info', 'msg':
@@ -357,7 +357,7 @@ Interlock.Session.powerOff = function() {
       }
     };
 
-    var elements = [$(document.createElement('p')).text('Press "Power Off" to close all the active Interlock ' +
+    var elements = [$(document.createElement('p')).text('Press "Power Off" to close all the active INTERLOCK ' +
                                                         'session(s) and power off the device.')];
 
     Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
@@ -391,7 +391,7 @@ Interlock.Session.refreshCallback = function(backendData) {
 
       $.get('/templates/file_manager.html', function(data) {
         $('body').html(data);
-        document.title = 'Interlock File Manager';
+        document.title = 'INTERLOCK';
 
         Interlock.Session.getVersion();
         Interlock.Session.statusPoller();
@@ -400,7 +400,7 @@ Interlock.Session.refreshCallback = function(backendData) {
       /* re-load the login page and present the error dialog on failures */
       $.get("/templates/login.html", function(data) {
         $('body').html(data);
-        document.title = 'Interlock Login';
+        document.title = 'INTERLOCK Login';
 
         Interlock.Session.createEvent({'kind': backendData.status,
                                        'msg': '[Interlock.Session.refreshCallback] ' + backendData.response});
@@ -445,7 +445,7 @@ Interlock.Session.getVersionCallback = function(backendData) {
   try {
     if (backendData.status === 'OK' &&
         backendData.response.version && backendData.response.build) {
-      sessionStorage.InterlockVersion = backendData.response.version + ' | ' +
+      sessionStorage.InterlockVersion = backendData.response.version + ' | build: ' +
                                         backendData.response.build;
     } else {
       Interlock.Session.createEvent({'kind': backendData.status,

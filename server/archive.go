@@ -11,15 +11,14 @@ import (
 	"errors"
 	"io"
 	"log/syslog"
-	"net/http"
 	"os"
 	"path"
 	"path/filepath"
 )
 
-func zipDir(w http.ResponseWriter, dirPath string) (written int64, err error) {
-	zw := zip.NewWriter(w)
-	defer zw.Close()
+func zipWriter(src string, dst io.Writer) (written int64, err error) {
+	writer := zip.NewWriter(dst)
+	defer writer.Close()
 
 	walkFn := func(osPath string, info os.FileInfo, e error) (err error) {
 		var w int64
@@ -42,7 +41,7 @@ func zipDir(w http.ResponseWriter, dirPath string) (written int64, err error) {
 			return
 		}
 
-		f, err = zw.Create(relPath)
+		f, err = writer.Create(relPath)
 
 		if err != nil {
 			return
@@ -65,16 +64,42 @@ func zipDir(w http.ResponseWriter, dirPath string) (written int64, err error) {
 		return
 	}
 
-	n := status.Notify(syslog.LOG_NOTICE, "zipping %s", path.Base(dirPath))
+	n := status.Notify(syslog.LOG_NOTICE, "zipping %s", path.Base(src))
 	defer status.Remove(n)
 
-	err = filepath.Walk(dirPath, walkFn)
+	err = filepath.Walk(src, walkFn)
+
+	return
+}
+
+func zipPath(src string, dst string) (err error) {
+	output, err := os.OpenFile(dst, os.O_WRONLY|os.O_CREATE|os.O_EXCL|os.O_TRUNC, 0600)
+
+	if err != nil {
+		return
+	}
+
+	go func() {
+		defer output.Close()
+
+		n := status.Notify(syslog.LOG_NOTICE, "compressing %s", path.Base(src))
+		defer status.Remove(n)
+
+		_, err = zipWriter(src, output)
+
+		if err != nil {
+			status.Error(err)
+			return
+		}
+
+		status.Log(syslog.LOG_NOTICE, "completed compression of %s", path.Base(src))
+	}()
 
 	return
 }
 
 func unzipFile(src string, dst string) (err error) {
-	zr, err := zip.OpenReader(src)
+	reader, err := zip.OpenReader(src)
 
 	if err != nil {
 		return
@@ -83,17 +108,17 @@ func unzipFile(src string, dst string) (err error) {
 	err = os.MkdirAll(dst, 0700)
 
 	if err != nil {
-		defer zr.Close()
+		defer reader.Close()
 		return
 	}
 
 	go func() {
-		defer zr.Close()
+		defer reader.Close()
 
 		n := status.Notify(syslog.LOG_NOTICE, "extracting %s", path.Base(src))
 		defer status.Remove(n)
 
-		for _, f := range zr.Reader.File {
+		for _, f := range reader.Reader.File {
 			if traversalPattern.MatchString(f.Name) {
 				status.Error(errors.New("path traversal detected"))
 				return

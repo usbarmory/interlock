@@ -28,6 +28,7 @@ const (
 	_copy
 	_mkdir
 	_extract
+	_compress
 	_delete
 )
 
@@ -130,6 +131,10 @@ func fileExtract(w http.ResponseWriter, r *http.Request) jsonObject {
 	return fileOp(w, r, _extract)
 }
 
+func fileCompress(w http.ResponseWriter, r *http.Request) jsonObject {
+	return fileOp(w, r, _compress)
+}
+
 func fileDelete(w http.ResponseWriter, r *http.Request) jsonObject {
 	return fileOp(w, r, _delete)
 }
@@ -142,29 +147,30 @@ func fileOp(w http.ResponseWriter, r *http.Request, mode int) (res jsonObject) {
 	}
 
 	switch mode {
-	case _move, _copy, _extract:
+	case _move, _copy, _extract, _compress:
 		err = validateRequest(req, []string{"src:s", "dst:s"})
 
 		if err != nil {
-			return errorResponse(err, "")
+			break
 		}
 
 		src, err := absolutePath(req["src"].(string))
 
 		if err != nil {
-			return errorResponse(err, "")
+			break
 		}
 
 		inKeyPath, private := detectKeyPath(src)
 
 		if inKeyPath && private {
-			return errorResponse(errors.New("cannot move or copy private key(s)"), "")
+			err = errors.New("cannot move or copy private key(s)")
+			break
 		}
 
 		dst, err := absolutePath(req["dst"].(string))
 
 		if err != nil {
-			return errorResponse(err, "")
+			break
 		}
 
 		switch mode {
@@ -182,19 +188,26 @@ func fileOp(w http.ResponseWriter, r *http.Request, mode int) (res jsonObject) {
 			default:
 				err = errors.New("unsupported archive format")
 			}
+		case _compress:
+			switch filepath.Ext(dst) {
+			case ".zip", ".ZIP":
+				err = zipPath(src, dst)
+			default:
+				err = errors.New("unsupported archive format")
+			}
 		}
 	case _mkdir, _delete:
 		if mode == _mkdir {
 			err = validateRequest(req, []string{"path:s"})
 
 			if err != nil {
-				return errorResponse(err, "")
+				break
 			}
 
 			path, err := absolutePath(req["path"].(string))
 
 			if err != nil {
-				return errorResponse(err, "")
+				break
 			}
 
 			err = os.MkdirAll(path, 0700)
@@ -202,7 +215,7 @@ func fileOp(w http.ResponseWriter, r *http.Request, mode int) (res jsonObject) {
 			err = validateRequest(req, []string{"path:a"})
 
 			if err != nil {
-				return errorResponse(err, "")
+				break
 			}
 
 			path := req["path"].([]interface{})
@@ -453,7 +466,7 @@ func fileDownloadByID(w http.ResponseWriter, id string) {
 	w.Header().Set("Content-Type", "application/octet-stream")
 
 	if stat.IsDir() {
-		written, err = zipDir(w, osPath)
+		written, err = zipWriter(osPath, w)
 	} else {
 		var input *os.File
 

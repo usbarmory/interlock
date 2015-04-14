@@ -91,7 +91,7 @@ Interlock.UI = new function() {
 
         /* bind the enter keypress event to the configured submit button */
         if (options.submitButton !== undefined) {
-          $modalForm.form.keypress(function(e) {
+          $('body').keypress(function(e) {
             var keyPressed = e.keyCode || e.which;
 
             if (keyPressed === 13) {
@@ -106,7 +106,7 @@ Interlock.UI = new function() {
       close: function() {
         $modalForm.fieldset.html('');
         /* unbind the registered keypress event handler (if any) */
-        $modalForm.form.unbind('keypress');
+        $('body').unbind('keypress');
       }
     });
   };

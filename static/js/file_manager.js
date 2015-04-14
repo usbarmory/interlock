@@ -333,8 +333,18 @@ Interlock.FileManager = new function() {
 
     menuEntries.push($(document.createElement('li')).text('Delete')
                                                     .click(function() {
-                                                      Interlock.FileManager.fileDelete([path]);
-                                                    }));
+      var buttons = { 'Delete': function() { Interlock.FileManager.fileDelete([path]) } };
+
+      var elements = [$(document.createElement('p')).text('Are you sure you want to delete the following ' +
+                                                         (inode.dir ? 'directory' : 'file') + '(s):')
+                                                    .addClass('text ui-widget-content ui-corner-all'),
+                      $(document.createElement('p')).text(inode.name)
+                                                    .addClass('text ui-widget-content ui-corner-all')];
+
+      Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
+        submitButton: 'Delete', title: 'Delete', height: 400, width: 400 });
+      Interlock.UI.modalFormDialog('open');
+    }));
 
     if (inode.dir) {
       if (inode.private) {
@@ -1132,6 +1142,7 @@ Interlock.FileManager.fileDownloadView = function(path) {
 Interlock.FileManager.fileDeleteCallback = function(backendData) {
   try {
     if (backendData.status === 'OK') {
+      Interlock.UI.modalFormDialog('close');
       Interlock.FileManager.fileList('mainView');
     } else {
       Interlock.Session.createEvent({'kind': backendData.status,

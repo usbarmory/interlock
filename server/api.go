@@ -27,18 +27,13 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.RequestURI {
 	case "/api/auth/login":
-		if validSessionID, _, _ := session.Validate(r); validSessionID {
-			// TODO: backward compatibility until client implements /api/auth/refresh
-			sendResponse(w, refresh(w))
-		} else {
-			// On a successful login the "Interlock-Token" is returned as cookie via the
-			// "Set-Cookie" header in HTTP response.
-			//
-			// The XSRF protection token "X-SRFToken" is returned in the response payload.
-			// This token must be included by the client as HTTP header in every request to
-			// the backend.
-			sendResponse(w, login(w, r))
-		}
+		// On a successful login the "Interlock-Token" is returned as cookie via the
+		// "Set-Cookie" header in HTTP response.
+		//
+		// The XSRF protection token "X-SRFToken" is returned in the response payload.
+		// This token must be included by the client as HTTP header in every request to
+		// the backend.
+		sendResponse(w, login(w, r))
 	case "/api/auth/refresh":
 		if validSessionID, _, _ := session.Validate(r); validSessionID {
 			// The session is validated using a single session cookie, we re-send the

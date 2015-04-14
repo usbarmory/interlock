@@ -315,13 +315,13 @@ Interlock.Session.logout = function() {
 Interlock.Session.powerOffCallback = function(backendData) {
   try {
     if (backendData.status === 'OK') {
+      Interlock.UI.modalFormDialog('close');
+
       sessionStorage.removeItem('XSRFToken');
       sessionStorage.removeItem('volume');
       sessionStorage.removeItem('InterlockVersion');
 
       var elements = [$(document.createElement('p')).text('The device is shutting down, please allow a few seconds before removal.')];
-
-      Interlock.UI.modalFormDialog('close');
 
       Interlock.UI.modalFormConfigure({ elements: elements, buttons: {},
         noCancelButton: true, title: 'Lock and Poweroff' });

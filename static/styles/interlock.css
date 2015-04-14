@@ -540,6 +540,10 @@ h1 {
   outline:none
 }
 
+.no-close .ui-dialog-titlebar-close {
+  display: none;
+}
+
 button.ui-button span {
   float: right;
   border: none;

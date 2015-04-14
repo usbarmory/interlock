@@ -74,6 +74,7 @@ Interlock.UI = new function() {
   this.modalFormConfigure = function(options) {
     $modalForm.dialog({
       autoOpen: false,
+      dialogClass: options.noCloseButton ? 'no-close' : '',
       height: options.height ? options.height : 350,
       width: options.width ? options.width : 350,
       modal: true,

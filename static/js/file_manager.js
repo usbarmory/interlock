@@ -9,7 +9,7 @@ Interlock.FileManager = new function() {
   /** @private */
   var cache = { 'mainView': [], 'browsingView': [] };
 
-  var SUPPORTED_ARCHIVE_EXTENSIONS = ['zip'];
+  var SUPPORTED_ARCHIVE_EXTENSIONS = ['zip','ZIP'];
 
   /* set default pwd and sorting rule for the main file manager
      and the browsing view */
@@ -711,7 +711,7 @@ Interlock.FileManager = new function() {
                                                         .addClass('text ui-widget-content ui-corner-all'),
                           $(document.createElement('input')).attr('id', 'dst')
                                                             .attr('name', 'dst')
-                                                            .attr('value', sessionStorage.mainViewPwd)
+                                                            .attr('value', (path.split('.')[0] || sessionStorage.mainViewPwd))
                                                             .attr('type', 'text')
                                                             .attr('placeholder', 'destination directory')
                                                             .addClass('text ui-widget-content ui-corner-all')];

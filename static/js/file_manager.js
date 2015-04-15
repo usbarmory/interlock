@@ -1031,10 +1031,29 @@ Interlock.FileManager.fileList = function(view, pwd, sort) {
 Interlock.FileManager.fileDownloadCallback = function(backendData) {
   try {
     if (backendData.status === 'OK') {
-      /* uses browser downloader, urls format:
-       * /api/file/download?id=9zOCouyy4SR2ARXOl3Dkpg== */
-      window.open(Interlock.Backend.API.prefix +
-        Interlock.Backend.API.file.download + '?id=' + backendData.response);
+    /* Creates a virtual link using the following urls format:
+       /api/file/download?id=9zOCouyy4SR2ARXOl3Dkpg== */
+
+      var link = document.createElement('a');
+      link.href = Interlock.Backend.API.prefix + Interlock.Backend.API.file.download + '?id=' + backendData.response;
+
+      if (link.download !== undefined) {
+      /* Set HTML5 download attribute:
+         this will prevent the browser from open the file (if supported).
+
+         The value of the download attribute is only a placeholder, the filename
+         is overwritten by the Content-Disposition Header passed by the backend */
+        link.download = 'download';
+      }
+
+      /* Dispatch the click event to the virtual link */
+      if (document.createEvent) {
+        var e = document.createEvent('MouseEvents');
+        e.initEvent('click', true, true);
+        link.dispatchEvent(e);
+
+        return true;
+      }
     } else {
       Interlock.Session.createEvent({'kind': backendData.status,
         'msg': '[Interlock.FileManager.fileDownloadCallback] ' + backendData.response});

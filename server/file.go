@@ -470,6 +470,7 @@ func fileDownloadByID(w http.ResponseWriter, id string) {
 
 	w.Header().Set("Content-Disposition", "attachment; filename=\""+fileName+"\"")
 	w.Header().Set("Content-Type", "application/octet-stream")
+	w.Header().Set("Cache-Control", "no-store")
 
 	if stat.IsDir() {
 		written, err = zipWriter(osPath, w)

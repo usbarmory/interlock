@@ -27,8 +27,8 @@ type config struct {
 	TLSCert     string   `json:"tls_cert"`
 	TLSKey      string   `json:"tls_key"`
 	KeyPath     string   `json:"key_path"`
-	Ciphers     []string `json:"ciphers"`
 	VolumeGroup string   `json:"volume_group"`
+	Ciphers     []string `json:"ciphers"`
 
 	// internal
 	availableCiphers map[string]cipherInterface

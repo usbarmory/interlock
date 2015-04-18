@@ -208,6 +208,8 @@ Configuration
 
 * key_path: path for public/private key storage on the encrypted filesystem
 
+* volume_group: volume group name
+
 * ciphers: array of cipher names to enable
 
 The following example illustrates the configuration file format (plain JSON)
@@ -221,6 +223,7 @@ and defaults.
         "tls_cert": "certs/cert.pem",
         "tls_key": "certs/key.pem",
         "key_path": "keys",
+        "volume_group": "lvmvolume"
         "ciphers": [
                 "OpenPGP",
                 "AES-256-OFB"

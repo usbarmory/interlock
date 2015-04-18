@@ -14,6 +14,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"strings"
 )
 
 func zipWriter(src string, dst io.Writer) (written int64, err error) {
@@ -41,6 +42,7 @@ func zipWriter(src string, dst io.Writer) (written int64, err error) {
 			return
 		}
 
+		relPath = strings.TrimPrefix(relPath, "/")
 		f, err = writer.Create(relPath)
 
 		if err != nil {

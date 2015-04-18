@@ -28,6 +28,7 @@ type config struct {
 	TLSKey      string   `json:"tls_key"`
 	KeyPath     string   `json:"key_path"`
 	Ciphers     []string `json:"ciphers"`
+    VolumeGroup string   `json:"volume_group"`
 
 	// internal
 	availableCiphers map[string]cipherInterface
@@ -110,6 +111,7 @@ func (c *config) SetDefaults() {
 	c.KeyPath = "keys"
 	c.Ciphers = []string{"OpenPGP", "AES-256-OFB"}
 	c.testMode = false
+    c.VolumeGroup = "lvmvolume"
 }
 
 func (c *config) SetMountPoint() error {

@@ -64,7 +64,7 @@ func luksOpen(volume string, password string) (err error) {
 		return errors.New("path traversal detected")
 	}
 
-	args := []string{"luksOpen", "/dev/lvmvolume/" + volume, mapping}
+	args := []string{"luksOpen", "/dev/" + conf.VolumeGroup + "/" + volume, mapping}
 	cmd := "/sbin/cryptsetup"
 
 	status.Log(syslog.LOG_NOTICE, "unlocking encrypted volume %s", volume)
@@ -147,7 +147,7 @@ func luksKeyOp(volume string, password string, newpassword string, mode int) (er
 		err = errors.New("unsupported operation")
 	}
 
-	args := []string{action, "/dev/lvmvolume/" + volume}
+	args := []string{action, "/dev/" + conf.VolumeGroup + "/" + volume}
 	cmd := "/sbin/cryptsetup"
 
 	status.Log(syslog.LOG_NOTICE, "performing LUKS key action %s", action)

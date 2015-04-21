@@ -1033,18 +1033,23 @@ Interlock.FileManager.fileDownloadCallback = function(backendData) {
     if (backendData.status === 'OK') {
     /* Creates a virtual link using the following urls format:
        /api/file/download?id=9zOCouyy4SR2ARXOl3Dkpg== */
-
       var link = document.createElement('a');
       link.href = Interlock.Backend.API.prefix + Interlock.Backend.API.file.download + '?id=' + backendData.response;
+      link.style.display = 'none';
 
       if (link.download !== undefined) {
       /* Set HTML5 download attribute:
          this will prevent the browser from open the file (if supported).
 
-         The value of the download attribute is only a placeholder, the filename
-         is overwritten by the Content-Disposition Header passed by the backend */
+         The value of the download attribute is only a placeholder, the
+         filename is overwritten by the Content-Disposition Header passed
+         by the backend */
         link.download = 'download';
       }
+
+      /* On IE the link must be appended in the page otherwise the click
+         event is not properly dispatched */
+      document.body.appendChild(link);
 
       /* Dispatch the click event to the virtual link */
       if (document.createEvent) {
@@ -1061,6 +1066,11 @@ Interlock.FileManager.fileDownloadCallback = function(backendData) {
   } catch (e) {
     Interlock.Session.createEvent({'kind': 'critical',
       'msg': '[Interlock.Session.fileDownloadCallback] ' + e});
+  } finally {
+    /* Ensure a proper clean-up of the download link */
+    if (link && link.parentNode === document.body) {
+      document.body.removeChild(link);
+    }
   }
 };
 

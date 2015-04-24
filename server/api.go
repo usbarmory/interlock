@@ -44,7 +44,9 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 			sendResponse(w, jsonObject{"status": "INVALID_SESSION", "response": nil})
 		}
 	default:
-		if validSessionID, validXSRFToken, err := session.Validate(r); !(validSessionID && validXSRFToken) {
+		validSessionID, validXSRFToken, err := session.Validate(r)
+
+		if !(validSessionID && validXSRFToken) {
 			u, _ := url.Parse(r.RequestURI)
 
 			switch u.Path {
@@ -67,8 +69,10 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 					sendResponse(w, jsonObject{"status": "INVALID_SESSION", "response": nil})
 				}
 			}
-		} else {
+		} else if validSessionID && validXSRFToken {
 			handleRequest(w, r)
+		} else {
+			sendResponse(w, jsonObject{"status": "INVALID_SESSION", "response": nil})
 		}
 	}
 }

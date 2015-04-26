@@ -1,0 +1,161 @@
+// INTERLOCK | https://github.com/inversepath/interlock
+// Copyright (c) 2015 Inverse Path S.r.l.
+//
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
+package main
+
+import (
+	"bytes"
+	"crypto/hmac"
+	"crypto/sha1"
+	"encoding/base32"
+	"encoding/binary"
+	"errors"
+	"fmt"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
+)
+
+type tOTP struct {
+	info   cipherInfo
+	secKey []byte
+
+	cipherInterface
+}
+
+func init() {
+	conf.SetAvailableCipher(new(tOTP).Init())
+}
+
+func (t *tOTP) Init() (c cipherInterface) {
+	t.info = cipherInfo{
+		Name:        "TOTP",
+		Description: "Time-Based One-Time Password Algorithm (RFC6238, a.k.a. Google Authenticator)",
+		KeyFormat:   "base32",
+		Enc:         false,
+		Dec:         false,
+		Sig:         false,
+		Extension:   "totp",
+	}
+
+	return t
+}
+
+func (t *tOTP) New() (c cipherInterface) {
+	c = new(tOTP)
+	return c.Init()
+}
+
+func (t *tOTP) GetInfo() cipherInfo {
+	return t.info
+}
+
+func (t *tOTP) GenKey(i string, e string) (p string, s string, err error) {
+	err = errors.New("cipher does not support key generation")
+	return
+}
+
+func (t *tOTP) GetKeyInfo(k key) (info string, err error) {
+	err = t.SetKey(k)
+
+	if err != nil {
+		return
+	}
+
+	otp, exp, err := t.GenCode(time.Now().Unix())
+
+	if err != nil {
+		return
+	}
+
+	info = fmt.Sprintf("Code (expires in %v seconds)\n\t%v\n", exp, otp)
+
+	return
+}
+
+func (t *tOTP) SetKey(k key) (err error) {
+	keyPath := filepath.Join(conf.mountPoint, k.Path)
+	keyFile, err := os.Open(keyPath)
+
+	if err != nil {
+		return
+	}
+	defer keyFile.Close()
+
+	s, err := ioutil.ReadAll(keyFile)
+
+	if err != nil {
+		return
+	}
+
+	seed := strings.ToUpper(string(s))
+	seed = strings.Replace(seed, " ", "", -1)
+	seed = strings.Replace(seed, "-", "", -1)
+
+	t.secKey, err = base32.StdEncoding.DecodeString(seed)
+
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func (t *tOTP) GenCode(timestamp int64) (code int, exp int64, err error) {
+	interval := int64(30)
+	message := timestamp / interval
+
+	buf := bytes.Buffer{}
+	err = binary.Write(&buf, binary.BigEndian, message)
+
+	if err != nil {
+		return
+	}
+
+	mac := hmac.New(sha1.New, t.secKey)
+	mac.Write(buf.Bytes())
+
+	hash := mac.Sum(nil)
+	offset := hash[len(hash)-1] & 0x0f
+	truncatedHash := hash[offset : offset+4]
+
+	var c int32
+	err = binary.Read(bytes.NewReader(truncatedHash), binary.BigEndian, &c)
+
+	if err != nil {
+		return
+	}
+
+	c = c & 0x7fffffff
+	c = c % 1000000
+
+	code = int(c)
+	exp = interval - (timestamp % interval)
+
+	return
+}
+
+func (t *tOTP) SetPassword(password string) error {
+	return errors.New("cipher does not support passwords")
+}
+
+func (t *tOTP) Encrypt(input *os.File, output *os.File, _ bool) error {
+	return errors.New("cipher does not support encryption")
+}
+
+func (t *tOTP) Decrypt(input *os.File, output *os.File, verify bool) error {
+	return errors.New("cipher does not support decryption")
+}
+
+func (t *tOTP) Sign(input *os.File, output *os.File) error {
+	return errors.New("cipher does not support signin")
+}
+
+func (t *tOTP) Verify(input *os.File, signature *os.File) error {
+	return errors.New("cipher does not support signature verification")
+}

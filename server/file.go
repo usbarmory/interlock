@@ -318,6 +318,7 @@ func fileList(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 			if err == nil {
 				inode.Key = &key
 			} else {
+				status.Log(syslog.LOG_NOTICE, "error parsing %s, %s", file.Name(), err.Error())
 				inode.Key = nil
 			}
 		}

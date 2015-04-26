@@ -72,6 +72,10 @@ Symmetric ciphers:
 
 * AES-256-OFB w/ PBKDF2 password derivation (SHA256, 4096 rounds) and HMAC (SHA256)
 
+Security tokens:
+
+* Time-based One-Time Password Algorithm (TOTP), RFC623 implementation (Google Authenticator)
+
 Key Storage
 ===========
 
@@ -90,6 +94,10 @@ The key storage directory structure is the following:
 
 Once uploaded in their respective directory, private keys can only be deleted
 or overwritten, they cannot be downloaded, moved or copied.
+
+The keys for OTP ciphers (e.g. "TOTP" implementing Google Authenticator)
+generate a valid OTP code, for the current time, when the key information is
+queried ('Key Info' action on the right click menu).
 
 Requirements & Operation
 ========================
@@ -226,7 +234,8 @@ and defaults.
         "volume_group": "lvmvolume"
         "ciphers": [
                 "OpenPGP",
-                "AES-256-OFB"
+                "AES-256-OFB",
+                "TOTP"
         ]
 }
 

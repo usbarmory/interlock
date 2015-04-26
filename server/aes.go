@@ -72,8 +72,7 @@ func (a *aes256OFB) GetKeyInfo(k key) (i string, err error) {
 
 func (a *aes256OFB) SetPassword(password string) (err error) {
 	if len(password) < 8 {
-		err = errors.New("password < 8 characters")
-		return
+		return errors.New("password < 8 characters")
 	}
 
 	a.password = password
@@ -87,8 +86,7 @@ func (a *aes256OFB) SetKey(k key) error {
 
 func (a *aes256OFB) Encrypt(input *os.File, output *os.File, sign bool) (err error) {
 	if sign {
-		err = errors.New("symmetric cipher does not support signing")
-		return
+		return errors.New("symmetric cipher does not support signing")
 	}
 
 	salt := make([]byte, 8)
@@ -164,8 +162,7 @@ func (a *aes256OFB) Encrypt(input *os.File, output *os.File, sign bool) (err err
 
 func (a *aes256OFB) Decrypt(input *os.File, output *os.File, verify bool) (err error) {
 	if verify {
-		err = errors.New("symmetric cipher does not support signature verification")
-		return
+		return errors.New("symmetric cipher does not support signature verification")
 	}
 
 	salt := make([]byte, 8)
@@ -217,8 +214,7 @@ func (a *aes256OFB) Decrypt(input *os.File, output *os.File, verify bool) (err e
 	}
 
 	if hmac.Equal(inputMac, mac.Sum(nil)) == false {
-		err = errors.New("invalid HMAC")
-		return
+		return errors.New("invalid HMAC")
 	}
 
 	stream := cipher.NewOFB(block, iv)

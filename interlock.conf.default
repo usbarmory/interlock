@@ -8,6 +8,7 @@
   "volume_group": "lvmvolume",
   "ciphers": [
           "OpenPGP",
-          "AES-256-OFB"
+          "AES-256-OFB",
+          "TOTP"
   ]
 }

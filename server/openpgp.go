@@ -123,8 +123,7 @@ func (o *openPGP) GetKeyInfo(k key) (info string, err error) {
 
 func (o *openPGP) SetPassword(password string) (err error) {
 	if o.secKey == nil {
-		err = errors.New("password cannot be set without secret key")
-		return
+		return errors.New("password cannot be set without secret key")
 	}
 
 	err = o.secKey.PrivateKey.Decrypt([]byte(password))
@@ -221,7 +220,7 @@ func (o *openPGP) Decrypt(input *os.File, output *os.File, verify bool) (err err
 	}
 
 	if verify && !(messageDetails.IsSigned && messageDetails.SignatureError == nil) {
-		err = errors.New("file has been decrypted but signature verification failed")
+		return errors.New("file has been decrypted but signature verification failed")
 	}
 
 	return

@@ -31,6 +31,7 @@ cipher:
     "enc":         boolean,  # encryption support
     "dec":         boolean,  # decryption support
     "sig":         boolean,  # signing support
+    "otp":         boolean,  # one-time password support
     "ext":         string    # encrypted file extension
   }
 

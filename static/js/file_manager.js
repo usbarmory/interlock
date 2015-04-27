@@ -163,7 +163,7 @@ Interlock.FileManager = new function() {
       /* waits until cipher list have been filled with the backend data */
       $.when(Interlock.cipherList).done(function () {
         $.each(Interlock.Crypto.getCiphers(), function(index, cipher) {
-          /* adds non-passowrd only ciphers and exclude base32 chipers */
+          /* adds non-password only ciphers and exclude base32 chipers */
           if (cipher.key_format !== 'password' && cipher.key_format !== 'base32') {
             $availableCiphers.push($(document.createElement('option')).attr('value', cipher.name)
                                                                       .text(cipher.name));

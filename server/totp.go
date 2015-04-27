@@ -40,6 +40,7 @@ func (t *tOTP) Init() (c cipherInterface) {
 		Enc:         false,
 		Dec:         false,
 		Sig:         false,
+		OTP:         true,
 		Extension:   "totp",
 	}
 
@@ -55,11 +56,6 @@ func (t *tOTP) GetInfo() cipherInfo {
 	return t.info
 }
 
-func (t *tOTP) GenKey(i string, e string) (p string, s string, err error) {
-	err = errors.New("cipher does not support key generation")
-	return
-}
-
 func (t *tOTP) GetKeyInfo(k key) (info string, err error) {
 	err = t.SetKey(k)
 
@@ -67,7 +63,7 @@ func (t *tOTP) GetKeyInfo(k key) (info string, err error) {
 		return
 	}
 
-	otp, exp, err := t.GenCode(time.Now().Unix())
+	otp, exp, err := t.GenOTP(time.Now().Unix())
 
 	if err != nil {
 		return
@@ -106,7 +102,7 @@ func (t *tOTP) SetKey(k key) (err error) {
 	return
 }
 
-func (t *tOTP) GenCode(timestamp int64) (code int, exp int64, err error) {
+func (t *tOTP) GenOTP(timestamp int64) (code int, exp int64, err error) {
 	interval := int64(30)
 	message := timestamp / interval
 
@@ -137,6 +133,11 @@ func (t *tOTP) GenCode(timestamp int64) (code int, exp int64, err error) {
 	code = int(c)
 	exp = interval - (timestamp % interval)
 
+	return
+}
+
+func (t *tOTP) GenKey(i string, e string) (p string, s string, err error) {
+	err = errors.New("cipher does not support key generation")
 	return
 }
 

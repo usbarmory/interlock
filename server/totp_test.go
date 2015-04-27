@@ -38,7 +38,7 @@ func TestTOTP(t *testing.T) {
 		return
 	}
 
-	otp, exp, err := t.GenCode(timestamp)
+	otp, exp, err := t.GenOTP(timestamp)
 
 	if err != nil {
 		t.Error(err)

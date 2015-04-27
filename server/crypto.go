@@ -34,6 +34,7 @@ type cipherInfo struct {
 	Enc         bool   `json:"enc"`
 	Dec         bool   `json:"dec"`
 	Sig         bool   `json:"sig"`
+	OTP         bool   `json:"otp"`
 	Extension   string `json:"ext"`
 }
 
@@ -60,6 +61,8 @@ type cipherInterface interface {
 	Sign(src *os.File, dst *os.File) error
 	// signature verification method
 	Verify(src *os.File, sig *os.File) error
+	// OTP method
+	GenOTP(timestamp int64) (otp int, exp int64, err error)
 }
 
 func ciphers(w http.ResponseWriter) (res jsonObject) {

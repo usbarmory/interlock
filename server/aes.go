@@ -45,6 +45,7 @@ func (a *aes256OFB) Init() (c cipherInterface) {
 		Enc:         true,
 		Dec:         true,
 		Sig:         false,
+		OTP:         false,
 		Extension:   "aes256ofb",
 	}
 
@@ -60,16 +61,6 @@ func (a *aes256OFB) GetInfo() cipherInfo {
 	return a.info
 }
 
-func (a *aes256OFB) GenKey(i string, e string) (p string, s string, err error) {
-	err = errors.New("symmetric cipher does not support key generation")
-	return
-}
-
-func (a *aes256OFB) GetKeyInfo(k key) (i string, err error) {
-	err = errors.New("symmetric cipher does not support key")
-	return
-}
-
 func (a *aes256OFB) SetPassword(password string) (err error) {
 	if len(password) < 8 {
 		return errors.New("password < 8 characters")
@@ -78,10 +69,6 @@ func (a *aes256OFB) SetPassword(password string) (err error) {
 	a.password = password
 
 	return
-}
-
-func (a *aes256OFB) SetKey(k key) error {
-	return errors.New("symmetric cipher does not support key")
 }
 
 func (a *aes256OFB) Encrypt(input *os.File, output *os.File, sign bool) (err error) {
@@ -237,10 +224,29 @@ func (a *aes256OFB) Decrypt(input *os.File, output *os.File, verify bool) (err e
 	return
 }
 
+func (a *aes256OFB) GenKey(i string, e string) (p string, s string, err error) {
+	err = errors.New("symmetric cipher does not support key generation")
+	return
+}
+
+func (a *aes256OFB) GetKeyInfo(k key) (i string, err error) {
+	err = errors.New("symmetric cipher does not support key")
+	return
+}
+
+func (a *aes256OFB) SetKey(k key) error {
+	return errors.New("symmetric cipher does not support key")
+}
+
 func (a *aes256OFB) Sign(i *os.File, o *os.File) error {
 	return errors.New("symmetric cipher does not support signing")
 }
 
 func (a *aes256OFB) Verify(i *os.File, s *os.File) error {
 	return errors.New("symmetric cipher does not support signature verification")
+}
+
+func (a *aes256OFB) GenOTP(timestamp int64) (otp int, exp int64, err error) {
+	err = errors.New("cipher does not support OTP generation")
+	return
 }

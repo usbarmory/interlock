@@ -46,8 +46,20 @@ Interlock.Crypto = new function() {
     });
   };
 
-  this.getCiphers = function() {
-    return ciphers;
+  this.getCiphers = function(name) {
+    selectedCiphers = [];
+
+    if (name) {
+      $.each(ciphers, function(index,cipher) {
+        if (cipher.name === name) {
+          selectedCiphers.push(cipher);
+        }
+      });
+    } else {
+      selectedCiphers = ciphers;
+    }
+
+    return selectedCiphers;
   }
 
   this.getPrivateKeys = function() {

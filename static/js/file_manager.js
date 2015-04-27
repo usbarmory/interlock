@@ -89,7 +89,7 @@ Interlock.FileManager = new function() {
       /* waits until cipher list have been filled with the backend data */
       $.when(Interlock.cipherList).done(function () {
         $.each(Interlock.Crypto.getCiphers(), function(index, cipher) {
-          /* adds only ciphers that support armor as key format */
+          /* adds non password-only ciphers */
           if (cipher.key_format !== 'password') {
             $availableCiphers.push($(document.createElement('option')).attr('value', cipher.name)
                                                                       .text(cipher.name));
@@ -110,7 +110,7 @@ Interlock.FileManager = new function() {
                                                            .attr('cols', 70)
                                                            .attr('rows', 20)
                                                            .attr('spellcheck',false)
-                                                           .attr('placeholder', 'key - armor format')
+                                                           .attr('placeholder', 'key')
                                                            .addClass('text ui-widget-content ui-corner-all key'),
                       $(document.createElement('input')).attr('id', 'private')
                                                         .attr('name', 'private')
@@ -119,14 +119,21 @@ Interlock.FileManager = new function() {
                                                         .addClass('text ui-widget-content ui-corner-all'),
                       $(document.createElement('label')).text('private (leave it unchecked for public key)')
                                                         .attr('for', 'private'),
-                      /* FIXME: armor hardcoded in key_format */
                       $(document.createElement('input')).attr('id', 'key_format')
                                                         .attr('name', 'key_format')
                                                         .attr('placeholder', 'key format')
                                                         .attr('type', 'text')
-                                                        .attr('value', 'armor')
+                                                        .attr('value', '')
                                                         .addClass('text ui-widget-content ui-corner-all')
                                                         .hide()];
+
+      $selectCiphers.change(function() {
+        var selectedCipher = $('#cipher > option:selected').val();
+        var selectedCipherKeyFormat = Interlock.Crypto.getCiphers(selectedCipher)[0] ?
+          Interlock.Crypto.getCiphers(selectedCipher)[0].key_format : '';
+
+        $('#key_format').attr('value', selectedCipherKeyFormat);
+      });
 
       Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
         submitButton: 'Import key', title: 'Import a new key', height: 600, width: 550 });
@@ -156,8 +163,8 @@ Interlock.FileManager = new function() {
       /* waits until cipher list have been filled with the backend data */
       $.when(Interlock.cipherList).done(function () {
         $.each(Interlock.Crypto.getCiphers(), function(index, cipher) {
-          /* adds only ciphers that support armor as key format */
-          if (cipher.key_format !== 'password') {
+          /* adds non-passowrd only ciphers and exclude base32 chipers */
+          if (cipher.key_format !== 'password' && cipher.key_format !== 'base32') {
             $availableCiphers.push($(document.createElement('option')).attr('value', cipher.name)
                                                                       .text(cipher.name));
           }
@@ -177,14 +184,21 @@ Interlock.FileManager = new function() {
                                                         .attr('placeholder', 'email')
                                                         .attr('type', 'text')
                                                         .addClass('text ui-widget-content ui-corner-all'),
-                      /* FIXME: armor hardcoded in key_format */
                       $(document.createElement('input')).attr('id', 'key_format')
                                                         .attr('name', 'key_format')
                                                         .attr('placeholder', 'key format')
                                                         .attr('type', 'text')
-                                                        .attr('value', 'armor')
+                                                        .attr('value', '')
                                                         .addClass('text ui-widget-content ui-corner-all')
                                                         .hide()];
+
+      $selectCiphers.change(function() {
+        var selectedCipher = $('#cipher > option:selected').val();
+        var selectedCipherKeyFormat = Interlock.Crypto.getCiphers(selectedCipher)[0] ?
+          Interlock.Crypto.getCiphers(selectedCipher)[0].key_format : '';
+
+        $('#key_format').attr('value', selectedCipherKeyFormat);
+      });
 
       Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
         submitButton: 'Generate key', title: 'Generate a new key', });

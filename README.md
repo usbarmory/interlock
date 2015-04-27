@@ -1,4 +1,4 @@
-**NOTE**: code & documentation are of alpha quality at this stage, not for
+**NOTE**: code & documentation are of beta quality at this stage, not for
 production use.
 
 Introduction

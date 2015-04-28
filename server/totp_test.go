@@ -17,7 +17,7 @@ func TestTOTP(t *testing.T) {
 	conf.mountPoint = "/tmp"
 	timestamp := int64(1430051641)
 	testSecKey := "this is a TOTP test k"
-	t := &tOTP{}
+	totp := &tOTP{}
 
 	secKeyFile, _ := ioutil.TempFile("", "totp_test_seed-")
 	secKeyFile.Write([]byte(testSecKey))
@@ -31,14 +31,14 @@ func TestTOTP(t *testing.T) {
 		Path:       path.Base(secKeyFile.Name()),
 	}
 
-	err := t.SetKey(secKey)
+	err := totp.SetKey(secKey)
 
 	if err != nil {
 		t.Error(err)
 		return
 	}
 
-	otp, exp, err := t.GenOTP(timestamp)
+	otp, exp, err := totp.GenOTP(timestamp)
 
 	if err != nil {
 		t.Error(err)

@@ -102,7 +102,7 @@ func (t *tOTP) SetKey(k key) (err error) {
 	return
 }
 
-func (t *tOTP) GenOTP(timestamp int64) (code int, exp int64, err error) {
+func (t *tOTP) GenOTP(timestamp int64) (code string, exp int64, err error) {
 	interval := int64(30)
 	message := timestamp / interval
 
@@ -130,7 +130,7 @@ func (t *tOTP) GenOTP(timestamp int64) (code int, exp int64, err error) {
 	c = c & 0x7fffffff
 	c = c % 1000000
 
-	code = int(c)
+	code = fmt.Sprintf("%6d", c)
 	exp = interval - (timestamp % interval)
 
 	return

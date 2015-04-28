@@ -62,7 +62,7 @@ type cipherInterface interface {
 	// signature verification method
 	Verify(src *os.File, sig *os.File) error
 	// OTP method
-	GenOTP(timestamp int64) (otp int, exp int64, err error)
+	GenOTP(timestamp int64) (otp string, exp int64, err error)
 }
 
 func ciphers(w http.ResponseWriter) (res jsonObject) {

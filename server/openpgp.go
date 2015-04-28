@@ -349,7 +349,7 @@ func serialize(e *openpgp.Entity, w io.Writer, config *packet.Config) (err error
 	return nil
 }
 
-func (o *openPGP) GenOTP(timestamp int64) (otp int, exp int64, err error) {
+func (o *openPGP) GenOTP(timestamp int64) (otp string, exp int64, err error) {
 	err = errors.New("cipher does not support OTP generation")
 	return
 }

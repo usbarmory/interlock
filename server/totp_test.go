@@ -45,7 +45,7 @@ func TestTOTP(t *testing.T) {
 		return
 	}
 
-	if otp != 695028 {
+	if otp != "695028" {
 		t.Errorf("invalid code (%v at %v, expires in %v)", otp, timestamp, exp)
 	}
 

@@ -246,7 +246,7 @@ func (a *aes256OFB) Verify(i *os.File, s *os.File) error {
 	return errors.New("symmetric cipher does not support signature verification")
 }
 
-func (a *aes256OFB) GenOTP(timestamp int64) (otp int, exp int64, err error) {
+func (a *aes256OFB) GenOTP(timestamp int64) (otp string, exp int64, err error) {
 	err = errors.New("cipher does not support OTP generation")
 	return
 }

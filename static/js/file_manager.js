@@ -82,12 +82,10 @@ Interlock.FileManager = new function() {
         }
       };
 
-      Interlock.cipherList = new $.Deferred();
-
       Interlock.Crypto.cipherList();
 
       /* waits until cipher list have been filled with the backend data */
-      $.when(Interlock.cipherList).done(function () {
+      $.when(Interlock.Crypto.cipherListCompleted).done(function () {
         $.each(Interlock.Crypto.getCiphers(), function(index, cipher) {
           /* adds non password-only ciphers */
           if (cipher.key_format !== 'password') {
@@ -156,12 +154,10 @@ Interlock.FileManager = new function() {
         }
       };
 
-      Interlock.cipherList = new $.Deferred();
-
       Interlock.Crypto.cipherList();
 
       /* waits until cipher list have been filled with the backend data */
-      $.when(Interlock.cipherList).done(function () {
+      $.when(Interlock.Crypto.cipherListCompleted).done(function () {
         $.each(Interlock.Crypto.getCiphers(), function(index, cipher) {
           /* adds non-password only ciphers and exclude base32 chipers */
           if (cipher.key_format !== 'password' && cipher.key_format !== 'base32') {
@@ -415,14 +411,11 @@ Interlock.FileManager = new function() {
         var $availableSignKeys = [$(document.createElement('option')).attr('value', '')
                                                                      .text('choose signing key')];
 
-        Interlock.keyList = new $.Deferred();
-        Interlock.cipherList = new $.Deferred();
-
         Interlock.Crypto.cipherList();
         Interlock.Crypto.keyList();
 
         /* waits until cipher and key lists have been filled with the backend data */
-        $.when(Interlock.cipherList, Interlock.keyList).done(function () {
+        $.when(Interlock.Crypto.cipherListCompleted, Interlock.Crypto.keyListCompleted).done(function () {
           $.each(Interlock.Crypto.getCiphers(), function(index, cipher) {
             $availableCiphers.push($(document.createElement('option')).attr('value', cipher.name)
                                                                       .text(cipher.name));
@@ -566,14 +559,11 @@ Interlock.FileManager = new function() {
         var $availableKeys = [$(document.createElement('option')).attr('value', '')
                                                                  .text('choose decryption key')];
 
-        Interlock.keyList = new $.Deferred();
-        Interlock.cipherList = new $.Deferred();
-
         Interlock.Crypto.cipherList();
         Interlock.Crypto.keyList();
 
         /* waits until cipher and key lists have been filled with the backend data */
-        $.when(Interlock.cipherList, Interlock.keyList).done(function () {
+        $.when(Interlock.Crypto.cipherListCompleted, Interlock.Crypto.keyListCompleted).done(function () {
           $.each(Interlock.Crypto.getCiphers(), function(index, cipher) {
             $availableCiphers.push($(document.createElement('option')).attr('value', cipher.name)
                                                                       .text(cipher.name));
@@ -655,14 +645,11 @@ Interlock.FileManager = new function() {
 
         var $availableSignKeys = [$(document.createElement('option')).attr('value', '')
                                                                      .text('choose signing key')];
-        Interlock.keyList = new $.Deferred();
-        Interlock.cipherList = new $.Deferred();
-
         Interlock.Crypto.cipherList();
         Interlock.Crypto.keyList();
 
         /* waits until cipher and key lists have been filled with the backend data */
-        $.when(Interlock.cipherList, Interlock.keyList).done(function () {
+        $.when(Interlock.Crypto.cipherListCompleted, Interlock.Crypto.keyListCompleted).done(function () {
           $.each(Interlock.Crypto.getSignKeys(), function(index, key) {
             $availableSignKeys.push($(document.createElement('option')).attr('value', key.path)
                                                                        .text(key.identifier));
@@ -700,14 +687,11 @@ Interlock.FileManager = new function() {
 
         var $availableVerifyKeys = [$(document.createElement('option')).attr('value', '')
                                                                        .text('choose a signature verification key')];
-        Interlock.keyList = new $.Deferred();
-        Interlock.cipherList = new $.Deferred();
-
         Interlock.Crypto.cipherList();
         Interlock.Crypto.keyList();
 
         /* waits until cipher and key lists have been filled with the backend data */
-        $.when(Interlock.cipherList, Interlock.keyList).done(function () {
+        $.when(Interlock.Crypto.cipherListCompleted, Interlock.Crypto.keyListCompleted).done(function () {
           $.each(Interlock.Crypto.getVerifyKeys(), function(index, key) {
             $availableVerifyKeys.push($(document.createElement('option')).attr('value', key.path)
                                                                          .text(key.identifier));
@@ -748,11 +732,10 @@ Interlock.FileManager = new function() {
         if (inode.key.key_format !== 'password') {
           menuEntries.push($(document.createElement('li')).text('Key Info')
                                                           .click(function() {
-            Interlock.cipherList = new $.Deferred();
             Interlock.Crypto.cipherList();
 
             /* waits until cipher list has been filled with the backend data */
-            $.when(Interlock.cipherList).done(function () {
+            $.when(Interlock.Crypto.cipherListCompleted).done(function () {
               Interlock.Crypto.keyInfo(inode.key.path, inode.key.cipher);
             });
           }));

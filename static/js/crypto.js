@@ -153,7 +153,7 @@ Interlock.Crypto.cipherListCallback = function(backendData) {
     Interlock.Session.createEvent({'kind': 'critical',
       'msg': '[Interlock.Crypto.cipherListCallback] ' + e});
   } finally {
-    Interlock.cipherList.resolve();
+    Interlock.Crypto.cipherListCompleted.resolve();
   }
 };
 
@@ -168,6 +168,8 @@ Interlock.Crypto.cipherListCallback = function(backendData) {
  * @returns {}
  */
 Interlock.Crypto.cipherList = function() {
+  Interlock.Crypto.cipherListCompleted = new $.Deferred();
+
   try {
     Interlock.Backend.APIRequest(Interlock.Backend.API.crypto.ciphers, 'GET',
       null, 'Crypto.cipherListCallback', null);
@@ -175,7 +177,7 @@ Interlock.Crypto.cipherList = function() {
     Interlock.Session.createEvent({'kind': 'critical',
       'msg': '[Interlock.Crypto.cipherList] ' + e});
 
-    Interlock.cipherList.resolve();
+    Interlock.Crypto.cipherListCompleted.resolve();
   }
 };
 
@@ -202,7 +204,7 @@ Interlock.Crypto.keyListCallback = function(backendData) {
     Interlock.Session.createEvent({'kind': 'critical',
       'msg': '[Interlock.Crypto.keyListCallback] ' + e});
   } finally {
-    Interlock.keyList.resolve();
+    Interlock.Crypto.keyListCompleted.resolve();
   }
 };
 
@@ -216,6 +218,8 @@ Interlock.Crypto.keyListCallback = function(backendData) {
  * @returns {}
  */
 Interlock.Crypto.keyList = function() {
+  Interlock.Crypto.keyListCompleted = new $.Deferred();
+
   try {
     Interlock.Backend.APIRequest(Interlock.Backend.API.crypto.keys, 'POST',
       JSON.stringify({private: true, public: true}), 'Crypto.keyListCallback');
@@ -223,7 +227,7 @@ Interlock.Crypto.keyList = function() {
     Interlock.Session.createEvent({'kind': 'critical',
       'msg': '[Interlock.Crypto.keyList] ' + e});
 
-    Interlock.keyList.resolve();
+    Interlock.Crypto.keyListCompleted.resolve();
   }
 };
 

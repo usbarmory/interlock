@@ -72,6 +72,9 @@ Interlock.UI = new function() {
 
   /* configure open function and customize form buttons for modal form */
   this.modalFormConfigure = function(options) {
+    Interlock.UI.modalFormOpened = new $.Deferred();
+    Interlock.UI.modalFormClosed = new $.Deferred();
+
     $modalForm.dialog({
       autoOpen: false,
       dialogClass: options.noCloseButton ? 'no-close' : '',
@@ -102,11 +105,15 @@ Interlock.UI = new function() {
             }
           });
         }
+
+        Interlock.UI.modalFormOpened.resolve();
       },
       close: function() {
         $modalForm.fieldset.html('');
         /* unbind the registered keypress event handler (if any) */
         $('body').unbind('keypress');
+
+        Interlock.UI.modalFormClosed.resolve();
       }
     });
   };

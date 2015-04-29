@@ -315,19 +315,22 @@ Interlock.Session.logout = function() {
 Interlock.Session.powerOffCallback = function(backendData) {
   try {
     if (backendData.status === 'OK') {
-      Interlock.UI.modalFormDialog('close');
+      /* fix synchronization issues related to fast open/close of
+         the UI modal dialog component */
+      $.when(Interlock.UI.modalFormOpened).done(function() {
+        Interlock.UI.modalFormDialog('close');
 
-      sessionStorage.removeItem('XSRFToken');
-      sessionStorage.removeItem('volume');
-      sessionStorage.removeItem('InterlockVersion');
+        sessionStorage.removeItem('XSRFToken');
+        sessionStorage.removeItem('volume');
+        sessionStorage.removeItem('InterlockVersion');
 
-      var elements = [$(document.createElement('p')).text('The device is shutting down, please allow a few seconds before removal.')];
+        var elements = [$(document.createElement('p')).text('The device is shutting down, please allow a few seconds before removal.')];
 
-      Interlock.UI.modalFormConfigure({ elements: elements, buttons: {},
-        noCancelButton: true, noCloseButton: true, title: 'Lock and Poweroff' });
+        Interlock.UI.modalFormConfigure({ elements: elements, buttons: {},
+          noCancelButton: true, noCloseButton: true, title: 'Lock and Poweroff' });
 
-      /* test if necessary */
-      Interlock.UI.modalFormDialog('open');
+        Interlock.UI.modalFormDialog('open');
+      });
 
       Interlock.Session.createEvent({'kind': 'info', 'msg':
         '[Interlock.Session.powerOffCallback] session closed, device is shutting down.'});
@@ -398,12 +401,15 @@ Interlock.Session.refreshCallback = function(backendData) {
       });
     } else {
       /* re-load the login page and present the error dialog on failures */
+      sessionStorage.removeItem('XSRFToken');
+      sessionStorage.removeItem('volume');
+
       $.get("/templates/login.html", function(data) {
         $('body').html(data);
         document.title = 'INTERLOCK Login';
 
         Interlock.Session.createEvent({'kind': backendData.status,
-                                       'msg': '[Interlock.Session.refreshCallback] ' + backendData.response});
+                                       'msg': '[Interlock.Session.refreshCallback] failed to refresh session, login required.'});
 
       });
     }

@@ -26,6 +26,7 @@ Interlock.Crypto = new function() {
                        enc: cipher.enc,
                        dec: cipher.dec,
                        sig: cipher.sig,
+                       otp: cipher.otp,
                        ext: cipher.ext });
       }
     });
@@ -234,13 +235,26 @@ Interlock.Crypto.keyList = function() {
  * Callback function, get key information
  *
  * @param {Object} backendData
+ * @param {Object} commandArguments path, cipher
  * @returns {}
  */
-Interlock.Crypto.keyInfoCallback = function(backendData) {
+Interlock.Crypto.keyInfoCallback = function(backendData, args) {
   try {
     if (backendData.status === 'OK') {
       var elements = [];
       var buttons = {'OK': function() { Interlock.UI.modalFormDialog('close'); } };
+
+      /* add the Refresh button to the key info dialog if the key.cipher is otp */
+      if (args.cipher) {
+        var ciphers = Interlock.Crypto.getCiphers(args.cipher);
+
+        if (ciphers && ciphers[0] && ciphers[0].otp) {
+          $.extend(buttons, {'Refresh': function() {
+            Interlock.UI.modalFormDialog('close');
+            Interlock.Crypto.keyInfo(args.path, args.cipher);
+          }});
+        }
+      }
 
       $.each(backendData.response.split(/\n/), function(index, line) {
         var pEl = $(document.createElement('p'));
@@ -273,12 +287,14 @@ Interlock.Crypto.keyInfoCallback = function(backendData) {
  * Retrieve key information
  *
  * @param {String} path, key path
+ * @param {String} cipher, key cipher
+ *
  * @returns {}
  */
-Interlock.Crypto.keyInfo = function(path) {
+Interlock.Crypto.keyInfo = function(path, cipher) {
   try {
     Interlock.Backend.APIRequest(Interlock.Backend.API.crypto.keyInfo, 'POST',
-      JSON.stringify({path: path}), 'Crypto.keyInfoCallback', null);
+      JSON.stringify({path: path}), 'Crypto.keyInfoCallback', null, {path: path, cipher: cipher});
   } catch (e) {
     Interlock.Session.createEvent({'kind': 'critical',
       'msg': '[Interlock.Crypto.keyInfo] ' + e});
@@ -423,6 +439,7 @@ Interlock.Crypto.isValidCipher = function(cipher) {
      cipher.enc !== undefined &&
      cipher.dec !== undefined &&
      cipher.sig !== undefined &&
+     cipher.otp !== undefined &&
      cipher.ext !== undefined);
 
   return valid;

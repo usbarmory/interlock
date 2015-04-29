@@ -742,18 +742,25 @@ Interlock.FileManager = new function() {
         });
       }));
 
-      /* add 'Key Info' menu - except for password. Reduntant check password
-         keys cannot be uploaded in first place.
-         Download function is disabled for all the key files. */
+      /* add 'Key Info' menu - except for password.
+         Reduntant, password keys cannot be uploaded in first place. */
       if (inode.key) {
         if (inode.key.key_format !== 'password') {
           menuEntries.push($(document.createElement('li')).text('Key Info')
                                                           .click(function() {
-                                                            Interlock.Crypto.keyInfo(inode.key.path);
-                                                          }));
+            Interlock.cipherList = new $.Deferred();
+            Interlock.Crypto.cipherList();
+
+            /* waits until cipher list has been filled with the backend data */
+            $.when(Interlock.cipherList).done(function () {
+              Interlock.Crypto.keyInfo(inode.key.path, inode.key.cipher);
+            });
+          }));
         }
       }
 
+      /* if inode is private (eg. private keys),
+         Extract/Compress/View/Download functions are disabled */
       if (inode.private) {
         menuEntries.push($(document.createElement('li')).text('Extract')
                                                         .addClass('disabled'));

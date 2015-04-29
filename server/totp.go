@@ -130,7 +130,7 @@ func (t *tOTP) GenOTP(timestamp int64) (code string, exp int64, err error) {
 	c = c & 0x7fffffff
 	c = c % 1000000
 
-	code = fmt.Sprintf("%6d", c)
+	code = fmt.Sprintf("%06d", c)
 	exp = interval - (timestamp % interval)
 
 	return

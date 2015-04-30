@@ -416,12 +416,12 @@ Interlock.FileManager = new function() {
 
         /* waits until cipher and key lists have been filled with the backend data */
         $.when(Interlock.Crypto.cipherListCompleted, Interlock.Crypto.keyListCompleted).done(function () {
-          $.each(Interlock.Crypto.getCiphers(), function(index, cipher) {
+          $.each(Interlock.Crypto.getEncryptCiphers(), function(index, cipher) {
             $availableCiphers.push($(document.createElement('option')).attr('value', cipher.name)
                                                                       .text(cipher.name));
           });
 
-          $.each(Interlock.Crypto.getPublicKeys(), function(index, key) {
+          $.each(Interlock.Crypto.getEncryptKeys(), function(index, key) {
             $availableKeys.push($(document.createElement('option')).attr('value', key.path)
                                                                    .text(key.identifier));
           });
@@ -564,12 +564,12 @@ Interlock.FileManager = new function() {
 
         /* waits until cipher and key lists have been filled with the backend data */
         $.when(Interlock.Crypto.cipherListCompleted, Interlock.Crypto.keyListCompleted).done(function () {
-          $.each(Interlock.Crypto.getCiphers(), function(index, cipher) {
+          $.each(Interlock.Crypto.getDecryptCiphers(), function(index, cipher) {
             $availableCiphers.push($(document.createElement('option')).attr('value', cipher.name)
                                                                       .text(cipher.name));
           });
 
-          $.each(Interlock.Crypto.getPrivateKeys(), function(index, key) {
+          $.each(Interlock.Crypto.getDecryptKeys(), function(index, key) {
             $availableKeys.push($(document.createElement('option')).attr('value', key.path)
                                                                    .text(key.identifier));
           });
@@ -628,7 +628,7 @@ Interlock.FileManager = new function() {
           $('#key').hide();
 
           /* pre-select the cipher based on the file extension */
-          $.each(Interlock.Crypto.getCiphers(), function(index, cipher) {
+          $.each(Interlock.Crypto.getDecryptCiphers(), function(index, cipher) {
             if (path.split('.').pop() === cipher.ext) {
               $('#cipher').val(cipher.name).change();
             }

@@ -61,7 +61,61 @@ Interlock.Crypto = new function() {
     }
 
     return selectedCiphers;
-  }
+  };
+
+  this.getEncryptCiphers = function(name) {
+    selectedCiphers = [];
+
+    $.each(ciphers, function(index,cipher) {
+      if (cipher.enc === true) {
+        if (name) {
+          if (cipher.name === name) {
+            selectedCiphers.push(cipher);
+          }
+        } else {
+          selectedCiphers.push(cipher);
+        }
+      }
+    });
+
+    return selectedCiphers;
+  };
+
+  this.getDecryptCiphers = function(name) {
+    selectedCiphers = [];
+
+    $.each(ciphers, function(index,cipher) {
+      if (cipher.dec === true) {
+        if (name) {
+          if (cipher.name === name) {
+            selectedCiphers.push(cipher);
+          }
+        } else {
+          selectedCiphers.push(cipher);
+        }
+      }
+    });
+
+    return selectedCiphers;
+  };
+
+  this.getSignCiphers = function(name) {
+    selectedCiphers = [];
+
+    $.each(ciphers, function(index,cipher) {
+      if (cipher.sig === true) {
+        if (name) {
+          if (cipher.name === name) {
+            selectedCiphers.push(cipher);
+          }
+        } else {
+          selectedCiphers.push(cipher);
+        }
+      }
+    });
+
+    return selectedCiphers;
+  };
 
   this.getPrivateKeys = function() {
     var privateKeys = [];
@@ -85,6 +139,34 @@ Interlock.Crypto = new function() {
     });
 
     return publicKeys;
+  };
+
+  this.getEncryptKeys = function() {
+    var encryptKeys = [];
+
+    $.each(keys, function(indexKey, key) {
+      $.each(ciphers, function(indexCipher, cipher) {
+        if (key.cipher === cipher.name && cipher.enc === true) {
+          encryptKeys.push(key);
+        }
+      });
+    });
+
+    return encryptKeys;
+  };
+
+  this.getDecryptKeys = function() {
+    var decryptKeys = [];
+
+    $.each(keys, function(indexKey, key) {
+      $.each(ciphers, function(indexCipher, cipher) {
+        if (key.cipher === cipher.name && cipher.dec === true) {
+          decryptKeys.push(key);
+        }
+      });
+    });
+
+    return decryptKeys;
   };
 
   this.getSignKeys = function() {

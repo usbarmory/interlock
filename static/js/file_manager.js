@@ -289,9 +289,13 @@ Interlock.FileManager = new function() {
     $('ul.inode_menu').remove();
 
     var menuEntries = [];
+    var pageY = e.pageY;
+    if (pageY > 400) {
+    pageY -= 220;
+    }
     var contextMenu = $(document.createElement('ul')).addClass('inode_menu')
                                                      .appendTo('body')
-                                                     .css({top: e.pageY + 'px', left: e.pageX + 'px'});
+                                                     .css({top: pageY + 'px', left: e.pageX + 'px'});
 
     /* disable move/copy for every key file or directory */
     if (inode.private) {

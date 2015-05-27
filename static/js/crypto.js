@@ -143,7 +143,7 @@ Interlock.Crypto = new function() {
 
   this.getEncryptKeys = function() {
     var encryptKeys = [];
-    var publicKeys = this.getPrivateKeys();
+    var publicKeys = this.getPublicKeys();
 
     $.each(publicKeys, function(indexKey, key) {
       $.each(ciphers, function(indexCipher, cipher) {

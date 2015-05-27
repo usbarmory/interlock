@@ -721,7 +721,7 @@ Interlock.FileManager = new function() {
                                                             .addClass('text ui-widget-content ui-corner-all')];
 
           Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
-            submitButton: 'Verify', title: 'Verify File Signature'});
+            submitButton: 'Verify', title: 'Verify Detached Signature'});
           Interlock.UI.modalFormDialog('open');
         });
       }));

@@ -296,7 +296,9 @@ table.inodes_table tbody tr {
   text-decoration: none;
 }
 
-table.inodes_table tbody tr:hover {
+table.inodes_table tbody tr:hover,
+table.inodes_table tbody tr.selected {
+  background: rgba(0,0,0,0.03);
   border-left: 2px solid silver;
 }
 

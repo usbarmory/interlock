@@ -48,6 +48,7 @@ Interlock.FileManager = new function() {
 
     /* remove the context menu on when the user clicks the left button */
     $(document).on('click', function(e) {
+      $('table.inodes_table tbody tr.selected').removeClass('selected');
       $('ul.inode_menu').remove();
     });
 
@@ -277,7 +278,10 @@ Interlock.FileManager = new function() {
 
       /* open the context menu on right click on the inode (mainView only) */
       if (view === 'mainView') {
-        $inode.on('contextmenu', function(e) { Interlock.FileManager.contextMenu(e, inode, path) });
+        $inode.on('contextmenu', function(e) {
+          $('table.inodes_table tbody tr.selected').removeClass('selected');
+          $inode.addClass('selected');
+          Interlock.FileManager.contextMenu(e, inode, path) });
       }
     });
   };
@@ -289,10 +293,13 @@ Interlock.FileManager = new function() {
     $('ul.inode_menu').remove();
 
     var menuEntries = [];
+
     var pageY = e.pageY;
+
     if (pageY > 400) {
-    pageY -= 220;
+      pageY -= 220;
     }
+
     var contextMenu = $(document.createElement('ul')).addClass('inode_menu')
                                                      .appendTo('body')
                                                      .css({top: pageY + 'px', left: e.pageX + 'px'});

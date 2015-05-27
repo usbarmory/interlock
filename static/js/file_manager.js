@@ -47,9 +47,13 @@ Interlock.FileManager = new function() {
     }
 
     /* remove the context menu on when the user clicks the left button */
-    $(document).on('click', function(e) {
-      $('table.inodes_table tbody tr.selected').removeClass('selected');
-      $('ul.inode_menu').remove();
+    $(document).on('click', function(event) {
+      /* event.button === 2 corresponds to right click.
+         This is necessary to prevent menu disappearing on Firefox */
+      if(event.button !== undefined && event.button !== 2) {
+        $('table.inodes_table tbody tr.selected').removeClass('selected');
+        $('ul.inode_menu').remove();
+      }
     });
 
     /* register the on 'click' event to the new directory button */

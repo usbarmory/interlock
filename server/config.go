@@ -26,6 +26,7 @@ type config struct {
 	BindAddress string   `json:"bind_address"`
 	TLSCert     string   `json:"tls_cert"`
 	TLSKey      string   `json:"tls_key"`
+	TLSClientCA string   `json:"tls_client_ca"`
 	KeyPath     string   `json:"key_path"`
 	VolumeGroup string   `json:"volume_group"`
 	Ciphers     []string `json:"ciphers"`

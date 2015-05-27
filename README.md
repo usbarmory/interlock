@@ -214,6 +214,8 @@ Configuration
 
 * tls_key: HTTPS server TLS key
 
+* tls_client_ca: Certificate Authority (CA) for HTTPS client authentication (optional)
+
 * key_path: path for public/private key storage on the encrypted filesystem
 
 * volume_group: volume group name
@@ -230,6 +232,7 @@ and defaults.
         "bind_address": "127.0.0.1:4430",
         "tls_cert": "certs/cert.pem",
         "tls_key": "certs/key.pem",
+        "tls_client_ca": "",
         "key_path": "keys",
         "volume_group": "lvmvolume"
         "ciphers": [

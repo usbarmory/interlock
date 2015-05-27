@@ -7,8 +7,11 @@
 package main
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"flag"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"log/syslog"
 	"net/http"
@@ -116,7 +119,33 @@ func main() {
 	log.Printf("starting server on %s", conf.BindAddress)
 
 	registerHandlers()
-	err = http.ListenAndServeTLS(conf.BindAddress, conf.TLSCert, conf.TLSKey, nil)
+
+	if conf.TLSClientCA != "" {
+		certPool := x509.NewCertPool()
+		{
+			clientCert, err := ioutil.ReadFile(conf.TLSClientCA)
+
+			if err != nil {
+				log.Fatalf("%s", err)
+			}
+
+			if ok := certPool.AppendCertsFromPEM(clientCert); !ok {
+				log.Fatal("could not parse client certificate authority")
+			}
+		}
+
+		server := &http.Server{
+			Addr: conf.BindAddress,
+			TLSConfig: &tls.Config{
+				ClientAuth: tls.RequireAndVerifyClientCert,
+				ClientCAs:  certPool,
+			},
+		}
+
+		err = server.ListenAndServeTLS(conf.TLSCert, conf.TLSKey)
+	} else {
+		err = http.ListenAndServeTLS(conf.BindAddress, conf.TLSCert, conf.TLSKey, nil)
+	}
 
 	if err != nil {
 		log.Fatalf("%s", err)

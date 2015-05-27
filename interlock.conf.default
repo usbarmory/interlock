@@ -4,6 +4,7 @@
   "bind_address": "0.0.0.0:4430",
   "tls_cert": "certs/cert.pem",
   "tls_key": "certs/key.pem",
+  "tls_client_ca": "",
   "key_path": "keys",
   "volume_group": "lvmvolume",
   "ciphers": [

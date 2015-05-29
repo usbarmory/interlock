@@ -170,10 +170,10 @@ or cross-compiled, under Linux (it is not supported by or designed for other
 OSes at this time).
 
 ```
-go get -u golang.org/x/crypto/pbkdf2
-go get -u golang.org/x/crypto/openpgp
 git clone https://github.com/inversepath/interlock
 cd interlock
+git submodule init
+git submodule update
 make
 ```
 

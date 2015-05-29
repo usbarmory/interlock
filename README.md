@@ -203,24 +203,26 @@ Options
 Configuration
 =============
 
-* debug: enable debugging logs
+* debug: enable debugging logs.
 
 * set_time: use the client browser time to set server time at login, useful on
-  non-routed USB armory devices (unable to set the clock on their own)
+  non-routed USB armory devices (unable to set the clock on their own).
 
-* bind_address: IP address, port pair
+* bind_address: IP address, port pair.
 
-* tls_cert: HTTPS server TLS certificate
+* tls_cert: HTTPS server TLS certificate.
 
-* tls_key: HTTPS server TLS key
+* tls_key: HTTPS server TLS key.
 
-* tls_client_ca: Certificate Authority (CA) for HTTPS client authentication (optional)
+* tls_client_ca: optional CA for HTTPS client authentication, client
+  certificate requires TLS Web Client Authentication X509v3 Extended Key Usage
+  extension to be correctly validated.
 
-* key_path: path for public/private key storage on the encrypted filesystem
+* key_path: path for public/private key storage on the encrypted filesystem.
 
-* volume_group: volume group name
+* volume_group: volume group name.
 
-* ciphers: array of cipher names to enable
+* ciphers: array of cipher names to enable.
 
 The following example illustrates the configuration file format (plain JSON)
 and defaults.

@@ -53,7 +53,7 @@ func enableSyslog() {
 	logwriter, err := syslog.New(syslog.LOG_INFO, "interlock")
 
 	if err != nil {
-		log.Fatalf("%s", err)
+		log.Fatal(err)
 	}
 
 	log.SetFlags(0)
@@ -82,7 +82,7 @@ func main() {
 	err := os.Chdir(path.Dir(os.Args[0]))
 
 	if err != nil {
-		log.Fatalf("%s", err)
+		log.Fatal(err)
 	}
 
 	log.SetFlags(log.Ldate | log.Ltime)
@@ -94,7 +94,7 @@ func main() {
 		err := conf.Set(*configPath)
 
 		if err != nil {
-			log.Fatalf("%s", err)
+			log.Fatal(err)
 		}
 
 		log.Printf("configuration file %s successfully parsed", *configPath)
@@ -103,7 +103,7 @@ func main() {
 	err = conf.SetMountPoint()
 
 	if err != nil {
-		log.Fatalf("%s", err)
+		log.Fatal(err)
 	}
 
 	conf.EnableCiphers()
@@ -126,7 +126,7 @@ func main() {
 			clientCert, err := ioutil.ReadFile(conf.TLSClientCA)
 
 			if err != nil {
-				log.Fatalf("%s", err)
+				log.Fatal(err)
 			}
 
 			if ok := certPool.AppendCertsFromPEM(clientCert); !ok {
@@ -148,6 +148,6 @@ func main() {
 	}
 
 	if err != nil {
-		log.Fatalf("%s", err)
+		log.Fatal(err)
 	}
 }

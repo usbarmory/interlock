@@ -83,7 +83,7 @@ func (c *config) EnableCiphers() {
 
 	if len(c.Ciphers) == 0 {
 		c.PrintAvailableCiphers()
-		log.Fatalf("missing cipher specification")
+		log.Fatal("missing cipher specification")
 	}
 
 	for i := 0; i < len(c.Ciphers); i++ {

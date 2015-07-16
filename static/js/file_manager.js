@@ -20,6 +20,7 @@ Interlock.FileManager = new function() {
   sessionStorage.browsingViewPwd = '/';
   sessionStorage.browsingViewSortAttribute = 'name';
   sessionStorage.browsingViewSortAsc = true;
+
   var MAX_VIEW_SIZE = 1 * 1024 * 1024;
 
   /** @protected */
@@ -58,7 +59,13 @@ Interlock.FileManager = new function() {
 
     /* register the on 'click' event to the new directory button */
     $('#add_new_directory').on('click', function() {
-      var buttons = { 'Create directory': function() { Interlock.FileManager.mkdir($('#directory').val());} };
+      var buttons = { 'Create directory': function() {
+          Interlock.FileManager.mkdir(
+            [sessionStorage['mainViewPwd'] + (sessionStorage['mainViewPwd'].slice(-1) === '/' ? '' : '/') + $('#directory').val()]
+          );
+        }
+      };
+
       var elements = [$(document.createElement('input')).attr('id', 'directory')
                                                         .attr('name', 'directory')
                                                         .attr('placeholder', 'directory name')
@@ -321,7 +328,7 @@ Interlock.FileManager = new function() {
     } else {
       menuEntries.push($(document.createElement('li')).text('Copy')
                                                       .click(function() {
-        var buttons = { 'Copy': function() { Interlock.FileManager.fileCopy({ src: path, dst: $('#dst').val() }) } };
+        var buttons = { 'Copy': function() { Interlock.FileManager.fileCopy({ src: [path], dst: $('#dst').val() }) } };
 
         var elements = [$(document.createElement('p')).text('Destination file or directory (absolute path):')
                                                       .addClass('text ui-widget-content ui-corner-all'),
@@ -339,7 +346,7 @@ Interlock.FileManager = new function() {
 
       menuEntries.push($(document.createElement('li')).text('Move')
                                                       .click(function() {
-        var buttons = { 'Move': function() { Interlock.FileManager.fileMove({ src: path, dst: $('#dst').val() }) } };
+        var buttons = { 'Move': function() { Interlock.FileManager.fileMove({ src: [path], dst: $('#dst').val() }) } };
 
         var elements = [$(document.createElement('p')).text('Destination file or directory (absolute path):')
                                                       .addClass('text ui-widget-content ui-corner-all'),
@@ -383,7 +390,7 @@ Interlock.FileManager = new function() {
            in a more clean way in order to avoid code repetition */
         menuEntries.push($(document.createElement('li')).text('Compress')
                                                         .click(function() {
-          var buttons = { 'Compress': function() { Interlock.FileManager.fileCompress({ src: path, dst: $('#dst').val() }) } };
+          var buttons = { 'Compress': function() { Interlock.FileManager.fileCompress({ src: [path], dst: $('#dst').val() }) } };
 
           var elements = [$(document.createElement('p')).text('Destination archive (absolute path):')
                                                         .addClass('text ui-widget-content ui-corner-all'),
@@ -774,7 +781,7 @@ Interlock.FileManager = new function() {
             SUPPORTED_ARCHIVE_EXTENSIONS) >= 0) {
           menuEntries.push($(document.createElement('li')).text('Extract')
                                                         .click(function() {
-            var buttons = { 'Extract': function() { Interlock.FileManager.fileExtract({ src: path, dst: $('#dst').val() }) } };
+            var buttons = { 'Extract': function() { Interlock.FileManager.fileExtract({ src: [path], dst: $('#dst').val() }) } };
 
             var elements = [$(document.createElement('p')).text('Destination directory (absolute path):')
                                                           .addClass('text ui-widget-content ui-corner-all'),
@@ -793,7 +800,7 @@ Interlock.FileManager = new function() {
         /* add the compress action for files */
         menuEntries.push($(document.createElement('li')).text('Compress')
                                                         .click(function() {
-          var buttons = { 'Compress': function() { Interlock.FileManager.fileCompress({ src: path, dst: $('#dst').val() }) } };
+          var buttons = { 'Compress': function() { Interlock.FileManager.fileCompress({ src: [path], dst: $('#dst').val() }) } };
 
           var elements = [$(document.createElement('p')).text('Destination archive (absolute path):')
                                                         .addClass('text ui-widget-content ui-corner-all'),
@@ -1261,9 +1268,7 @@ Interlock.FileManager.mkdirCallback = function(backendData) {
 Interlock.FileManager.mkdir = function(path) {
   try {
     Interlock.Backend.APIRequest(Interlock.Backend.API.file.mkdir, 'POST',
-      JSON.stringify({path: sessionStorage['mainViewPwd'] +
-        (sessionStorage['mainViewPwd'].slice(-1) === '/' ? '' : '/') + path}),
-      'FileManager.mkdirCallback');
+      JSON.stringify({path: path}), 'FileManager.mkdirCallback');
   } catch (e) {
     Interlock.Session.createEvent({'kind': 'critical',
       'msg': '[Interlock.FileManager.mkdir] ' + e});

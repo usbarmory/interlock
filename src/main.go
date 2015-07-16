@@ -91,7 +91,7 @@ func main() {
 	log.Printf("starting INTERLOCK %s (%s)\n", InterlockVersion, InterlockBuild)
 
 	if *configPath != "" {
-		err := conf.Set(*configPath)
+		err = conf.Set(*configPath)
 
 		if err != nil {
 			log.Fatal(err)

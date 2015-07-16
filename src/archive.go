@@ -17,7 +17,7 @@ import (
 	"strings"
 )
 
-func zipWriter(src string, dst io.Writer) (written int64, err error) {
+func zipWriter(src []string, dst io.Writer) (written int64, err error) {
 	writer := zip.NewWriter(dst)
 	defer writer.Close()
 
@@ -66,15 +66,21 @@ func zipWriter(src string, dst io.Writer) (written int64, err error) {
 		return
 	}
 
-	n := status.Notify(syslog.LOG_NOTICE, "compressing %s", path.Base(src))
-	defer status.Remove(n)
+	for _, s := range src {
+		n := status.Notify(syslog.LOG_NOTICE, "compressing %s", path.Base(s))
+		defer status.Remove(n)
 
-	err = filepath.Walk(src, walkFn)
+		err = filepath.Walk(s, walkFn)
+
+		if err != nil {
+			break
+		}
+	}
 
 	return
 }
 
-func zipPath(src string, dst string) (err error) {
+func zipPath(src []string, dst string) (err error) {
 	output, err := os.OpenFile(dst, os.O_WRONLY|os.O_CREATE|os.O_EXCL|os.O_TRUNC, 0600)
 
 	if err != nil {
@@ -91,7 +97,7 @@ func zipPath(src string, dst string) (err error) {
 			return
 		}
 
-		status.Log(syslog.LOG_NOTICE, "completed compression of %s", path.Base(src))
+		status.Log(syslog.LOG_NOTICE, "completed compression to %s", path.Base(dst))
 	}()
 
 	return

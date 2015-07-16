@@ -116,30 +116,78 @@ func detectKeyPath(path string) (inKeyPath bool, private bool) {
 }
 
 func fileMove(w http.ResponseWriter, r *http.Request) jsonObject {
-	return fileOp(w, r, _move)
+	return fileMultiOp(w, r, _move)
 }
 
 func fileCopy(w http.ResponseWriter, r *http.Request) jsonObject {
-	return fileOp(w, r, _copy)
+	return fileMultiOp(w, r, _copy)
 }
 
 func fileMkdir(w http.ResponseWriter, r *http.Request) jsonObject {
-	return fileOp(w, r, _mkdir)
+	return fileMultiOp(w, r, _mkdir)
 }
 
 func fileExtract(w http.ResponseWriter, r *http.Request) jsonObject {
-	return fileOp(w, r, _extract)
-}
-
-func fileCompress(w http.ResponseWriter, r *http.Request) jsonObject {
-	return fileOp(w, r, _compress)
+	return fileMultiOp(w, r, _extract)
 }
 
 func fileDelete(w http.ResponseWriter, r *http.Request) jsonObject {
-	return fileOp(w, r, _delete)
+	return fileMultiOp(w, r, _delete)
 }
 
-func fileOp(w http.ResponseWriter, r *http.Request, mode int) (res jsonObject) {
+func fileCompress(w http.ResponseWriter, r *http.Request) (res jsonObject) {
+	req, err := parseRequest(r)
+
+	if err != nil {
+		return errorResponse(err, "")
+	}
+
+	err = validateRequest(req, []string{"src:a", "dst:s"})
+
+	if err != nil {
+		return errorResponse(err, "")
+	}
+
+	dst, err := absolutePath(req["dst"].(string))
+
+	if err != nil {
+		return errorResponse(err, "")
+	}
+
+	switch filepath.Ext(dst) {
+	case ".zip", ".ZIP":
+		src := req["src"].([]interface{})
+		s := make([]string, len(src))
+
+		for i := range src {
+			s[i], err = absolutePath(src[i].(string))
+
+			if err != nil {
+				return errorResponse(err, "")
+			}
+		}
+
+		err = zipPath(s, dst)
+	default:
+		err = errors.New("unsupported archive format")
+	}
+
+	if err != nil {
+		return errorResponse(err, "")
+	}
+
+	res = jsonObject{
+		"status":   "OK",
+		"response": nil,
+	}
+
+	return
+}
+
+func fileMultiOp(w http.ResponseWriter, r *http.Request, mode int) (res jsonObject) {
+	var srcAttr string
+	var dst string
+
 	req, err := parseRequest(r)
 
 	if err != nil {
@@ -147,29 +195,55 @@ func fileOp(w http.ResponseWriter, r *http.Request, mode int) (res jsonObject) {
 	}
 
 	switch mode {
-	case _move, _copy, _extract, _compress:
-		err = validateRequest(req, []string{"src:s", "dst:s"})
+	case _move, _copy, _extract:
+		err = validateRequest(req, []string{"src:a", "dst:s"})
+		srcAttr = "src"
+
+		dst, err = absolutePath(req["dst"].(string))
 
 		if err != nil {
-			break
+			return errorResponse(err, "")
 		}
+	case _mkdir, _delete:
+		err = validateRequest(req, []string{"path:a"})
+		srcAttr = "path"
+	default:
+		err = errors.New("unsupported operation")
+	}
 
-		src, err := absolutePath(req["src"].(string))
+	if err != nil {
+		return errorResponse(err, "")
+	}
+
+	for _, file := range req[srcAttr].([]interface{}) {
+		path, err := absolutePath(file.(string))
 
 		if err != nil {
-			break
+			return errorResponse(err, "")
 		}
 
+		err = fileOp(path, dst, mode)
+
+		if err != nil {
+			return errorResponse(err, "")
+		}
+	}
+
+	res = jsonObject{
+		"status":   "OK",
+		"response": nil,
+	}
+
+	return
+}
+
+func fileOp(src string, dst string, mode int) (err error) {
+	switch mode {
+	case _move, _copy, _extract:
 		inKeyPath, private := detectKeyPath(src)
 
 		if inKeyPath && private {
 			err = errors.New("cannot move or copy private key(s)")
-			break
-		}
-
-		dst, err := absolutePath(req["dst"].(string))
-
-		if err != nil {
 			break
 		}
 
@@ -194,65 +268,21 @@ func fileOp(w http.ResponseWriter, r *http.Request, mode int) (res jsonObject) {
 			default:
 				err = errors.New("unsupported archive format")
 			}
-		case _compress:
-			switch filepath.Ext(dst) {
-			case ".zip", ".ZIP":
-				err = zipPath(src, dst)
-			default:
-				err = errors.New("unsupported archive format")
-			}
 		}
 	case _mkdir, _delete:
 		if mode == _mkdir {
-			err = validateRequest(req, []string{"path:s"})
-
-			if err != nil {
-				break
-			}
-
-			path, err := absolutePath(req["path"].(string))
-
-			if err != nil {
-				break
-			}
-
-			err = os.MkdirAll(path, 0700)
+			err = os.MkdirAll(src, 0700)
 		} else { // _delete
-			err = validateRequest(req, []string{"path:a"})
+			err = os.RemoveAll(src)
 
 			if err != nil {
 				break
 			}
 
-			path := req["path"].([]interface{})
-
-			for _, file := range path {
-				p, err := absolutePath(file.(string))
-
-				if err != nil {
-					return errorResponse(err, "")
-				}
-
-				err = os.RemoveAll(p)
-
-				status.Log(syslog.LOG_NOTICE, "deleted %s", file)
-
-				if err != nil {
-					return errorResponse(err, "")
-				}
-			}
+			status.Log(syslog.LOG_NOTICE, "deleted %s", src)
 		}
 	default:
 		err = errors.New("unsupported operation")
-	}
-
-	if err != nil {
-		return errorResponse(err, "")
-	}
-
-	res = jsonObject{
-		"status":   "OK",
-		"response": nil,
 	}
 
 	return
@@ -474,7 +504,7 @@ func fileDownloadByID(w http.ResponseWriter, id string) {
 	w.Header().Set("Cache-Control", "no-store")
 
 	if stat.IsDir() {
-		written, err = zipWriter(osPath, w)
+		written, err = zipWriter([]string{osPath}, w)
 	} else {
 		var input *os.File
 

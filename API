@@ -236,7 +236,7 @@ Recursively delete one or more files or directories under a certain path.
 
 request:
   {
-    "path":        [string]  # absolute path for files and/or directory delete
+    "path":        [string]  # absolute path for file and/or directory delete
   }
 
 ## POST api/file/move
@@ -245,7 +245,7 @@ Move/rename files or directories.
 
 request:
   {
-    "src":         string,   # absolute path for file and/or directory move
+    "src":         [string], # absolute path for file and/or directory move
     "dst":         string    # absolute path for destination
   }
 
@@ -255,7 +255,7 @@ Copy files or directories.
 
 request:
   {
-    "src":         string,   # absolute path for file and/or directory copy
+    "src":         [string], # absolute path for file and/or directory copy
     "dst":         string    # absolute path for destination
   }
 
@@ -265,7 +265,7 @@ Create a new directory, path creation can include parent directories.
 
 request:
   {
-    "path":        string    # absolute path for directory creation
+    "path":        [string]  # absolute path for directory creation
   }
 
 ## POST api/file/extract
@@ -276,7 +276,7 @@ zip.
 
 request:
   {
-    "src":         string,   # absolute path for archive file
+    "src":         [string], # absolute path for archive file
     "dst":         string    # absolute path for destination directory
   }
 
@@ -287,7 +287,7 @@ supported formats: zip.
 
 request:
   {
-    "src":         string,   # absolute path for file and/or directory
+    "src":         [string], # absolute path for file and/or directory to zip
     "dst":         string    # absolute path for destination archive name
   }
 

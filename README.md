@@ -55,7 +55,7 @@ Design goals:
   keys.
 
 * Minimal footprint (single statically linked binary + supporting static files)
-  to ease integration with USB armory secure booted initrd ramdisk.
+  to ease integration/execution on the USB armory platform.
 
 Supported Ciphers
 =================

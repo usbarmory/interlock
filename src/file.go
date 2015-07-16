@@ -248,20 +248,25 @@ func fileOp(src string, dst string, mode int) (err error) {
 		}
 
 		switch mode {
-		case _move:
+		case _copy, _move:
 			var stat os.FileInfo
+			var args []string
+			var cmd string
+
 			stat, err = os.Stat(dst)
 
-			if err == nil && stat.IsDir() {
-				dst = filepath.Join(dst, path.Base(src))
-			} else if err == nil {
+			if err == nil && !stat.IsDir() {
 				err = fmt.Errorf("path %s exists", dst)
-			} else {
-				err = os.Rename(src, dst)
+				break
 			}
-		case _copy:
-			args := []string{"-ran", src, dst}
-			cmd := "/bin/cp"
+
+			if mode == _copy {
+				args = []string{"-ran", src, dst}
+				cmd = "/bin/cp"
+			} else { // _move
+				args = []string{"-n", src, dst}
+				cmd = "/bin/mv"
+			}
 
 			_, err = execCommand(cmd, args, false, "")
 		case _extract:

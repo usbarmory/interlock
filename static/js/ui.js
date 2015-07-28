@@ -146,32 +146,6 @@ Interlock.UI.OpenShellInABox = function(e) {
  * @public
  *
  * @description
- * Increase/decrease the font size of the page elements
- *
- * @param {Object} event, JavaScript event raised during function invockation
- * @param {Integer} resizeStep (eg. +/-1)
- * @returns {}
- */
-Interlock.UI.resizeText = function(e, resizeStep) {
-  var curSize = parseInt($('body').css('font-size')) + resizeStep;
-
-  $('body').css('font-size', curSize);
-  $('div').css('font-size', curSize);
-  $('img').css('font-size', curSize);
-  $('h1').css('font-size', curSize);
-  $('button').css('font-size', curSize);
-  $('input').css('font-size', curSize);
-  $('fieldset').css('font-size', curSize);
-  $('form').css('font-size', curSize);
-
-  e.preventDefault();
-};
-
-/**
- * @function
- * @public
- *
- * @description
  * display the loader overlay on the selected page element
  *
  * @param {Object} element, page element to cover with the loading spinner

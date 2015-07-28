@@ -130,14 +130,6 @@ html, body, img, h1, div {
   margin-right: 0px;
 }
 
-.actions.resize_text {
-  position: fixed;
-  bottom: 1%;
-  left: 1%;
-  z-index: 100;
-  opacity: 0.4;
-}
-
 input[type="checkbox"] {
   vertical-align: bottom;
   top: 9px;

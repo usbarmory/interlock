@@ -1,7 +1,7 @@
 * {
   font-family: 'Arial', sans-serif;
   line-height: 1.4em;
-  color: rgb(50,50,50)
+  color: rgb(50,50,50);
 }
 
 html, body, img, h1, div {
@@ -251,10 +251,10 @@ fieldset { border: none }
 .inodes_table_container {
   display: block;
   padding-right: 25px;
-  border-right: 2px solid rgba(0,0,0,0.1);
-  border-bottom: 1px dotted rgba(0,0,0,0.1);
+  border-right: 2px solid rgba(0,0,0,0.2);
+  border-bottom: 1px solid rgba(0,0,0,0.2);
   width: 100%;
-  height: 500px;
+  height: 550px;
   overflow-y: auto;
 }
 
@@ -268,7 +268,7 @@ table.inodes_table {
   border: none;
   border-collapse: collapse;
   margin: 20px auto;
-  margin-bottom: 20px
+  margin-bottom: 30px
 }
 
 table.inodes_table td, table.inodes_table th {
@@ -277,7 +277,13 @@ table.inodes_table td, table.inodes_table th {
 }
 
 table.inodes_table tbody tr {
-  border-top: 1px solid #eeeeee
+  border-top: 1px solid #eeeeee;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 table.inodes_table tr.details {
@@ -297,9 +303,13 @@ table.inodes_table tbody tr {
 }
 
 table.inodes_table tbody tr:hover,
-table.inodes_table tbody tr.selected {
-  background: rgba(0,0,0,0.03);
-  border-left: 2px solid silver;
+table.inodes_table tbody tr.ui-selecting {
+  background: rgba(0,0,0,0.05);
+}
+
+table.inodes_table tbody tr.ui-selected {
+  background: rgba(0,0,0,0.2);
+  color: white
 }
 
 h1 {
@@ -460,12 +470,21 @@ h1 {
   font-weight: bold;
 }
 
-.directory:hover {
-  cursor: pointer;
+.directory:hover,
+.file:hover {
+  cursor: default
 }
 
-.file:hover {
- cursor: default; 
+#logs,
+.file,
+.directory {
+  -ms-word-break: break-all;
+  word-break: break-all;
+  word-break: break-word;
+  -webkit-hyphens: auto;
+  -moz-hyphens: auto;
+  -ms-hyphens: auto;
+  hyphens: auto;
 }
 
 .indent {

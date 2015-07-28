@@ -7,8 +7,6 @@
  */
 Interlock.FileManager = new function() {
   /** @private */
-  var cache = { 'mainView': [], 'browsingView': [] };
-
   var SUPPORTED_ARCHIVE_EXTENSIONS = ['zip','ZIP'];
 
   /* set default pwd and sorting rule for the main file manager
@@ -21,6 +19,9 @@ Interlock.FileManager = new function() {
   sessionStorage.browsingViewSortAttribute = 'name';
   sessionStorage.browsingViewSortAsc = true;
 
+  sessionStorage.clipBoard = sessionStorage.clipBoard || JSON.stringify({ 'action': 'none', 'paths': undefined });
+
+  /* max file dimension (bytes) allowed by file view action */
   var MAX_VIEW_SIZE = 1 * 1024 * 1024;
 
   /** @protected */
@@ -47,15 +48,28 @@ Interlock.FileManager = new function() {
       $submitButton.css({display: 'none'});
     }
 
-    /* remove the context menu on when the user clicks the left button */
+    /* remove the context menu when the user clicks the left button */
     $(document).on('click', function(event) {
       /* event.button === 2 corresponds to right click.
          This is necessary to prevent menu disappearing on Firefox */
-      if(event.button !== undefined && event.button !== 2) {
-        $('table.inodes_table tbody tr.selected').removeClass('selected');
+      if (event.button !== undefined && event.button !== 2) {
         $('ul.inode_menu').remove();
+        /* unselect any previously selected file or directory if the user
+           performs a left click without the ctrl key pressed */
+        if (event.ctrlKey !== true) {
+          $('table.inodes_table tbody tr.ui-selected').removeClass('ui-selected');
+        }
       }
     });
+
+    /* paste context menu (Copy here, Move here actions) */
+    $('#inodes_table_containter_main').on('contextmenu', function(event) {
+      event.preventDefault();
+      Interlock.FileManager.pasteMenu(event);
+    });
+
+    /* toggle the UndoSelectionButton if the copy/move buffer is not empty */
+    Interlock.FileManager.toggleUndoSelectionButton();
 
     /* register the on 'click' event to the new directory button */
     $('#add_new_directory').on('click', function() {
@@ -221,7 +235,7 @@ Interlock.FileManager = new function() {
     var totalSpace = parseFloat(totalSpace / (1000 * 1000 * 1000)).toFixed(2);
 
     $diskUsageSelector.text(freeSpace + ' GB free (' + totalSpace + ' GB total)' );
-  }
+  };
 
   this.refreshView = function(view, inodes) {
     var inodes = Interlock.FileManager.sortInodes(inodes);
@@ -270,7 +284,7 @@ Interlock.FileManager = new function() {
       var mtime = inode.mtime || 0;
       var path = sessionStorage[view + 'Pwd'] + (sessionStorage[view + 'Pwd'].slice(-1) === '/' ? '' : '/') + inode.name;
 
-      var $inode = $(document.createElement('tr'));
+      var $inode = $(document.createElement('tr')).attr('id', inode.name);
       var $inodeName = $(document.createElement('td')).text(inode.name);
       var $inodeSize = $(document.createElement('td')).text(size);
       var $inodeMtime = $(document.createElement('td')).text(Interlock.UI.convertToTimeString(mtime));
@@ -280,43 +294,236 @@ Interlock.FileManager = new function() {
 
       if (inode.dir) {
         $inode.addClass('directory');
-        $inodeName.click(function() {
+        $inodeName.dblclick(function() {
           Interlock.FileManager.fileList(view, path);
         });
       } else {
         $inode.addClass('file');
       }
 
-      /* open the context menu on right click on the inode (mainView only) */
+      if (inode.private) {
+        $inode.addClass('private');
+      }
+
+      if (inode.key_path) {
+        $inode.addClass('key_path');
+      }
+
+      /* if the view is the mainView register the context menu open action on right click
+         on the inode and makes the items selectable (for multiple selection) */
       if (view === 'mainView') {
         $inode.on('contextmenu', function(e) {
-          $('table.inodes_table tbody tr.selected').removeClass('selected');
-          $inode.addClass('selected');
-          Interlock.FileManager.contextMenu(e, inode, path) });
+          /* automatically selects the inode right-clicked by the user if this
+             has not been previously selected */
+          if (!document.getElementById(inode.name).className.match(/ui-selected/)) {
+            $('.ui-selected').map(function() { $(this).removeClass('ui-selected') });
+
+            document.getElementById(inode.name).className = document.getElementById(inode.name).className + ' ui-selected';
+          }
+
+          Interlock.FileManager.contextMenu(e, inode);
+        });
+
+        $('#inodes_table_main').selectable({
+          filter:'tbody tr',
+          cancel: '.ui-selected',
+          stop: function(event, ui) {
+            /* removes any opened context menu */
+            $('ul.inode_menu').remove();
+
+            /* this is needed to enable the unselect on click since the .ui-selected
+               class is filtered (to enable double click on directories) */
+            $('.ui-selected').click(function() {
+              $(this).removeClass('ui-selected');
+            });
+          }
+        });
       }
     });
   };
 
+  /* toggle the Undo copy/move selection and set the on click event */
+  this.toggleUndoSelectionButton = function() {
+    var clipBoard = JSON.parse(sessionStorage.clipBoard);
+
+    if (clipBoard.action === undefined ||
+        clipBoard.action === 'none' ||
+        clipBoard.paths === undefined) {
+
+      $('#undo_selection').text('');
+      $('#undo_selection').toggle(false);
+    } else {
+      $('#undo_selection').text('Undo ' + clipBoard.action + ' selection');
+      $('#undo_selection').toggle(true);
+
+      $('#undo_selection').on('click', function() {
+        sessionStorage.clipBoard = JSON.stringify({ 'action': 'none', 'paths': undefined });
+        $('#undo_selection').toggle(false);
+      });
+    }
+  };
+
+  this.isFile = function(inode) {
+    var isFile = true;
+    var inodeDOM;
+
+    try {
+      $.each(inode, function(index, i) {
+        inodeDOM = document.getElementById(i.id);
+
+        if (!(inodeDOM !== undefined && inodeDOM.className.match(/file/))) {
+          isFile = false;
+
+          /* exit from the each loop */
+          return false;
+        }
+      });
+    } catch (e) {
+      /* TypeError is raised if a single inode has been specified as
+         function argument instead of an array */
+      if (e instanceof TypeError) {
+        inodeDOM = document.getElementById(inode.id);
+        isFile = (inodeDOM === undefined) ? false : inodeDOM.className.match(/file/);
+      } else {
+        isFile = false;
+      }
+    }
+
+    return isFile;
+  };
+
+  this.isDirectory = function(inode) {
+    var isDirectory = true;
+    var inodeDOM;
+
+    try {
+      $.each(inode, function(index, i) {
+        inodeDOM = document.getElementById(i.id);
+
+        if (!(inodeDOM !== undefined && inodeDOM.className.match(/directory/))) {
+          isDirectory = false;
+
+          /* exit from the each loop */
+          return false;
+        }
+      });
+    } catch (e) {
+       /* TypeError is raised if a single inode has been specified as
+          function argument instead of an array */
+       if (e instanceof TypeError) {
+         inodeDOM = document.getElementById(inode.id);
+         isDirectory = (inodeDOM === undefined) ? false : inodeDOM.className.match(/directory/);
+       } else {
+         isDirectory = false;
+       }
+    }
+
+    return isDirectory;
+  };
+
+  this.isPrivate = function(inode) {
+    var isPrivate = false;
+    var inodeDOM;
+
+    try {
+      $.each(inode, function(index, i) {
+        inodeDOM = document.getElementById(i.id);
+
+        if ((inodeDOM !== undefined) && inodeDOM.className.match(/private/)) {
+          isPrivate = true;
+
+          /* exit from the each loop */
+          return false;
+        }
+      });
+    } catch (e) {
+       /* TypeError is raised if a single inode has been specified as
+          function argument instead of an array */
+       if (e instanceof TypeError) {
+         inodeDOM = document.getElementById(inode.id);
+         isPrivate = (inodeDOM === undefined) ? false : inodeDOM.className.match(/private/);
+       } else {
+         isPrivate = false;
+       }
+    }
+
+    return isPrivate;
+  };
+
+  /* dinamically creates the paste menu */
+  this.pasteMenu = function(event) {
+    $('ul.paste_menu').remove();
+
+    var clipBoard = JSON.parse(sessionStorage.clipBoard);
+
+    if (event.target.className === 'inodes_table_container' &&
+        clipBoard.action !== undefined && clipBoard.paths !== undefined) {
+
+      var dst = sessionStorage['mainViewPwd'] + (sessionStorage['mainViewPwd'].slice(-1) === '/' ? '' : '/');
+      var contextMenu = $(document.createElement('ul')).addClass('inode_menu')
+                                                       .addClass('paste_menu')
+                                                       .appendTo('body')
+                                                       .css({top: event.pageY + 'px', left: event.pageX + 'px'});
+      var menuEntries = [];
+      var paths = [].concat.apply([], [clipBoard.paths]);
+
+      $('table.inodes_table tbody tr.ui-selected').removeClass('ui-selected');
+
+      switch (clipBoard.action) {
+        case 'copy':
+          menuEntries.push($(document.createElement('li')).text('Paste (Copy Here)')
+                                                          .on('click', function() {
+            Interlock.FileManager.fileCopy({ src: paths, dst: dst });
+          }));
+
+          break;
+        case 'move':
+          menuEntries.push($(document.createElement('li')).text('Paste (Move Here)')
+                                                          .on('click', function() {
+            Interlock.FileManager.fileMove({ src: paths, dst: dst });
+          }));
+
+          break;
+        case 'none':
+        default:
+          break;
+      }
+
+      contextMenu.append(menuEntries);
+    }
+  };
+
   /* dinamically creates the context menu for every inode entry in the
      File Manager mainView */
-  this.contextMenu = function(e, inode, path) {
+  this.contextMenu = function(e, inode) {
+    var $selectedInodes = $('#inodes_table_main').find(".ui-selected");
+    var menuEntries = [];
+    var pageY = e.pageY;
+    var multipleSelection = ($selectedInodes.length > 1) ? true : false;
+
+    var selectedInodeIds = $selectedInodes.map(function() { return this.id; }).get();
+
     e.preventDefault();
+
     $('ul.inode_menu').remove();
 
-    var menuEntries = [];
-
-    var pageY = e.pageY;
-
     if (pageY > 400) {
-      pageY -= 220;
+      if (multipleSelection) {
+        pageY -= 110;
+      } else {
+        pageY -= 220;
+      }
     }
 
     var contextMenu = $(document.createElement('ul')).addClass('inode_menu')
                                                      .appendTo('body')
                                                      .css({top: pageY + 'px', left: e.pageX + 'px'});
 
-    /* disable move/copy for every key file or directory */
-    if (inode.private) {
+    var path = $selectedInodes.map(function() {
+      return sessionStorage['mainViewPwd'] + (sessionStorage['mainViewPwd'].slice(-1) === '/' ? '' : '/') + this.id;
+    }).get();
+
+    if (Interlock.FileManager.isPrivate($selectedInodes)) {
       menuEntries.push($(document.createElement('li')).text('Copy')
                                                       .addClass('disabled'));
 
@@ -328,507 +535,568 @@ Interlock.FileManager = new function() {
     } else {
       menuEntries.push($(document.createElement('li')).text('Copy')
                                                       .click(function() {
-        var buttons = { 'Copy': function() { Interlock.FileManager.fileCopy({ src: [path], dst: $('#dst').val() }) } };
-
-        var elements = [$(document.createElement('p')).text('Destination file or directory (absolute path):')
-                                                      .addClass('text ui-widget-content ui-corner-all'),
-                        $(document.createElement('input')).attr('id', 'dst')
-                                                          .attr('name', 'dst')
-                                                          .attr('value', path + '.copy')
-                                                          .attr('type', 'text')
-                                                          .attr('placeholder', 'destination file or directory')
-                                                          .addClass('text ui-widget-content ui-corner-all')];
-
-        Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
-          submitButton: 'Copy', title: 'Copy' });
-        Interlock.UI.modalFormDialog('open');
+        sessionStorage.clipBoard = JSON.stringify({ 'action': 'copy', 'paths': path });
+        Interlock.FileManager.toggleUndoSelectionButton();
       }));
 
       menuEntries.push($(document.createElement('li')).text('Move')
                                                       .click(function() {
-        var buttons = { 'Move': function() { Interlock.FileManager.fileMove({ src: [path], dst: $('#dst').val() }) } };
-
-        var elements = [$(document.createElement('p')).text('Destination file or directory (absolute path):')
-                                                      .addClass('text ui-widget-content ui-corner-all'),
-                        $(document.createElement('input')).attr('id', 'dst')
-                                                          .attr('name', 'dst')
-                                                          .attr('value', path + '.moved')
-                                                          .attr('type', 'text')
-                                                          .attr('placeholder', 'destination file or directory')
-                                                          .addClass('text ui-widget-content ui-corner-all')];
-
-        Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
-          submitButton: 'Move', title: 'Move' });
-        Interlock.UI.modalFormDialog('open');
+        sessionStorage.clipBoard = JSON.stringify({ 'action': 'move', 'paths': path });
+        Interlock.FileManager.toggleUndoSelectionButton();
       }));
     }
 
     menuEntries.push($(document.createElement('li')).text('Delete')
                                                     .click(function() {
-      var buttons = { 'Delete': function() { Interlock.FileManager.fileDelete([path]) } };
+      var buttons = { 'Delete': function() { Interlock.FileManager.fileDelete([].concat.apply([], [path])) } };
 
-      var elements = [$(document.createElement('p')).text('Are you sure you want to delete the following ' +
-                                                         (inode.dir ? 'directories:' : 'files:'))
-                                                    .addClass('text ui-widget-content ui-corner-all'),
-                      $(document.createElement('p')).text(inode.name)
+      var elements = [$(document.createElement('p')).text('Are you sure you want to delete the following files/directories:')
                                                     .addClass('text ui-widget-content ui-corner-all')];
+
+      $.each($selectedInodes, function(index, $selectedInode) {
+        elements.push($(document.createElement('p')).text($selectedInode.id)
+                                                    .addClass('text ui-widget-content ui-corner-all')
+                                                    .addClass(Interlock.FileManager.isDirectory($selectedInode) ? 'directory' : 'file'));
+      });
 
       Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
         submitButton: 'Delete', title: 'Delete', height: 400, width: 400 });
       Interlock.UI.modalFormDialog('open');
     }));
 
-    if (inode.dir) {
-      if (inode.private) {
-        menuEntries.push($(document.createElement('li')).text('Compress')
-                                                        .addClass('disabled'));
-        menuEntries.push($(document.createElement('li')).text('Download (zip archive)')
+    /* multiple-selection */
+    if (multipleSelection) {
+      /* add the compress action for multiple selection */
+      menuEntries.push($(document.createElement('li')).text('Compress')
+                                                      .click(function() {
+        var buttons = { 'Compress': function() { Interlock.FileManager.fileCompress({ src: path, dst: $('#dst').val() }) } };
+
+        var elements = [$(document.createElement('p')).text('Destination archive (absolute path):')
+                                                      .addClass('text ui-widget-content ui-corner-all'),
+                        $(document.createElement('input')).attr('id', 'dst')
+                                                          .attr('name', 'dst')
+                                                          .attr('value', sessionStorage['mainViewPwd'] +
+                                                            (sessionStorage['mainViewPwd'].slice(-1) === '/' ? '' : '/') +
+                                                            'new_archive.zip')
+                                                          .attr('type', 'text')
+                                                          .attr('placeholder', 'destination archive')
+                                                          .addClass('text ui-widget-content ui-corner-all')];
+        Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
+          submitButton: 'Compress', title: 'Compress' });
+        Interlock.UI.modalFormDialog('open');
+      }));
+    } else {
+      /* single inode selected */
+      $selectedInode = $selectedInodes[0];
+      path = sessionStorage['mainViewPwd'] + (sessionStorage['mainViewPwd'].slice(-1) === '/' ? '' : '/') + $selectedInode.id;
+
+      /* disable move/copy for every key file or directory */
+      if (Interlock.FileManager.isPrivate($selectedInode)) {
+        menuEntries.push($(document.createElement('li')).text('Rename')
                                                         .addClass('disabled'));
       } else {
-        /* add the compress action for directories */
-        /* FIXME: the context menu actions should be conditionally appended
-           in a more clean way in order to avoid code repetition */
-        menuEntries.push($(document.createElement('li')).text('Compress')
+        menuEntries.push($(document.createElement('li')).text('Rename')
                                                         .click(function() {
-          var buttons = { 'Compress': function() { Interlock.FileManager.fileCompress({ src: [path], dst: $('#dst').val() }) } };
+          var basedir = sessionStorage['mainViewPwd'] + (sessionStorage['mainViewPwd'].slice(-1) === '/' ? '' : '/');
 
-          var elements = [$(document.createElement('p')).text('Destination archive (absolute path):')
+          var buttons = { 'Rename': function() { Interlock.FileManager.fileRename({ src: [path], dst: basedir + $('#dst').val() }) } };
+
+          var elements = [$(document.createElement('p')).text('Renamed file or directory:')
                                                         .addClass('text ui-widget-content ui-corner-all'),
                           $(document.createElement('input')).attr('id', 'dst')
                                                             .attr('name', 'dst')
-                                                            .attr('value', path + '.zip')
+                                                            .attr('value', $selectedInode.id + '.renamed')
                                                             .attr('type', 'text')
-                                                            .attr('placeholder', 'destination archive')
+                                                            .attr('placeholder', 'destination file or directory')
                                                             .addClass('text ui-widget-content ui-corner-all')];
+
           Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
-            submitButton: 'Compress', title: 'Compress' });
+            submitButton: 'Rename', title: 'Rename' });
           Interlock.UI.modalFormDialog('open');
         }));
-
-        menuEntries.push($(document.createElement('li')).text('Download (zip archive)')
-                                                        .click(function() {
-                                                          Interlock.FileManager.fileDownload(path);
-                                                        }));
       }
-    } else {
-      /* file encrypt */
-      menuEntries.push($(document.createElement('li')).text('Encrypt')
-                                                      .click(function() {
 
-        var $selectCiphers = $(document.createElement('select')).attr('id', 'cipher')
-                                                                .attr('name', 'cipher');
+      if (Interlock.FileManager.isDirectory($selectedInode)) {
+        if (Interlock.FileManager.isPrivate($selectedInode)) {
+          menuEntries.push($(document.createElement('li')).text('Compress')
+                                                          .addClass('disabled'));
+          menuEntries.push($(document.createElement('li')).text('Download (zip archive)')
+                                                          .addClass('disabled'));
+        } else {
 
-        var $selectKeys = $(document.createElement('select')).attr('id', 'key')
-                                                             .attr('name', 'key');
+          var clipBoard = JSON.parse(sessionStorage.clipBoard);
 
-        var $selectSignKeys = $(document.createElement('select')).attr('id', 'sig_key')
-                                                                 .attr('name', 'sig_key');
+          if (clipBoard.action !== undefined && clipBoard.paths !== undefined) {
+             var dst = sessionStorage['mainViewPwd'] + (sessionStorage['mainViewPwd'].slice(-1) === '/' ? '' : '/') +
+                       $selectedInode.id;
+             var paths = [].concat.apply([], [clipBoard.paths]);
 
-        var $availableCiphers = [$(document.createElement('option')).attr('value', '')
-                                                                    .text('choose encryption cipher')];
+             switch (clipBoard.action) {
+               case 'copy':
+                 menuEntries.push($(document.createElement('li')).text('Paste (Copy Here)')
+                                                                 .on('click', function() {
+                 Interlock.FileManager.fileCopy({ src: paths, dst: dst });
+               }));
 
-        var $availableKeys = [$(document.createElement('option')).attr('value', '')
-                                                                 .text('choose encryption key')];
+               break;
+               case 'move':
+                 menuEntries.push($(document.createElement('li')).text('Paste (Move Here)')
+                                                               .on('click', function() {
+                 Interlock.FileManager.fileMove({ src: paths, dst: dst });
+               }));
 
-        var $availableSignKeys = [$(document.createElement('option')).attr('value', '')
-                                                                     .text('choose signing key')];
-
-        Interlock.Crypto.cipherList();
-        Interlock.Crypto.keyList();
-
-        /* waits until cipher and key lists have been filled with the backend data */
-        $.when(Interlock.Crypto.cipherListCompleted, Interlock.Crypto.keyListCompleted).done(function () {
-          $.each(Interlock.Crypto.getEncryptCiphers(), function(index, cipher) {
-            $availableCiphers.push($(document.createElement('option')).attr('value', cipher.name)
-                                                                      .text(cipher.name));
-          });
-
-          $.each(Interlock.Crypto.getEncryptKeys(), function(index, key) {
-            $availableKeys.push($(document.createElement('option')).attr('value', key.path)
-                                                                   .text(key.identifier));
-          });
-
-          $.each(Interlock.Crypto.getSignKeys(), function(index, key) {
-            $availableSignKeys.push($(document.createElement('option')).attr('value', key.path)
-                                                                       .text(key.identifier));
-          });
-
-          $selectCiphers.append($availableCiphers);
-          $selectKeys.append($availableKeys);
-          $selectSignKeys.append($availableSignKeys);
-
-          $selectCiphers.change(function() {
-            var selectedCipher = $('#cipher > option:selected').val();
-
-            switch (selectedCipher) {
-              case 'AES-256-OFB':
-                $('#password').attr('placeholder', 'encryption password').show();
-                $('#wipe_src').show();
-                $('#wipe_src_label').show();
-
-                $('#key').hide();
-                $('#sig_key').hide();
-                $('#sign').prop('checked', false).hide();
-                $('#sign_label').hide();
-
-                break;
-              case 'OpenPGP':
-                $('#key').show();
-                $('#sign').show();
-                $('#sign_label').show();
-                $('#wipe_src').show();
-                $('#wipe_src_label').show();
-
-                if ($('#sign').is(':checked') === true) {
-                  $('#sig_key').show();
-                  $('#password').val('')
-                                .attr('placeholder', 'key password')
-                                .show();
-                } else {
-                  $('#sig_key').hide();
-                  $('#password').val('').hide();
-                }
-
-                break;
+              break;
+              case 'none':
               default:
-                $('#password').val('').hide();
-                $('#key').val('').hide();
-                $('#sig_key').val('').hide();
-                $('#sign').prop('checked', false).hide();
-                $('#sign_label').hide();
-                $('#wipe_src').prop('checked', false).hide();
-                $('#wipe_src_label').hide();
+              break;
             }
-          });
+          }
 
-          var buttons = { 'Encrypt': function() {
-            Interlock.FileManager.fileEncrypt( path,
-                {cipher: $('#cipher').val(), password: $('#password').val(), key: $('#key').val(),
-                 sign: $('#sign').is(':checked'), sig_key: $('#sig_key').val(), wipe_src: $('#wipe_src').is(':checked')});
-            }
-          };
-
-          var elements = [$selectCiphers,
-                          $selectKeys,
-                          $(document.createElement('fieldset')).addClass('nested')
-                                                               .append(
-                            $(document.createElement('input')).attr('id', 'wipe_src')
-                                                              .attr('name', 'wipe_src')
-                                                              .attr('type', 'checkbox')
-                                                              .addClass('text ui-widget-content ui-corner-all')
-                                                              .hide(),
-                            $(document.createElement('label')).attr('id', 'wipe_src_label')
-                                                              .attr('name', 'wipe_src_label')
-                                                              .attr('for', 'wipe_src')
-                                                              .text('delete the original file after encryption')
-                                                              .addClass('text ui-widget-content ui-corner-all')
-                                                              .hide()),
-                          $(document.createElement('fieldset')).addClass('nested')
-                                                               .css({'margin-bottom': '15px'})
-                                                               .append(
-                            $(document.createElement('input')).attr('id', 'sign')
-                                                              .attr('name', 'sign')
-                                                              .attr('type', 'checkbox')
-                                                              .addClass('text ui-widget-content ui-corner-all')
-                                                              .change(function() {
-                                                                if ($('#sign').is(':checked') === true) {
-                                                                  $('#sig_key').show();
-                                                                  $('#password').val('')
-                                                                                .attr('placeholder', 'sign key password')
-                                                                                .show();
-                                                                } else {
-                                                                  $('#sig_key').hide();
-                                                                   $('#password').val('').hide();
-                                                                }
-                                                              })
-                                                              .hide(),
-                            $(document.createElement('label')).attr('id', 'sign_label')
-                                                              .attr('name', 'sign_label')
-                                                              .attr('for', 'sign')
-                                                              .text('sign the encrypted file')
-                                                              .addClass('text ui-widget-content ui-corner-all')
-                                                              .hide()),
-                          $selectSignKeys.hide(),
-                          $(document.createElement('input')).attr('id', 'password')
-                                                            .attr('name', 'password')
-                                                            .attr('value', '')
-                                                            .attr('type', 'password')
-                                                            .attr('placeholder', 'encryption password')
-                                                            .addClass('text ui-widget-content ui-corner-all')];
-
-          Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
-            submitButton: 'Encrypt', title: 'Encrypt File', height: 380});
-
-          Interlock.UI.modalFormDialog('open');
-
-          $('#password').hide();
-          $('#key').hide();
-        });
-      }));
-
-      /* file decrypt */
-      menuEntries.push($(document.createElement('li')).text('Decrypt')
-                                                      .click(function() {
-        var $selectCiphers = $(document.createElement('select')).attr('id', 'cipher')
-                                                                .attr('name', 'cipher');
-
-        var $selectKeys = $(document.createElement('select')).attr('id', 'key')
-                                                             .attr('name', 'key');
-
-        var $availableCiphers = [$(document.createElement('option')).attr('value', '')
-                                                                    .text('choose decryption cipher')];
-
-        var $availableKeys = [$(document.createElement('option')).attr('value', '')
-                                                                 .text('choose decryption key')];
-
-        Interlock.Crypto.cipherList();
-        Interlock.Crypto.keyList();
-
-        /* waits until cipher and key lists have been filled with the backend data */
-        $.when(Interlock.Crypto.cipherListCompleted, Interlock.Crypto.keyListCompleted).done(function () {
-          $.each(Interlock.Crypto.getDecryptCiphers(), function(index, cipher) {
-            $availableCiphers.push($(document.createElement('option')).attr('value', cipher.name)
-                                                                      .text(cipher.name));
-          });
-
-          $.each(Interlock.Crypto.getDecryptKeys(), function(index, key) {
-            $availableKeys.push($(document.createElement('option')).attr('value', key.path)
-                                                                   .text(key.identifier));
-          });
-
-          $selectCiphers.append($availableCiphers);
-          $selectKeys.append($availableKeys);
-
-          $selectCiphers.change(function() {
-            var selectedCipher = $('#cipher > option:selected').val();
-
-            switch (selectedCipher) {
-              case 'AES-256-OFB':
-                $('#password').attr('placeholder', 'decryption password');
-
-                $('#key').hide();
-                $('#password').show();
-
-                break;
-              case 'OpenPGP':
-                $('#password').attr('placeholder', 'key password');
-
-                $('#key').show();
-                $('#password').show();
-
-                break;
-              default:
-                $('#password').value = '';
-                $('#key').value = '';
-
-                $('#password').hide();
-                $('#key').hide();
-            }
-          });
-
-          var buttons = { 'Decrypt': function() {
-              Interlock.FileManager.fileDecrypt( path, {cipher: $('#cipher').val(),
-              password: $('#password').val(), key: $('#key').val() })
-            }
-          };
-
-          var elements = [$selectCiphers,
-                          $selectKeys,
-                          $(document.createElement('input')).attr('id', 'password')
-                                                            .attr('name', 'password')
-                                                            .attr('value', '')
-                                                            .attr('type', 'password')
-                                                            .attr('placeholder', 'decryption password')
-                                                            .addClass('text ui-widget-content ui-corner-all')];
-
-          Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
-            submitButton: 'Decrypt', title: 'Decrypt File' });
-
-          Interlock.UI.modalFormDialog('open');
-
-          $('#password').hide();
-          $('#key').hide();
-
-          /* pre-select the cipher based on the file extension */
-          $.each(Interlock.Crypto.getDecryptCiphers(), function(index, cipher) {
-            if (path.split('.').pop() === cipher.ext) {
-              $('#cipher').val(cipher.name).change();
-            }
-          });
-        });
-      }));
-
-      /* file sign */
-      menuEntries.push($(document.createElement('li')).text('Sign')
-                                                      .click(function() {
-
-        var $selectSignKeys = $(document.createElement('select')).attr('id', 'sig_key')
-                                                                 .attr('name', 'sig_key');
-
-        var $availableSignKeys = [$(document.createElement('option')).attr('value', '')
-                                                                     .text('choose signing key')];
-        Interlock.Crypto.cipherList();
-        Interlock.Crypto.keyList();
-
-        /* waits until cipher and key lists have been filled with the backend data */
-        $.when(Interlock.Crypto.cipherListCompleted, Interlock.Crypto.keyListCompleted).done(function () {
-          $.each(Interlock.Crypto.getSignKeys(), function(index, key) {
-            $availableSignKeys.push($(document.createElement('option')).attr('value', key.path)
-                                                                       .text(key.identifier));
-          });
-
-          $selectSignKeys.append($availableSignKeys);
-
-          var buttons = { 'Sign': function() {
-            Interlock.FileManager.fileSign({cipher: Interlock.Crypto.getKeyCipher($('#sig_key option:selected').text()),
-                                            password: $('#password').val(),
-                                            key: $('#sig_key').val(), src: path});
-            }
-          };
-
-          var elements = [$selectSignKeys,
-                          $(document.createElement('input')).attr('id', 'password')
-                                                            .attr('name', 'password')
-                                                            .attr('value', '')
-                                                            .attr('type', 'password')
-                                                            .attr('placeholder', 'key password')
-                                                            .addClass('text ui-widget-content ui-corner-all')];
- 
-          Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
-            submitButton: 'Sign', title: 'Sign File'});
-          Interlock.UI.modalFormDialog('open');
-        });
-      }));
-
-      /* file verify */
-      menuEntries.push($(document.createElement('li')).text('Verify')
-                                                      .click(function() {
-
-        var $selectVerifyKeys = $(document.createElement('select')).attr('id', 'verify_key')
-                                                                   .attr('name', 'verify_key');
-
-        var $availableVerifyKeys = [$(document.createElement('option')).attr('value', '')
-                                                                       .text('choose a signature verification key')];
-        Interlock.Crypto.cipherList();
-        Interlock.Crypto.keyList();
-
-        /* waits until cipher and key lists have been filled with the backend data */
-        $.when(Interlock.Crypto.cipherListCompleted, Interlock.Crypto.keyListCompleted).done(function () {
-          $.each(Interlock.Crypto.getVerifyKeys(), function(index, key) {
-            $availableVerifyKeys.push($(document.createElement('option')).attr('value', key.path)
-                                                                         .text(key.identifier));
-          });
-
-          $selectVerifyKeys.append($availableVerifyKeys);
-
-          var buttons = { 'Verify': function() {
-              Interlock.FileManager.fileVerify({src: $('#src').val(), sig_path: $('#sig_path').val(),
-                                                key: $('#verify_key').val(),
-                                                cipher: Interlock.Crypto.getKeyCipher($('#verify_key option:selected').text()) });
-            }
-          };
-
-          var elements = [$(document.createElement('input')).attr('id', 'src')
-                                                            .attr('name', 'src')
-                                                            .attr('value', path)
-                                                            .attr('type', 'text')
-                                                            .attr('placeholder', 'file to verify')
-                                                            .addClass('text ui-widget-content ui-corner-all'),
-                          $selectVerifyKeys,
-                          $(document.createElement('input')).attr('id', 'sig_path')
-                                                            .attr('name', 'sig_path')
-                                                            .attr('value', '')
-                                                            .attr('type', 'text')
-                                                            .attr('placeholder', 'signature file')
-                                                            .addClass('text ui-widget-content ui-corner-all')];
-
-          Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
-            submitButton: 'Verify', title: 'Verify Detached Signature'});
-          Interlock.UI.modalFormDialog('open');
-        });
-      }));
-
-      /* add 'Key Info' menu - except for password.
-         Reduntant, password keys cannot be uploaded in first place. */
-      if (inode.key) {
-        if (inode.key.key_format !== 'password') {
-          menuEntries.push($(document.createElement('li')).text('Key Info')
+          /* add the compress action for directories */
+          /* FIXME: the context menu actions should be conditionally appended
+             in a more clean way in order to avoid code repetition */
+          menuEntries.push($(document.createElement('li')).text('Compress')
                                                           .click(function() {
-            Interlock.Crypto.cipherList();
+            var buttons = { 'Compress': function() { Interlock.FileManager.fileCompress({ src: [path], dst: $('#dst').val() }) } };
 
-            /* waits until cipher list has been filled with the backend data */
-            $.when(Interlock.Crypto.cipherListCompleted).done(function () {
-              Interlock.Crypto.keyInfo(inode.key.path, inode.key.cipher);
-            });
-          }));
-        }
-      }
-
-      /* if inode is private (eg. private keys),
-         Extract/Compress/View/Download functions are disabled */
-      if (inode.private) {
-        menuEntries.push($(document.createElement('li')).text('Extract')
-                                                        .addClass('disabled'));
-        menuEntries.push($(document.createElement('li')).text('Compress')
-                                                        .addClass('disabled'));
-        menuEntries.push($(document.createElement('li')).text('View')
-                                                        .addClass('disabled'));
-        menuEntries.push($(document.createElement('li')).text('Download')
-                                                        .addClass('disabled'));
-      } else {
-        /* add the extract action for the supported archive files */
-        if ($.inArray((inode.name.split('.').pop() || ''),
-            SUPPORTED_ARCHIVE_EXTENSIONS) >= 0) {
-          menuEntries.push($(document.createElement('li')).text('Extract')
-                                                        .click(function() {
-            var buttons = { 'Extract': function() { Interlock.FileManager.fileExtract({ src: [path], dst: $('#dst').val() }) } };
-
-            var elements = [$(document.createElement('p')).text('Destination directory (absolute path):')
+            var elements = [$(document.createElement('p')).text('Destination archive (absolute path):')
                                                           .addClass('text ui-widget-content ui-corner-all'),
                             $(document.createElement('input')).attr('id', 'dst')
                                                               .attr('name', 'dst')
-                                                              .attr('value', (path.split('.')[0] || sessionStorage.mainViewPwd))
+                                                              .attr('value', path + '.zip')
                                                               .attr('type', 'text')
-                                                              .attr('placeholder', 'destination directory')
+                                                              .attr('placeholder', 'destination archive')
                                                               .addClass('text ui-widget-content ui-corner-all')];
             Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
-              submitButton: 'Extract', title: 'Extract' });
+              submitButton: 'Compress', title: 'Compress' });
             Interlock.UI.modalFormDialog('open');
+          }));
+
+          menuEntries.push($(document.createElement('li')).text('Download (zip archive)')
+                                                          .click(function() {
+                                                            Interlock.FileManager.fileDownload(path);
                                                           }));
         }
-
-        /* add the compress action for files */
-        menuEntries.push($(document.createElement('li')).text('Compress')
+      } else {
+        /* file encrypt */
+        menuEntries.push($(document.createElement('li')).text('Encrypt')
                                                         .click(function() {
-          var buttons = { 'Compress': function() { Interlock.FileManager.fileCompress({ src: [path], dst: $('#dst').val() }) } };
 
-          var elements = [$(document.createElement('p')).text('Destination archive (absolute path):')
-                                                        .addClass('text ui-widget-content ui-corner-all'),
-                          $(document.createElement('input')).attr('id', 'dst')
-                                                            .attr('name', 'dst')
-                                                            .attr('value', path + '.zip')
-                                                            .attr('type', 'text')
-                                                            .attr('placeholder', 'destination archive')
-                                                            .addClass('text ui-widget-content ui-corner-all')];
-          Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
-            submitButton: 'Compress', title: 'Compress' });
-          Interlock.UI.modalFormDialog('open');
+          var $selectCiphers = $(document.createElement('select')).attr('id', 'cipher')
+                                                                  .attr('name', 'cipher');
+
+          var $selectKeys = $(document.createElement('select')).attr('id', 'key')
+                                                               .attr('name', 'key');
+
+          var $selectSignKeys = $(document.createElement('select')).attr('id', 'sig_key')
+                                                                   .attr('name', 'sig_key');
+
+          var $availableCiphers = [$(document.createElement('option')).attr('value', '')
+                                                                      .text('choose encryption cipher')];
+
+          var $availableKeys = [$(document.createElement('option')).attr('value', '')
+                                                                   .text('choose encryption key')];
+
+          var $availableSignKeys = [$(document.createElement('option')).attr('value', '')
+                                                                       .text('choose signing key')];
+
+          Interlock.Crypto.cipherList();
+          Interlock.Crypto.keyList();
+
+          /* waits until cipher and key lists have been filled with the backend data */
+          $.when(Interlock.Crypto.cipherListCompleted, Interlock.Crypto.keyListCompleted).done(function () {
+            $.each(Interlock.Crypto.getEncryptCiphers(), function(index, cipher) {
+              $availableCiphers.push($(document.createElement('option')).attr('value', cipher.name)
+                                                                        .text(cipher.name));
+            });
+
+            $.each(Interlock.Crypto.getEncryptKeys(), function(index, key) {
+              $availableKeys.push($(document.createElement('option')).attr('value', key.path)
+                                                                     .text(key.identifier));
+            });
+
+            $.each(Interlock.Crypto.getSignKeys(), function(index, key) {
+              $availableSignKeys.push($(document.createElement('option')).attr('value', key.path)
+                                                                         .text(key.identifier));
+            });
+
+            $selectCiphers.append($availableCiphers);
+            $selectKeys.append($availableKeys);
+            $selectSignKeys.append($availableSignKeys);
+
+            $selectCiphers.change(function() {
+              var selectedCipher = $('#cipher > option:selected').val();
+
+              switch (selectedCipher) {
+                case 'AES-256-OFB':
+                  $('#password').attr('placeholder', 'encryption password').show();
+                  $('#wipe_src').show();
+                  $('#wipe_src_label').show();
+
+                  $('#key').hide();
+                  $('#sig_key').hide();
+                  $('#sign').prop('checked', false).hide();
+                  $('#sign_label').hide();
+
+                  break;
+                case 'OpenPGP':
+                  $('#key').show();
+                  $('#sign').show();
+                  $('#sign_label').show();
+                  $('#wipe_src').show();
+                  $('#wipe_src_label').show();
+
+                  if ($('#sign').is(':checked') === true) {
+                    $('#sig_key').show();
+                    $('#password').val('')
+                                  .attr('placeholder', 'key password')
+                                  .show();
+                  } else {
+                    $('#sig_key').hide();
+                    $('#password').val('').hide();
+                  }
+
+                  break;
+                default:
+                  $('#password').val('').hide();
+                  $('#key').val('').hide();
+                  $('#sig_key').val('').hide();
+                  $('#sign').prop('checked', false).hide();
+                  $('#sign_label').hide();
+                  $('#wipe_src').prop('checked', false).hide();
+                  $('#wipe_src_label').hide();
+              }
+            });
+
+            var buttons = { 'Encrypt': function() {
+              Interlock.FileManager.fileEncrypt( path,
+                  {cipher: $('#cipher').val(), password: $('#password').val(), key: $('#key').val(),
+                   sign: $('#sign').is(':checked'), sig_key: $('#sig_key').val(), wipe_src: $('#wipe_src').is(':checked')});
+              }
+            };
+
+            var elements = [$selectCiphers,
+                            $selectKeys,
+                            $(document.createElement('fieldset')).addClass('nested')
+                                                                 .append(
+                              $(document.createElement('input')).attr('id', 'wipe_src')
+                                                                .attr('name', 'wipe_src')
+                                                                .attr('type', 'checkbox')
+                                                                .addClass('text ui-widget-content ui-corner-all')
+                                                                .hide(),
+                              $(document.createElement('label')).attr('id', 'wipe_src_label')
+                                                                .attr('name', 'wipe_src_label')
+                                                                .attr('for', 'wipe_src')
+                                                                .text('delete the original file after encryption')
+                                                                .addClass('text ui-widget-content ui-corner-all')
+                                                                .hide()),
+                            $(document.createElement('fieldset')).addClass('nested')
+                                                                 .css({'margin-bottom': '15px'})
+                                                                 .append(
+                              $(document.createElement('input')).attr('id', 'sign')
+                                                                .attr('name', 'sign')
+                                                                .attr('type', 'checkbox')
+                                                                .addClass('text ui-widget-content ui-corner-all')
+                                                                .change(function() {
+                                                                  if ($('#sign').is(':checked') === true) {
+                                                                    $('#sig_key').show();
+                                                                    $('#password').val('')
+                                                                                  .attr('placeholder', 'sign key password')
+                                                                                  .show();
+                                                                  } else {
+                                                                    $('#sig_key').hide();
+                                                                     $('#password').val('').hide();
+                                                                  }
+                                                                })
+                                                                .hide(),
+                              $(document.createElement('label')).attr('id', 'sign_label')
+                                                                .attr('name', 'sign_label')
+                                                                .attr('for', 'sign')
+                                                                .text('sign the encrypted file')
+                                                                .addClass('text ui-widget-content ui-corner-all')
+                                                                .hide()),
+                            $selectSignKeys.hide(),
+                            $(document.createElement('input')).attr('id', 'password')
+                                                              .attr('name', 'password')
+                                                              .attr('value', '')
+                                                              .attr('type', 'password')
+                                                              .attr('placeholder', 'encryption password')
+                                                              .addClass('text ui-widget-content ui-corner-all')];
+
+            Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
+              submitButton: 'Encrypt', title: 'Encrypt File', height: 380});
+
+            Interlock.UI.modalFormDialog('open');
+
+            $('#password').hide();
+            $('#key').hide();
+          });
         }));
 
-        if (inode.size <= MAX_VIEW_SIZE) {
-          menuEntries.push($(document.createElement('li')).text('View')
-                                                          .click(function() {
-                                                            Interlock.FileManager.fileDownloadView(path);
-                                                          }));
-        } else {
-          menuEntries.push($(document.createElement('li')).text('View')
-                                                          .addClass('disabled'));
+        /* file decrypt */
+        menuEntries.push($(document.createElement('li')).text('Decrypt')
+                                                        .click(function() {
+          var $selectCiphers = $(document.createElement('select')).attr('id', 'cipher')
+                                                                  .attr('name', 'cipher');
+
+          var $selectKeys = $(document.createElement('select')).attr('id', 'key')
+                                                               .attr('name', 'key');
+
+          var $availableCiphers = [$(document.createElement('option')).attr('value', '')
+                                                                      .text('choose decryption cipher')];
+
+          var $availableKeys = [$(document.createElement('option')).attr('value', '')
+                                                                   .text('choose decryption key')];
+
+          Interlock.Crypto.cipherList();
+          Interlock.Crypto.keyList();
+
+          /* waits until cipher and key lists have been filled with the backend data */
+          $.when(Interlock.Crypto.cipherListCompleted, Interlock.Crypto.keyListCompleted).done(function () {
+            $.each(Interlock.Crypto.getDecryptCiphers(), function(index, cipher) {
+              $availableCiphers.push($(document.createElement('option')).attr('value', cipher.name)
+                                                                        .text(cipher.name));
+            });
+
+            $.each(Interlock.Crypto.getDecryptKeys(), function(index, key) {
+              $availableKeys.push($(document.createElement('option')).attr('value', key.path)
+                                                                   .text(key.identifier));
+            });
+
+            $selectCiphers.append($availableCiphers);
+            $selectKeys.append($availableKeys);
+
+            $selectCiphers.change(function() {
+              var selectedCipher = $('#cipher > option:selected').val();
+
+              switch (selectedCipher) {
+                case 'AES-256-OFB':
+                  $('#password').attr('placeholder', 'decryption password');
+
+                  $('#key').hide();
+                  $('#password').show();
+
+                  break;
+                case 'OpenPGP':
+                  $('#password').attr('placeholder', 'key password');
+
+                  $('#key').show();
+                  $('#password').show();
+
+                  break;
+                default:
+                  $('#password').value = '';
+                  $('#key').value = '';
+
+                  $('#password').hide();
+                  $('#key').hide();
+              }
+            });
+
+            var buttons = { 'Decrypt': function() {
+                Interlock.FileManager.fileDecrypt( path, {cipher: $('#cipher').val(),
+                password: $('#password').val(), key: $('#key').val() })
+              }
+            };
+
+            var elements = [$selectCiphers,
+                            $selectKeys,
+                            $(document.createElement('input')).attr('id', 'password')
+                                                              .attr('name', 'password')
+                                                              .attr('value', '')
+                                                              .attr('type', 'password')
+                                                              .attr('placeholder', 'decryption password')
+                                                              .addClass('text ui-widget-content ui-corner-all')];
+
+            Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
+              submitButton: 'Decrypt', title: 'Decrypt File' });
+
+            Interlock.UI.modalFormDialog('open');
+
+            $('#password').hide();
+            $('#key').hide();
+
+            /* pre-select the cipher based on the file extension */
+            $.each(Interlock.Crypto.getDecryptCiphers(), function(index, cipher) {
+              if (path.split('.').pop() === cipher.ext) {
+                $('#cipher').val(cipher.name).change();
+              }
+            });
+          });
+        }));
+
+        /* file sign */
+        menuEntries.push($(document.createElement('li')).text('Sign')
+                                                        .click(function() {
+
+          var $selectSignKeys = $(document.createElement('select')).attr('id', 'sig_key')
+                                                                   .attr('name', 'sig_key');
+
+          var $availableSignKeys = [$(document.createElement('option')).attr('value', '')
+                                                                       .text('choose signing key')];
+          Interlock.Crypto.cipherList();
+          Interlock.Crypto.keyList();
+
+          /* waits until cipher and key lists have been filled with the backend data */
+          $.when(Interlock.Crypto.cipherListCompleted, Interlock.Crypto.keyListCompleted).done(function () {
+            $.each(Interlock.Crypto.getSignKeys(), function(index, key) {
+              $availableSignKeys.push($(document.createElement('option')).attr('value', key.path)
+                                                                         .text(key.identifier));
+            });
+
+            $selectSignKeys.append($availableSignKeys);
+
+            var buttons = { 'Sign': function() {
+              Interlock.FileManager.fileSign({cipher: Interlock.Crypto.getKeyCipher($('#sig_key option:selected').text()),
+                                              password: $('#password').val(),
+                                              key: $('#sig_key').val(), src: path});
+              }
+            };
+
+            var elements = [$selectSignKeys,
+                            $(document.createElement('input')).attr('id', 'password')
+                                                              .attr('name', 'password')
+                                                              .attr('value', '')
+                                                              .attr('type', 'password')
+                                                              .attr('placeholder', 'key password')
+                                                              .addClass('text ui-widget-content ui-corner-all')];
+ 
+            Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
+              submitButton: 'Sign', title: 'Sign File'});
+            Interlock.UI.modalFormDialog('open');
+          });
+        }));
+
+        /* file verify */
+        menuEntries.push($(document.createElement('li')).text('Verify')
+                                                        .click(function() {
+
+          var $selectVerifyKeys = $(document.createElement('select')).attr('id', 'verify_key')
+                                                                     .attr('name', 'verify_key');
+
+          var $availableVerifyKeys = [$(document.createElement('option')).attr('value', '')
+                                                                         .text('choose a signature verification key')];
+          Interlock.Crypto.cipherList();
+          Interlock.Crypto.keyList();
+
+          /* waits until cipher and key lists have been filled with the backend data */
+          $.when(Interlock.Crypto.cipherListCompleted, Interlock.Crypto.keyListCompleted).done(function () {
+            $.each(Interlock.Crypto.getVerifyKeys(), function(index, key) {
+              $availableVerifyKeys.push($(document.createElement('option')).attr('value', key.path)
+                                                                           .text(key.identifier));
+            });
+
+            $selectVerifyKeys.append($availableVerifyKeys);
+
+            var buttons = { 'Verify': function() {
+                Interlock.FileManager.fileVerify({src: $('#src').val(), sig_path: $('#sig_path').val(),
+                                                  key: $('#verify_key').val(),
+                                                  cipher: Interlock.Crypto.getKeyCipher($('#verify_key option:selected').text()) });
+              }
+            };
+
+            var elements = [$(document.createElement('input')).attr('id', 'src')
+                                                              .attr('name', 'src')
+                                                              .attr('value', path)
+                                                              .attr('type', 'text')
+                                                              .attr('placeholder', 'file to verify')
+                                                              .addClass('text ui-widget-content ui-corner-all'),
+                            $selectVerifyKeys,
+                            $(document.createElement('input')).attr('id', 'sig_path')
+                                                              .attr('name', 'sig_path')
+                                                              .attr('value', '')
+                                                              .attr('type', 'text')
+                                                              .attr('placeholder', 'signature file')
+                                                              .addClass('text ui-widget-content ui-corner-all')];
+
+            Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
+              submitButton: 'Verify', title: 'Verify Detached Signature'});
+            Interlock.UI.modalFormDialog('open');
+          });
+        }));
+
+        /* add 'Key Info' menu - except for password.
+           Reduntant, password keys cannot be uploaded in first place. */
+        if (inode.key) {
+          if (inode.key.key_format !== 'password') {
+            menuEntries.push($(document.createElement('li')).text('Key Info')
+                                                            .click(function() {
+              Interlock.Crypto.cipherList();
+
+              /* waits until cipher list has been filled with the backend data */
+              $.when(Interlock.Crypto.cipherListCompleted).done(function () {
+                Interlock.Crypto.keyInfo(inode.key.path, inode.key.cipher);
+              });
+            }));
+          }
         }
 
-        menuEntries.push($(document.createElement('li')).text('Download')
-                                                        .click(function() {
-                                                          Interlock.FileManager.fileDownload(path);
-                                                        }));
+        /* if inode is private (eg. private keys),
+           Extract/Compress/View/Download functions are disabled */
+        if (Interlock.FileManager.isPrivate($selectedInode)) {
+          menuEntries.push($(document.createElement('li')).text('Extract')
+                                                          .addClass('disabled'));
+          menuEntries.push($(document.createElement('li')).text('Compress')
+                                                          .addClass('disabled'));
+          menuEntries.push($(document.createElement('li')).text('View')
+                                                          .addClass('disabled'));
+          menuEntries.push($(document.createElement('li')).text('Download')
+                                                          .addClass('disabled'));
+        } else {
+          /* add the extract action for the supported archive files */
+          if ($.inArray(($selectedInode.id.split('.').pop() || ''),
+              SUPPORTED_ARCHIVE_EXTENSIONS) >= 0) {
+            menuEntries.push($(document.createElement('li')).text('Extract')
+                                                          .click(function() {
+              var buttons = { 'Extract': function() { Interlock.FileManager.fileExtract({ src: [path], dst: $('#dst').val() }) } };
+
+              var elements = [$(document.createElement('p')).text('Destination directory (absolute path):')
+                                                            .addClass('text ui-widget-content ui-corner-all'),
+                              $(document.createElement('input')).attr('id', 'dst')
+                                                                .attr('name', 'dst')
+                                                                .attr('value', (path.split('.')[0] || sessionStorage.mainViewPwd))
+                                                                .attr('type', 'text')
+                                                                .attr('placeholder', 'destination directory')
+                                                                .addClass('text ui-widget-content ui-corner-all')];
+              Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
+                submitButton: 'Extract', title: 'Extract' });
+              Interlock.UI.modalFormDialog('open');
+                                                            }));
+          }
+
+          /* add the compress action for files */
+          menuEntries.push($(document.createElement('li')).text('Compress')
+                                                          .click(function() {
+            var buttons = { 'Compress': function() { Interlock.FileManager.fileCompress({ src: [path], dst: $('#dst').val() }) } };
+
+            var elements = [$(document.createElement('p')).text('Destination archive (absolute path):')
+                                                          .addClass('text ui-widget-content ui-corner-all'),
+                            $(document.createElement('input')).attr('id', 'dst')
+                                                              .attr('name', 'dst')
+                                                              .attr('value', path + '.zip')
+                                                              .attr('type', 'text')
+                                                              .attr('placeholder', 'destination archive')
+                                                              .addClass('text ui-widget-content ui-corner-all')];
+            Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
+              submitButton: 'Compress', title: 'Compress' });
+            Interlock.UI.modalFormDialog('open');
+          }));
+
+          if (inode.size <= MAX_VIEW_SIZE) {
+            menuEntries.push($(document.createElement('li')).text('View')
+                                                            .click(function() {
+                                                              Interlock.FileManager.fileDownloadView(path);
+                                                            }));
+          } else {
+            menuEntries.push($(document.createElement('li')).text('View')
+                                                            .addClass('disabled'));
+          }
+
+          menuEntries.push($(document.createElement('li')).text('Download')
+                                                          .click(function() {
+                                                            Interlock.FileManager.fileDownload(path);
+                                                          }));
+        }
       }
     }
 
@@ -1289,8 +1557,9 @@ Interlock.FileManager.mkdir = function(path) {
 Interlock.FileManager.fileCopyCallback = function(backendData, args) {
   try {
     if (backendData.status === 'OK') {
-      Interlock.UI.modalFormDialog('close');
       Interlock.FileManager.fileList('mainView');
+      sessionStorage.clipBoard = JSON.stringify({ 'action': 'none', 'paths': undefined });;
+      Interlock.FileManager.toggleUndoSelectionButton();
     } else {
       Interlock.Session.createEvent({'kind': backendData.status,
         'msg': '[Interlock.FileManager.fileCopy] ' + backendData.response});
@@ -1298,6 +1567,8 @@ Interlock.FileManager.fileCopyCallback = function(backendData, args) {
   } catch (e) {
     Interlock.Session.createEvent({'kind': 'critical',
       'msg': '[Interlock.FileManager.fileCopy] ' + e});
+  } finally {
+    $('#upload_form > fieldset > .ajax_overlay').remove();
   }
 };
 
@@ -1313,6 +1584,8 @@ Interlock.FileManager.fileCopyCallback = function(backendData, args) {
  */
 Interlock.FileManager.fileCopy = function(args){
   try {
+    Interlock.UI.ajaxLoader('#upload_form > fieldset');
+
     Interlock.Backend.APIRequest(Interlock.Backend.API.file.copy, 'POST',
       JSON.stringify({src: args.src, dst: args.dst}),
       'FileManager.fileCopyCallback');
@@ -1336,15 +1609,18 @@ Interlock.FileManager.fileCopy = function(args){
 Interlock.FileManager.fileMoveCallback = function(backendData) {
   try {
     if (backendData.status === 'OK') {
-      Interlock.UI.modalFormDialog('close');
       Interlock.FileManager.fileList('mainView');
+      sessionStorage.clipBoard = JSON.stringify({ 'action': 'none', 'paths': undefined });;
+      Interlock.FileManager.toggleUndoSelectionButton();
     } else {
       Interlock.Session.createEvent({'kind': backendData.status,
-        'msg': '[Interlock.FileManager.MoveCopy] ' + backendData.response});
+        'msg': '[Interlock.FileManager.fileMove] ' + backendData.response});
     }
   } catch (e) {
     Interlock.Session.createEvent({'kind': 'critical',
       'msg': '[Interlock.FileManager.fileMove] ' + e});
+  } finally {
+    $('#upload_form > fieldset > .ajax_overlay').remove();
   }
 };
 
@@ -1360,12 +1636,61 @@ Interlock.FileManager.fileMoveCallback = function(backendData) {
  */
 Interlock.FileManager.fileMove = function(args){
   try {
+    Interlock.UI.ajaxLoader('#upload_form > fieldset');
+
     Interlock.Backend.APIRequest(Interlock.Backend.API.file.move, 'POST',
       JSON.stringify({src: args.src, dst: args.dst}),
       'FileManager.fileMoveCallback');
   } catch (e) {
     Interlock.Session.createEvent({'kind': 'critical',
       'msg': '[Interlock.FileManager.fileMove] ' + e});
+  }
+};
+
+/**
+ * @function
+ * @public
+ *
+ * @description
+ * Callback function, refresh the file listed in the mainView according with
+ * the current pwd after file/directory has been renamed
+ *
+ * @param {Object} backendData
+ * @returns {}
+ */
+Interlock.FileManager.fileRenameCallback = function(backendData) {
+  try {
+    if (backendData.status === 'OK') {
+      Interlock.UI.modalFormDialog('close');
+      Interlock.FileManager.fileList('mainView');
+    } else {
+      Interlock.Session.createEvent({'kind': backendData.status,
+        'msg': '[Interlock.FileManager.fileRename] ' + backendData.response});
+    }
+  } catch (e) {
+    Interlock.Session.createEvent({'kind': 'critical',
+      'msg': '[Interlock.FileManager.fileRename] ' + e});
+  }
+};
+
+/**
+ * @function
+ * @public
+ *
+ * @description
+ * Rename a file or directory
+ *
+ * @param {Object} commandArgs, move options: src, dst
+ * @returns {}
+ */
+Interlock.FileManager.fileRename = function(args){
+  try {
+    Interlock.Backend.APIRequest(Interlock.Backend.API.file.move, 'POST',
+      JSON.stringify({src: args.src, dst: args.dst}),
+      'FileManager.fileRenameCallback');
+  } catch (e) {
+    Interlock.Session.createEvent({'kind': 'critical',
+      'msg': '[Interlock.FileManager.fileRename] ' + e});
   }
 };
 
@@ -1686,7 +2011,6 @@ Interlock.FileManager.sortInodes = function(inodes) {
 
     var sortAttr = 'name';
 
-    /* FIXME: optimize sorting algorithm */
     if (sessionStorage.mainViewSortAttribute !== 'name' ||
         sessionStorage.mainViewSortAttribute !== 'size' ||
         sessionStorage.mainViewSortAttribute !== 'mtime') {

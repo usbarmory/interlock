@@ -118,7 +118,11 @@ func main() {
 
 	log.Printf("starting server on %s", conf.BindAddress)
 
-	registerHandlers()
+	err = registerHandlers(conf.StaticPath)
+
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	if conf.TLSClientCA != "" {
 		certPool := x509.NewCertPool()

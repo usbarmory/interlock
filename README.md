@@ -205,6 +205,9 @@ Configuration
 
 * debug: enable debugging logs.
 
+* static_path: directory path for INTERLOCK static HTML/JavaScript files
+  ("static" directory included in project repository).
+
 * set_time: use the client browser time to set server time at login, useful on
   non-routed USB armory devices (unable to set the clock on their own).
 
@@ -230,6 +233,7 @@ and defaults.
 ```
 {
         "debug": false,
+        "static_path": "static",
         "set_time": false,
         "bind_address": "127.0.0.1:4430",
         "tls_cert": "certs/cert.pem",

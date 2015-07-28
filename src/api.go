@@ -11,11 +11,20 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"os"
 )
 
-func registerHandlers() {
-	http.Handle("/", http.StripPrefix("/", http.FileServer(http.Dir("static"))))
+func registerHandlers(staticPath string) (err error) {
+	_, err = os.Stat(conf.StaticPath)
+
+	if err != nil {
+		return fmt.Errorf("invalid path for static files: %s", staticPath)
+	}
+
+	http.Handle("/", http.StripPrefix("/", http.FileServer(http.Dir(staticPath))))
 	http.HandleFunc("/api/", apiHandler)
+
+	return
 }
 
 func apiHandler(w http.ResponseWriter, r *http.Request) {

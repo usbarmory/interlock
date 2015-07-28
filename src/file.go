@@ -399,7 +399,7 @@ func fileUpload(w http.ResponseWriter, r *http.Request) {
 	_, err = os.Stat(osPath)
 
 	if err == nil && overwrite != "true" {
-		err = fmt.Errorf("path %s exists but overwrite is false", osPath)
+		err = fmt.Errorf("path %s exists, not overwriting", osPath)
 		return
 	}
 

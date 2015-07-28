@@ -22,6 +22,7 @@ import (
 type config struct {
 	// exported
 	Debug       bool     `json:"debug"`
+	StaticPath  string   `json:"static_path"`
 	SetTime     bool     `json:"set_time"`
 	BindAddress string   `json:"bind_address"`
 	TLSCert     string   `json:"tls_cert"`
@@ -106,6 +107,7 @@ func (c *config) PrintAvailableCiphers() {
 
 func (c *config) SetDefaults() {
 	c.Debug = false
+	c.StaticPath = "static"
 	c.SetTime = false
 	c.TLSCert = "certs/cert.pem"
 	c.TLSKey = "certs/key.pem"

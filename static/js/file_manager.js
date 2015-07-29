@@ -551,7 +551,7 @@ Interlock.FileManager = new function() {
                                                     .click(function() {
       var buttons = { 'Delete': function() { Interlock.FileManager.fileDelete([].concat.apply([], [path])) } };
 
-      var elements = [$(document.createElement('p')).text('Are you sure you want to delete the following files/directories:')
+      var elements = [$(document.createElement('p')).text('Are you sure you want to delete the following files/directories?')
                                                     .addClass('text ui-widget-content ui-corner-all')];
 
       $.each($selectedInodes, function(index, $selectedInode) {

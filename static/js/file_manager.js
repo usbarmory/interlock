@@ -240,7 +240,8 @@ Interlock.FileManager = new function() {
   this.refreshView = function(view, inodes) {
     var inodes = Interlock.FileManager.sortInodes(inodes);
     var traversingPath = '/';
-    var $inodesTable = $('#file_manager_' + view + ' > div.inodes_table_container > table > tbody.inodes_container');
+    var $inodesTable = $('#file_manager_' + view +
+      ' > div.inodes_table_container > div.inodes_selectable_container > table > tbody.inodes_container');
     var $pwd = $('#file_manager_' + view + ' > span.pwd');
 
     $pwd.html('');
@@ -324,7 +325,7 @@ Interlock.FileManager = new function() {
           Interlock.FileManager.contextMenu(e, inode);
         });
 
-        $('#inodes_table_main').selectable({
+        $('#inodes_selectable_container_main').selectable({
           filter:'tbody tr',
           cancel: '.ui-selected',
           stop: function(event, ui) {

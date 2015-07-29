@@ -129,8 +129,11 @@ func login(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		return errorResponse(err, "")
 	}
 
-	// switch logging to encrypted partition
-	enableFilelog()
+	if !conf.Debug {
+		// switch logging to encrypted partition
+		enableFileLog()
+	}
+
 	session.Set(req["volume"].(string), sessionID, XSRFToken)
 
 	res = jsonObject{

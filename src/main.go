@@ -60,7 +60,7 @@ func enableSyslog() {
 	log.SetOutput(logwriter)
 }
 
-func enableFilelog() {
+func enableFileLog() {
 	if conf.logFile != nil {
 		conf.logFile.Close()
 	}

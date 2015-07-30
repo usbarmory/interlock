@@ -119,6 +119,17 @@ html, body, img, h1, div {
   border-radius: 1px;
 }
 
+.actions ul li#file_select_li,
+.actions ul li#directory_select_li {
+  padding-left: 0px;
+  padding-right: 0px;
+}
+
+.actions ul li#file_select_li span,
+.actions ul li#directory_select_li span {
+  padding: 5px;
+}
+
 .actions ul li:hover {
   cursor: pointer;
 }

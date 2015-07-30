@@ -295,9 +295,29 @@ Interlock.FileManager = new function() {
 
       if (inode.dir) {
         $inode.addClass('directory');
+
+        /* this is triggered by dblclick on un-selected directory */
         $inodeName.dblclick(function() {
           Interlock.FileManager.fileList(view, path);
         });
+
+        /* fix dblclick on jQuery selectable */
+        /* this is triggered by a single click on a selected directory */
+        $inodeName.click(function(event) {
+          if (Interlock.UI.doubleClick !== false) {
+            Interlock.FileManager.fileList(view, path);
+            Interlock.UI.doubleClick = false;
+          } else {
+            $inode.removeClass('ui-selected');
+
+            Interlock.UI.doubleClick = inode.name;
+            setTimeout( function() { Interlock.UI.doubleClick = false }, Interlock.UI.doubleClickDelay);
+          }
+
+          event.stopPropagation();
+          event.preventDefault();
+        });
+
       } else {
         $inode.addClass('file');
       }
@@ -327,16 +347,26 @@ Interlock.FileManager = new function() {
 
         $('#inodes_selectable_container_main').selectable({
           filter:'tbody tr',
+          /* dblclick on directories */
           cancel: '.ui-selected',
           stop: function(event, ui) {
             /* removes any opened context menu */
             $('ul.inode_menu').remove();
 
-            /* this is needed to enable the unselect on click since the .ui-selected
-               class is filtered (to enable double click on directories) */
-            $('.ui-selected').click(function() {
-              $(this).removeClass('ui-selected');
-            });
+            /* dblclick on directories */
+            if (Interlock.UI.doubleClick !== false &&
+                event.ctrlKey !== true && event.shiftKey !== true) {
+              Interlock.FileManager.fileList(view,
+                sessionStorage[view + 'Pwd'] + (sessionStorage[view + 'Pwd'].slice(-1) === '/' ? '' : '/') + Interlock.UI.doubleClick);
+
+              /* reset doubleClick buffer */
+              Interlock.UI.doubleClick = false;
+              event.stopPropagation();
+              event.preventDefault();
+            } else {
+              Interlock.UI.doubleClick = true;
+              setTimeout( function() { Interlock.UI.doubleClick = false }, Interlock.UI.doubleClickDelay);
+            }
           }
         });
       }

@@ -46,6 +46,10 @@ Interlock.UI = new function() {
   }
 
   /** @protected */
+  this.doubleClick = false;
+  /* double click delay in milli-seconds */
+  this.doubleClickDelay = 250;
+
   this.errorFormDialog = function(msgs) {
     $errorForm.dialog({
       autoOpen: false,

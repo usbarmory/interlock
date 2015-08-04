@@ -71,6 +71,10 @@ Interlock.UI = new function() {
           /* updates the error msg */
           $errorForm.append($(document.createElement('p')).text(msg));
         });
+      },
+      close: function() {
+        /* cleanup form */
+        $errorForm.html('');
       }
     });
 

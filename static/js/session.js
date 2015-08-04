@@ -182,7 +182,15 @@ Interlock.Session.createEvent = function(data) {
         msgs[index] = msg.substring(msg.indexOf(']') + 1);
       });
 
-      Interlock.UI.errorFormDialog(msgs);
+      /* do not overwrite any existing error message on a previously
+         opened error dialog */
+      if ($('#error-form').dialog('isOpen') === true) {
+        $.each(msgs, function(index, msg) {
+          $('#error-form').append($(document.createElement('p')).text(msg));
+        });
+      } else {
+        Interlock.UI.errorFormDialog(msgs);
+      }
   }
 
   /* send the log to the browser console and store it in the sessionStorage */
@@ -503,9 +511,6 @@ Interlock.Session.statusPollerCallback = function(backendData) {
   try {
     if (backendData.status === 'OK') {
       Interlock.Session.refreshStatus(backendData.response);
-    } else {
-      Interlock.Session.createEvent({'kind': backendData.status,
-                                     'msg': '[Interlock.Session.statusPollerCallback] ' + backendData.response});
     }
   } catch (e) {
     Interlock.Session.createEvent({'kind': 'critical',

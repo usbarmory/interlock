@@ -1248,6 +1248,11 @@ Interlock.FileManager = new function() {
         /* use document.getElementById(), jQuery selectors cannot be used here */
         if (xhr.status === 200) {
           document.getElementById(file.name + '_' + rnd).className = 'success';
+        } else if (xhr.status === 400 && xhr.response.match(/path .+ exists but overwrite is false/)) {
+          document.getElementById(file.name + '_' + rnd).className = 'failure';
+          document.getElementById(file.name + '_' + rnd).innerText = file.name + ' - FAILED (file already exists)';
+
+          Interlock.Session.createEvent({'kind': 'critical', 'msg': '[Interlock.FileManager]' + xhr.response});
         } else {
           document.getElementById(file.name + '_' + rnd).className = 'failure';
           document.getElementById(file.name + '_' + rnd).innerText = file.name + ' - FAILED';
@@ -1263,7 +1268,7 @@ Interlock.FileManager = new function() {
     xhr.setRequestHeader('X-XSRFToken', sessionStorage.XSRFToken);
     xhr.setRequestHeader('X-UploadFilename',
       sessionStorage.mainViewPwd + (sessionStorage.mainViewPwd.slice(-1) === '/' ? '' : '/') + path + fileName);
-    xhr.setRequestHeader('X-ForceOverwrite', 'true');
+    xhr.setRequestHeader('X-ForceOverwrite', 'false');
 
     xhr.send(file);
   };

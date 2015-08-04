@@ -35,7 +35,14 @@ Interlock.FileManager = new function() {
     var xhr = new XMLHttpRequest();
 
     $fileSelect.on('change', function(e) { Interlock.FileManager.selectButtonHandler(e); });
-    $directorySelect.on('change', function(e) { Interlock.FileManager.selectButtonHandler(e); });
+
+    /* register the on change event listener for directory upload button
+       only for chrome */
+    if (window.chrome) {
+      $directorySelect.on('change', function(e) { Interlock.FileManager.selectButtonHandler(e); });
+    } else {
+      $('#directory_select_li').hide();
+    }
 
     /* hide the submit button and enable drag and drop events only for
        browsers that supports it */

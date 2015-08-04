@@ -496,9 +496,6 @@ Interlock.Session.statusPollerCallback = function(backendData) {
   try {
     if (backendData.status === 'OK') {
       Interlock.Session.refreshStatus(backendData.response);
-    } else {
-      Interlock.Session.createEvent({'kind': backendData.status,
-                                     'msg': '[Interlock.Session.statusPollerCallback] ' + backendData.response});
     }
   } catch (e) {
     Interlock.Session.createEvent({'kind': 'critical',

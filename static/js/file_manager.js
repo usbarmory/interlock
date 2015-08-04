@@ -63,7 +63,7 @@ Interlock.FileManager = new function() {
     });
 
     /* paste context menu (Copy here, Move here actions) */
-    $('#inodes_table_containter_main').on('contextmenu', function(event) {
+    $('#inodes_selectable_container_main').on('contextmenu', function(event) {
       event.preventDefault();
       Interlock.FileManager.pasteMenu(event);
     });
@@ -487,7 +487,7 @@ Interlock.FileManager = new function() {
 
     var clipBoard = JSON.parse(sessionStorage.clipBoard);
 
-    if (event.target.className === 'inodes_table_container' &&
+    if (event.target.className.match(/inodes_selectable_container/) &&
         clipBoard.action !== undefined && clipBoard.paths !== undefined) {
 
       var dst = sessionStorage['mainViewPwd'] + (sessionStorage['mainViewPwd'].slice(-1) === '/' ? '' : '/');

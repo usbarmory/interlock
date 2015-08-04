@@ -12,3 +12,10 @@ ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
 WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+
+The license does not apply to the following 3rd party bundled code (see
+individual file headers for their copyright and license notices):
+
+        static/js/jquery-1.11.2.min.js
+        static/js/jquery-ui-1.11.3.min.js
+        static/styles/jquery-ui.css

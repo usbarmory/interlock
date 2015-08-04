@@ -1,8 +1,8 @@
 // INTERLOCK | https://github.com/inversepath/interlock
 // Copyright (c) 2015 Inverse Path S.r.l.
 //
-// Use of this source code is governed by a BSD-style
-// license that can be found in the LICENSE file.
+// Use of this source code is governed by the license
+// that can be found in the LICENSE file.
 
 package main
 
@@ -21,7 +21,7 @@ func TestOpenPGP(t *testing.T) {
 	cleartext := "01234567890ABCDEFGHILMNOPQRSTUVZ!@#"
 	o := &openPGP{}
 
-	fmt.Println("openpgp_test is generating keypair, this might take a while")
+	fmt.Println("openpgp_test is generating a test keypair, this might take a while")
 
 	testPubKey, testSecKey, err := o.GenKey("openpgp_test_key", "testonly@example.com")
 

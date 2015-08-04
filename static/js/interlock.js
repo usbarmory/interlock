@@ -1,3 +1,10 @@
+/** INTERLOCK | https://github.com/inversepath/interlock
+ * Copyright (c) 2015 Inverse Path S.r.l.
+ *
+ * Use of this source code is governed by the license
+ * that can be found in the LICENSE file.
+ */
+
 /**
  * @namespace
  *

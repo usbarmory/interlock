@@ -57,7 +57,7 @@ error response:
     "response":    string    # error string
   }
 
-# API Methods (* == currently not implemented)
+# API Methods
 
   api/
     auth/           login, refesh, logout, poweroff

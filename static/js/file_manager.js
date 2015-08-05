@@ -310,11 +310,6 @@ Interlock.FileManager = new function() {
       if (inode.dir) {
         $inode.addClass('directory');
 
-        /* this is triggered by dblclick on un-selected directory */
-        $inodeName.dblclick(function() {
-          Interlock.FileManager.fileList(view, path);
-        });
-
         /* fix dblclick on jQuery selectable */
         /* this is triggered by a single click on a selected directory */
         $inodeName.click(function(event) {

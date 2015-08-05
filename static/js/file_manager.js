@@ -85,6 +85,9 @@ Interlock.FileManager = new function() {
     /* toggle the UndoSelectionButton if the copy/move buffer is not empty */
     Interlock.FileManager.toggleUndoSelectionButton();
 
+    /* register the on 'click' event to the refresh button */
+    $('#refresh').on('click', function() { Interlock.FileManager.fileList('mainView'); });
+
     /* register the on 'click' event to the new directory button */
     $('#add_new_directory').on('click', function() {
       var buttons = { 'Create directory': function() {

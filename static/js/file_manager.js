@@ -1159,10 +1159,40 @@ Interlock.FileManager = new function() {
 
   this.selectButtonHandler = function(e) {
     var files = e.target.files;
+    var $file_select_label = $('#file_select_label');
+    var $directory_select_label = $('#directory_select_label');
 
     for (var i = 0, f; f = files[i]; i++) {
       Interlock.FileManager.uploadFile(f);
     }
+
+    /* remove and re-create the file/directory input tags,
+       needed since some browsers don't fire the onChange event when
+       selecting the same file/directory on subsequent uploads */
+
+    $('#fileselect').remove();
+    $('#directoryselect').remove();
+
+    $(document.createElement('input')).attr('id', 'fileselect')
+                                      .attr('type', 'file')
+                                      .attr('name', 'fileselect[]')
+                                      .attr('multiple', '')
+                                      .prependTo($file_select_label)
+                                      .on('change', function(e) {
+                                        Interlock.FileManager.selectButtonHandler(e);
+                                      });
+
+    $(document.createElement('input')).attr('id', 'directoryselect')
+                                      .attr('type', 'file')
+                                      .attr('name', 'directoryselect[]')
+                                      .attr('multiple', '')
+                                      .attr('directory', '')
+                                      .attr('webkitdirectory', '')
+                                      .attr('mozdirectory', '')
+                                      .prependTo($directory_select_label)
+                                      .on('change', function(e) {
+                                        Interlock.FileManager.selectButtonHandler(e);
+                                      });
   };
 
   this.entitySelectHandler = function(e) {

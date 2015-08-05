@@ -1251,23 +1251,24 @@ Interlock.FileManager = new function() {
       var pc = parseInt(e.loaded / e.total * 100);
       /* use document.getElementById(), jQuery selectors cannot be used here */
       document.getElementById(file.name + '_' + rnd).style.backgroundPosition = pc + '% 0';
-      document.getElementById(file.name + '_' + rnd).innerText = file.name + ' ' + pc + '%';
+      document.getElementById(file.name + '_' + rnd).textContent = file.name + ' ' + pc + '%';
     });
 
     xhr.onreadystatechange = function(e) {
-      /* FIXME: add a redirect to login in case of 401 Unauthorized or similar */
       if (xhr.readyState === 4) {
         /* use document.getElementById(), jQuery selectors cannot be used here */
         if (xhr.status === 200) {
           document.getElementById(file.name + '_' + rnd).className = 'success';
-        } else if (xhr.status === 400 && xhr.response.match(/path .+ exists but overwrite is false/)) {
+        } else if (xhr.status === 400 && xhr.response.match(/path .+ exists/)) {
           document.getElementById(file.name + '_' + rnd).className = 'failure';
-          document.getElementById(file.name + '_' + rnd).innerText = file.name + ' - FAILED (file already exists)';
+          document.getElementById(file.name + '_' + rnd).textContent = file.name + ' - FAILED (file already exists)';
 
           Interlock.Session.createEvent({'kind': 'critical', 'msg': '[Interlock.FileManager]' + xhr.response});
         } else {
           document.getElementById(file.name + '_' + rnd).className = 'failure';
-          document.getElementById(file.name + '_' + rnd).innerText = file.name + ' - FAILED';
+          document.getElementById(file.name + '_' + rnd).textContent = file.name + ' - FAILED';
+
+          Interlock.Session.createEvent({'kind': 'critical', 'msg': '[Interlock.FileManager]' + xhr.response});
         }
 
         /* FIXME: optimization, don't perform a fileList for every file */

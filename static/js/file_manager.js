@@ -82,9 +82,6 @@ Interlock.FileManager = new function() {
       Interlock.FileManager.pasteMenu(event);
     });
 
-    /* toggle the UndoSelectionButton if the copy/move buffer is not empty */
-    Interlock.FileManager.toggleUndoSelectionButton();
-
     /* register the on 'click' event to the refresh button */
     $('#refresh').on('click', function() { Interlock.FileManager.fileList('mainView'); });
 
@@ -392,27 +389,6 @@ Interlock.FileManager = new function() {
     });
   };
 
-  /* toggle the Undo copy/move selection and set the on click event */
-  this.toggleUndoSelectionButton = function() {
-    var clipBoard = JSON.parse(sessionStorage.clipBoard);
-
-    if (clipBoard.action === undefined ||
-        clipBoard.action === 'none' ||
-        clipBoard.paths === undefined) {
-
-      $('#undo_selection').text('');
-      $('#undo_selection').toggle(false);
-    } else {
-      $('#undo_selection').text('Undo ' + clipBoard.action + ' selection');
-      $('#undo_selection').toggle(true);
-
-      $('#undo_selection').on('click', function() {
-        sessionStorage.clipBoard = JSON.stringify({ 'action': 'none', 'paths': undefined });
-        $('#undo_selection').toggle(false);
-      });
-    }
-  };
-
   this.isFile = function(inode) {
     var isFile = true;
     var inodeDOM;
@@ -586,13 +562,11 @@ Interlock.FileManager = new function() {
       menuEntries.push($(document.createElement('li')).text('Copy')
                                                       .click(function() {
         sessionStorage.clipBoard = JSON.stringify({ 'action': 'copy', 'paths': path });
-        Interlock.FileManager.toggleUndoSelectionButton();
       }));
 
       menuEntries.push($(document.createElement('li')).text('Move')
                                                       .click(function() {
         sessionStorage.clipBoard = JSON.stringify({ 'action': 'move', 'paths': path });
-        Interlock.FileManager.toggleUndoSelectionButton();
       }));
     }
 
@@ -1645,7 +1619,6 @@ Interlock.FileManager.fileCopyCallback = function(backendData, args) {
     if (backendData.status === 'OK') {
       Interlock.FileManager.fileList('mainView');
       sessionStorage.clipBoard = JSON.stringify({ 'action': 'none', 'paths': undefined });;
-      Interlock.FileManager.toggleUndoSelectionButton();
     } else {
       Interlock.Session.createEvent({'kind': backendData.status,
         'msg': '[Interlock.FileManager.fileCopy] ' + backendData.response});
@@ -1697,7 +1670,6 @@ Interlock.FileManager.fileMoveCallback = function(backendData) {
     if (backendData.status === 'OK') {
       Interlock.FileManager.fileList('mainView');
       sessionStorage.clipBoard = JSON.stringify({ 'action': 'none', 'paths': undefined });;
-      Interlock.FileManager.toggleUndoSelectionButton();
     } else {
       Interlock.Session.createEvent({'kind': backendData.status,
         'msg': '[Interlock.FileManager.fileMove] ' + backendData.response});

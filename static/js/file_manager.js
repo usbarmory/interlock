@@ -368,14 +368,21 @@ Interlock.FileManager = new function() {
             /* dblclick on directories */
             if (Interlock.UI.doubleClick !== false &&
                 event.ctrlKey !== true && event.shiftKey !== true) {
-              Interlock.FileManager.fileList(view,
-                sessionStorage[view + 'Pwd'] + (sessionStorage[view + 'Pwd'].slice(-1) === '/' ? '' : '/') + Interlock.UI.doubleClick);
+              /* (Interlock.UI.doubleClick === true) means that the placeholder
+                 has not been properly updated, don't fire any fileList() in
+                 this case */
+              if (Interlock.UI.doubleClick !== true) {
+                Interlock.FileManager.fileList(view,
+                  sessionStorage[view + 'Pwd'] + (sessionStorage[view + 'Pwd'].slice(-1) === '/' ? '' : '/') + Interlock.UI.doubleClick);
 
-              /* reset doubleClick buffer */
-              Interlock.UI.doubleClick = false;
+                /* reset doubleClick buffer */
+                Interlock.UI.doubleClick = false;
+              }
+
               event.stopPropagation();
               event.preventDefault();
             } else {
+              /* the true value is used as placeholder */
               Interlock.UI.doubleClick = true;
               setTimeout( function() { Interlock.UI.doubleClick = false }, Interlock.UI.doubleClickDelay);
             }

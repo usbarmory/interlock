@@ -165,6 +165,12 @@ func fileCompress(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 			if err != nil {
 				return errorResponse(err, "")
 			}
+
+			inKeyPath, private := detectKeyPath(s[i])
+
+			if inKeyPath && private {
+				return errorResponse(errors.New("cannot download private key(s)"), "")
+			}
 		}
 
 		err = zipPath(s, dst)

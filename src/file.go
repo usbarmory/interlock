@@ -287,7 +287,7 @@ func fileOp(src string, dst string, mode int) (err error) {
 				break
 			}
 
-			status.Log(syslog.LOG_NOTICE, "deleted %s", src)
+			status.Log(syslog.LOG_NOTICE, "deleted %s", path.Base(src))
 		}
 	default:
 		err = errors.New("unsupported operation")

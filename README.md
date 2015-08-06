@@ -1,6 +1,3 @@
-**NOTE**: code & documentation are of beta quality at this stage, not for
-production use.
-
 Introduction
 ============
 

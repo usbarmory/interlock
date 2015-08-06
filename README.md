@@ -42,7 +42,10 @@ Design goals:
   and integration.
 
 * Minimum amount of external dependencies, currently no code outside of Go
-  standard and supplementary libraries is required for the server binary.
+  standard and supplementary libraries is required for the basic server binary.
+
+  NOTE: TextSecure support can be optionally enabled at compile time, it
+  currently requires an external dependency, see related section for details.
 
 * Authentication process directly tied to LUKS partition locking/unlocking.
 
@@ -75,6 +78,10 @@ Symmetric ciphers:
 Security tokens:
 
 * Time-based One-Time Password Algorithm (TOTP), RFC623 implementation (Google Authenticator)
+
+Messaging:
+
+* TextSecure protocol V2 via external library (https://github.com/janimo/textsecure)
 
 Key Storage
 ===========
@@ -200,6 +207,13 @@ Options
   -t=false:            test mode (WARNING: disables authentication)
 ```
 
+The optional TextSecure support (see related section for details) implements
+the following additional flag:
+
+```
+  -r=false: textsecure registration
+```
+
 Configuration
 =============
 
@@ -272,6 +286,75 @@ on disk.
 
 Any non-debug log generated outside an unauthenticated session is issued
 through standard syslog facility.
+
+TextSecure support
+==================
+
+**NOTE**: this feature is currently experimental, compilation with this feature
+enabled might fail as the external library API is subject to change.
+
+A messaging functionality, which leverages on the Open Whisper Systems
+[TextSecure](https://github.com/WhisperSystems/TextSecure) protocol, provides
+communication with other TextSecure/Signal clients, including other INTERLOCK
+instances using this feature.
+
+The feature is disabled by default and it depends on an external Go
+[library](https://github.com/janimo/textsecure). The library can be installed
+as follows:
+
+```
+go get github.com/janimo/textsecure/cmd/textsecure
+```
+
+The functionality can be enabled by compiling INTERLOCK as shown in the
+'Compiling' section, with the exception that the 'with_textsecure' target
+should be used when issuing the make command:
+
+```
+make with_textsecure
+```
+
+Additionally the "TextSecure" entry must be added to the "ciphers"
+configuration parameter (see Configuration section), to enable it.
+
+```
+        "ciphers": [
+                "OpenPGP",
+                "AES-256-OFB",
+                "TOTP",
+                "TextSecure"
+        ]
+```
+
+A pre-defined directory structure, stored on the encrypted filesystem under the
+key storage path, is assigned to TextSecure operation and holds generated keys,
+this is automatically managed by the protocol library.
+
+The user registration is prompted when starting INTERLOCK, with the feature
+compiled in and enabled in the configuration file, and by passing the '-r'
+option flag. The registration process triggers, and prompts for, a SMS
+verification code transmitted to the specified number.
+
+**NOTE**: Any existing TextSecure/Signal registration for the specified mobile
+number gets invalidated and taken over by INTERLOCK.
+
+A contact is represented by a file that can be regularly managed with the
+built-in file manager. The contact file stores the chat history and is used as
+the entry point for starting a chat with the right click menu.
+
+The contact files must respect to the following naming scheme and are located
+under the top level 'textsecure/contacts' directory:
+
+```
+<contact_name number>.textsecure # e.g. John Doe +3912345678.textsecure
+```
+
+New contacts can be uploaded using the file manager while incoming messages for
+unknown contacts trigger automatic creation of a contact file with name
+'Unknown' and the originating number.
+
+All contact files reside on the encrypted partition managed by INTERLOCK and,
+being regular files, benefit from the available file operations.
 
 Authors
 =======

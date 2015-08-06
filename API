@@ -32,6 +32,7 @@ cipher:
     "dec":         boolean,  # decryption support
     "sig":         boolean,  # signing support
     "otp":         boolean,  # one-time password support
+    "msg":         boolean,  # messaging support
     "ext":         string    # encrypted file extension
   }
 
@@ -57,7 +58,7 @@ error response:
     "response":    string    # error string
   }
 
-# API Methods
+# Core API Methods
 
   api/
     auth/           login, refesh, logout, poweroff
@@ -453,4 +454,39 @@ response:
         }
       ]
     }
+  }
+
+# TextSecure API Methods
+
+  api/
+    textsecure/     send
+
+## POST api/textsecure/send
+
+Transmits a TextSecure message to the contact identified with the file
+specified in the "contact" attribute.
+
+request:
+  {
+    "contact":     string    # contact file path
+    "msg":         string    # text message
+     ############  optional: ############
+    "attachment":  string    # attachment path
+  }
+
+## POST api/textsecure/history
+
+Retrieve last messages history for the contact identified with the file
+specified in the "contact" attribute. The response payload is the raw history
+content.
+
+request:
+  {
+    "contact":     string    # contact file path
+  }
+
+response:
+  {
+    "status":      string,   # OK | KO | INVALID_SESSION | INVALID
+    "response":    string    # chat history
   }

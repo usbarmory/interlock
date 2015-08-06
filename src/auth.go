@@ -61,7 +61,13 @@ func authenticate(volume string, password string, dispose bool) (err error) {
 
 	if dispose {
 		err = luksKeyOp(volume, password, "", _remove)
+
+		if err != nil {
+			return
+		}
 	}
+
+	err = conf.ActivateCiphers()
 
 	return
 }

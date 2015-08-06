@@ -24,7 +24,7 @@ const bufferSize = 20
 var InterlockBuild string
 
 // release version
-var InterlockVersion = "beta"
+var InterlockVersion = "1.0"
 
 type statusBuffer struct {
 	sync.Mutex

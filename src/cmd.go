@@ -9,8 +9,13 @@ package main
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"log"
+	"os"
 	"os/exec"
+	"syscall"
+
+	"golang.org/x/crypto/ssh/terminal"
 )
 
 func execCommand(cmd string, args []string, root bool, input string) (output string, err error) {
@@ -49,4 +54,58 @@ func execCommand(cmd string, args []string, root bool, input string) (output str
 	}
 
 	return stdout.String(), err
+}
+
+func readLine(prompt string) string {
+	var input string
+
+	fmt.Print(prompt)
+	fmt.Scanln(&input)
+
+	return input
+}
+
+func readPasswd(prompt string, masked bool) string {
+	var pwd, bs, mask []byte
+
+	if masked {
+		bs = []byte("\b \b")
+		mask = []byte("*")
+	}
+
+	fmt.Print(prompt)
+
+	for {
+		if v := getch(); v == 127 || v == 8 {
+			if l := len(pwd); l > 0 {
+				pwd = pwd[:l-1]
+				os.Stdout.Write(bs)
+			}
+		} else if v == 13 || v == 10 {
+			break
+		} else if v != 0 {
+			pwd = append(pwd, v)
+			os.Stdout.Write(mask)
+		}
+	}
+
+	println()
+
+	return string(pwd)
+}
+
+func getch() byte {
+	var buf [1]byte
+
+	if oldState, err := terminal.MakeRaw(0); err != nil {
+		panic(err)
+	} else {
+		defer terminal.Restore(0, oldState)
+	}
+
+	if n, err := syscall.Read(0, buf[:]); n == 0 || err != nil {
+		panic(err)
+	}
+
+	return buf[0]
 }

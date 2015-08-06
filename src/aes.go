@@ -46,15 +46,20 @@ func (a *aes256OFB) Init() (c cipherInterface) {
 		Dec:         true,
 		Sig:         false,
 		OTP:         false,
+		Msg:         false,
 		Extension:   "aes256ofb",
 	}
 
 	return a
 }
 
-func (a *aes256OFB) New() (c cipherInterface) {
-	c = new(aes256OFB)
-	return c.Init()
+func (a *aes256OFB) New() cipherInterface {
+	return new(aes256OFB).Init()
+}
+
+func (a *aes256OFB) Activate(postAuth bool) (c cipherInterface, err error) {
+	// no post-authentication activation required
+	return a, nil
 }
 
 func (a *aes256OFB) GetInfo() cipherInfo {

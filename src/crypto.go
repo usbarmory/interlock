@@ -35,14 +35,17 @@ type cipherInfo struct {
 	Dec         bool   `json:"dec"`
 	Sig         bool   `json:"sig"`
 	OTP         bool   `json:"otp"`
+	Msg         bool   `json:"msg"`
 	Extension   string `json:"ext"`
 }
 
 type cipherInterface interface {
-	// returns a fresh cipher instance
-	New() cipherInterface
 	// initializes cipher instance
 	Init() cipherInterface
+	// returns a fresh cipher instance
+	New() cipherInterface
+	// cipher activation
+	Activate(postAuth bool) (cipherInterface, error)
 	// provides cipher information
 	GetInfo() cipherInfo
 	// generate key
@@ -53,16 +56,18 @@ type cipherInterface interface {
 	SetPassword(string) error
 	// sets encryption, decryption or signing key
 	SetKey(key) error
-	// encryption method
+	// encryption
 	Encrypt(src *os.File, dst *os.File, sign bool) error
-	// decryption method
+	// decryption
 	Decrypt(src *os.File, dst *os.File, verify bool) error
-	// signing method
+	// signing
 	Sign(src *os.File, dst *os.File) error
-	// signature verification method
+	// signature verification
 	Verify(src *os.File, sig *os.File) error
-	// OTP method
+	// One Time Password
 	GenOTP(timestamp int64) (otp string, exp int64, err error)
+	// direct request handling
+	HandleRequest(http.ResponseWriter, *http.Request) jsonObject
 }
 
 func ciphers(w http.ResponseWriter) (res jsonObject) {
@@ -175,15 +180,33 @@ func getKey(path string) (k key, cipher cipherInterface, err error) {
 	format := filepath.Ext(name)
 	identifier := name[0 : len(name)-len(format)]
 
-	pathList := strings.Split(path, "/")
+	if format == "" {
+		format = "N/A"
+	} else {
+		format = format[1:]
+	}
+
+	relativePath, err := relativePath(path)
+
+	if err != nil {
+		return
+	}
+
+	keyPath, err := filepath.Rel("/"+conf.KeyPath, relativePath)
+
+	if err != nil {
+		return
+	}
+
+	pathList := strings.Split(keyPath, "/")
 
 	if len(pathList) < 3 {
 		err = fmt.Errorf("invalid file in key path: %s", path)
 		return
 	}
 
-	cipherExt := pathList[len(pathList)-3]
-	typeInfo := pathList[len(pathList)-2]
+	cipherExt := pathList[0]
+	typeInfo := pathList[1]
 
 	switch typeInfo {
 	case "private":
@@ -191,8 +214,7 @@ func getKey(path string) (k key, cipher cipherInterface, err error) {
 	case "public":
 		private = false
 	default:
-		err = errors.New("missing private/public path entry")
-		return
+		private = true
 	}
 
 	cipher, err = conf.GetCipherByExt(cipherExt)
@@ -203,10 +225,10 @@ func getKey(path string) (k key, cipher cipherInterface, err error) {
 
 	k = key{
 		Identifier: identifier,
-		KeyFormat:  format[1:],
+		KeyFormat:  format,
 		Cipher:     cipher.GetInfo().Name,
 		Private:    private,
-		Path:       filepath.Join("/", conf.KeyPath, cipherExt, typeInfo, name),
+		Path:       relativePath,
 	}
 
 	return

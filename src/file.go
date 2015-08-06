@@ -165,12 +165,6 @@ func fileCompress(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 			if err != nil {
 				return errorResponse(err, "")
 			}
-
-			inKeyPath, private := detectKeyPath(s[i])
-
-			if inKeyPath && private {
-				return errorResponse(errors.New("cannot download private key(s)"), "")
-			}
 		}
 
 		err = zipPath(s, dst)
@@ -362,7 +356,7 @@ func fileList(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 			if err == nil {
 				inode.Key = &key
 			} else {
-				status.Log(syslog.LOG_NOTICE, "error parsing %s, %s", file.Name(), err.Error())
+				status.Log(syslog.LOG_ERR, "error parsing %s, %s", file.Name(), err.Error())
 				inode.Key = nil
 			}
 		}
@@ -456,7 +450,7 @@ func fileDownload(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 	inKeyPath, private := detectKeyPath(osPath)
 
 	if inKeyPath && private {
-		return errorResponse(errors.New("cannot download private key(s)"), "")
+		return errorResponse(errors.New("downloading private key(s) is not allowed"), "")
 	}
 
 	_, err = os.Stat(osPath)
@@ -520,9 +514,7 @@ func fileDownloadByID(w http.ResponseWriter, id string) {
 	if stat.IsDir() {
 		written, err = zipWriter([]string{osPath}, w)
 	} else {
-		var input *os.File
-
-		input, err = os.Open(osPath)
+		input, err := os.Open(osPath)
 
 		if err != nil {
 			return

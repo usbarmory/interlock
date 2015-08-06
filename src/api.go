@@ -7,6 +7,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -142,6 +143,14 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 		res = versionStatus(w)
 	case "/api/status/running":
 		res = runningStatus(w)
+	case "/api/textsecure/send", "/api/textsecure/history":
+		cipher, err := conf.GetCipher("TextSecure")
+
+		if err != nil {
+			res = errorResponse(errors.New("textsecure support not enabled at build time"), "")
+		} else {
+			res = cipher.HandleRequest(w, r)
+		}
 	default:
 		res = notFound(w)
 	}

@@ -9,6 +9,7 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"log/syslog"
@@ -18,6 +19,8 @@ import (
 	"strconv"
 	"time"
 )
+
+const mountPoint = ".interlock-mnt"
 
 type config struct {
 	// exported
@@ -65,9 +68,9 @@ func (c *config) GetCipher(cipherName string) (cipher cipherInterface, err error
 }
 
 func (c *config) GetCipherByExt(ext string) (cipher cipherInterface, err error) {
-	for _, value := range c.enabledCiphers {
-		if value.GetInfo().Extension == ext {
-			cipher = value
+	for _, val := range c.enabledCiphers {
+		if val.GetInfo().Extension == ext {
+			cipher = val
 			return
 		}
 	}
@@ -77,24 +80,42 @@ func (c *config) GetCipherByExt(ext string) (cipher cipherInterface, err error) 
 	return
 }
 
-func (c *config) EnableCiphers() {
+func (c *config) EnableCiphers() (err error) {
 	if c.enabledCiphers == nil {
 		c.enabledCiphers = make(map[string]cipherInterface)
 	}
 
 	if len(c.Ciphers) == 0 {
 		c.PrintAvailableCiphers()
-		log.Fatal("missing cipher specification")
+		return errors.New("missing cipher specification")
 	}
 
 	for i := 0; i < len(c.Ciphers); i++ {
 		if val, ok := c.availableCiphers[c.Ciphers[i]]; ok {
-			c.enabledCiphers[c.Ciphers[i]] = val
+			c.enabledCiphers[c.Ciphers[i]], err = val.Activate(false)
+
+			if err != nil {
+				return err
+			}
 		} else {
 			c.PrintAvailableCiphers()
-			log.Fatalf("unsupported cipher name %s", c.Ciphers[i])
+			return fmt.Errorf("unsupported cipher name %s", c.Ciphers[i])
 		}
 	}
+
+	return
+}
+
+func (c *config) ActivateCiphers() (err error) {
+	for _, val := range c.enabledCiphers {
+		_, err = val.Activate(true)
+
+		if err != nil {
+			return
+		}
+	}
+
+	return
 }
 
 func (c *config) PrintAvailableCiphers() {
@@ -118,7 +139,7 @@ func (c *config) SetDefaults() {
 }
 
 func (c *config) SetMountPoint() error {
-	c.mountPoint = filepath.Join(os.Getenv("HOME"), ".interlock-mnt")
+	c.mountPoint = filepath.Join(os.Getenv("HOME"), mountPoint)
 
 	return os.MkdirAll(c.mountPoint, 0700)
 }
@@ -129,6 +150,7 @@ func (c *config) Set(configPath string) (err error) {
 	if err != nil {
 		return
 	}
+	defer f.Close()
 
 	b, err := ioutil.ReadAll(f)
 

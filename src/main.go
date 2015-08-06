@@ -10,7 +10,6 @@ import (
 	"crypto/tls"
 	"crypto/x509"
 	"flag"
-	"fmt"
 	"io/ioutil"
 	"log"
 	"log/syslog"
@@ -36,12 +35,6 @@ func init() {
 	flag.BoolVar(&conf.Debug, "d", false, "debug mode")
 	flag.BoolVar(&conf.testMode, "t", false, "test mode (WARNING: disables authentication)")
 	flag.StringVar(&conf.BindAddress, "b", "127.0.0.1:4430", "binding address:port pair")
-
-	flag.Parse()
-
-	if conf.testMode {
-		log.Println("*** WARNING *** authentication disabled (test mode switch enabled)")
-	}
 }
 
 func enableSyslog() {
@@ -70,7 +63,7 @@ func enableFileLog() {
 	logwriter, err := os.OpenFile(logPath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
 
 	if err != nil {
-		status.Error(fmt.Errorf("could not switch to log file %s: %s", logPath, err.Error()))
+		status.Log(syslog.LOG_ERR, "could not switch to log file %s: %v", logPath, err)
 	}
 
 	conf.logFile = logwriter
@@ -79,6 +72,12 @@ func enableFileLog() {
 }
 
 func main() {
+	flag.Parse()
+
+	if conf.testMode {
+		log.Println("*** WARNING *** authentication disabled (test mode switch enabled)")
+	}
+
 	err := os.Chdir(path.Dir(os.Args[0]))
 
 	if err != nil {
@@ -106,7 +105,12 @@ func main() {
 		log.Fatal(err)
 	}
 
-	conf.EnableCiphers()
+	err = conf.EnableCiphers()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	conf.Print()
 
 	if conf.Debug {

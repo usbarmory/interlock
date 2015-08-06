@@ -13,6 +13,10 @@ WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
+Additional copyright notices:
+        src/cmd.go:readPasswd(),getch() - Copyright (c) 2012 Chris Howey
+        (adapted from https://github.com/howeyc/gopass)
+
 The license does not apply to the following 3rd party bundled code (see
 individual file headers for their copyright and license notices):
 

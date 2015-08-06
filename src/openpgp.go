@@ -41,15 +41,20 @@ func (o *openPGP) Init() (c cipherInterface) {
 		Dec:         true,
 		Sig:         true,
 		OTP:         false,
+		Msg:         false,
 		Extension:   "pgp",
 	}
 
 	return o
 }
 
-func (o *openPGP) New() (c cipherInterface) {
-	c = new(openPGP)
-	return c.Init()
+func (o *openPGP) New() cipherInterface {
+	return new(openPGP).Init()
+}
+
+func (o *openPGP) Activate(postAuth bool) (c cipherInterface, err error) {
+	// no post-authentication activation required
+	return o, nil
 }
 
 func (o *openPGP) GetInfo() cipherInfo {

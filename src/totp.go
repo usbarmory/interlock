@@ -41,15 +41,20 @@ func (t *tOTP) Init() (c cipherInterface) {
 		Dec:         false,
 		Sig:         false,
 		OTP:         true,
+		Msg:         false,
 		Extension:   "totp",
 	}
 
 	return t
 }
 
-func (t *tOTP) New() (c cipherInterface) {
-	c = new(tOTP)
-	return c.Init()
+func (t *tOTP) New() cipherInterface {
+	return new(tOTP).Init()
+}
+
+func (t *tOTP) Activate(postAuth bool) (c cipherInterface, err error) {
+	// no post-authentication activation required
+	return t, nil
 }
 
 func (t *tOTP) GetInfo() cipherInfo {

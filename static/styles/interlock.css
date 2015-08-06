@@ -541,8 +541,14 @@ h1 {
 }
 
 .ui-widget-content textarea.key,
-.file_contents {
+.file_contents,
+.history_contents {
   font-family: monospace;
+}
+
+.history_contents {
+  height: 337px;
+  overflow-y: auto;
 }
 
 .ui-widget-content textarea.key::-webkit-input-placeholder { font-family: 'Arial', sans-serif }

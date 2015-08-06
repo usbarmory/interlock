@@ -13,9 +13,7 @@
  * FileManager instance class
  */
 Interlock.FileManager = new function() {
-  /** @private */
-  var SUPPORTED_ARCHIVE_EXTENSIONS = ['zip','ZIP'];
-
+  /* @private */
   /* set default pwd and sorting rule for the main file manager
      and the browsing view */
   sessionStorage.mainViewPwd = sessionStorage.mainViewPwd || '/';
@@ -26,12 +24,14 @@ Interlock.FileManager = new function() {
   sessionStorage.browsingViewSortAttribute = 'name';
   sessionStorage.browsingViewSortAsc = true;
 
-  sessionStorage.clipBoard = sessionStorage.clipBoard || JSON.stringify({ 'action': 'none', 'paths': undefined });
-
-  /* max file dimension (bytes) allowed by file view action */
-  var MAX_VIEW_SIZE = 1 * 1024 * 1024;
+  sessionStorage.clipBoard = sessionStorage.clipBoard || JSON.stringify({ 'action': 'none', 'paths': undefined, 'isSingleFile': false });
 
   /** @protected */
+  /* max file dimension (bytes) allowed by file view action */
+  this.MAX_VIEW_SIZE = 1 * 1024 * 1024;
+  /* supported archive file extensions */
+  this.ARCHIVE_EXTENSIONS = ['zip','ZIP'];
+
   /* FileManager mainView initialization: register drag and drop and
      file/directory upload button event handlers */
   this.init = function() {
@@ -40,6 +40,10 @@ Interlock.FileManager = new function() {
     var $entityDrag = $('.entitydrag');
     var $submitButton = $('#submitbutton');
     var xhr = new XMLHttpRequest();
+
+    /* load from the backend all the available ciphers
+       once when the FileManager is intialized */
+    Interlock.Crypto.cipherList();
 
     $fileSelect.on('change', function(e) { Interlock.FileManager.selectButtonHandler(e); });
 
@@ -122,20 +126,15 @@ Interlock.FileManager = new function() {
         }
       };
 
-      Interlock.Crypto.cipherList();
-
-      /* waits until cipher list have been filled with the backend data */
-      $.when(Interlock.Crypto.cipherListCompleted).done(function () {
-        $.each(Interlock.Crypto.getCiphers(), function(index, cipher) {
-          /* adds non password-only ciphers */
-          if (cipher.key_format !== 'password') {
-            $availableCiphers.push($(document.createElement('option')).attr('value', cipher.name)
-                                                                      .text(cipher.name));
-          }
-        });
-
-        $selectCiphers.append($availableCiphers);
+      $.each(Interlock.Crypto.getCiphers(), function(index, cipher) {
+        /* adds non password-only ciphers */
+        if (cipher.key_format !== 'password') {
+          $availableCiphers.push($(document.createElement('option')).attr('value', cipher.name)
+                                                                    .text(cipher.name));
+        }
       });
+
+      $selectCiphers.append($availableCiphers);
 
       var elements = [$selectCiphers,
                       $(document.createElement('input')).attr('id', 'identifier')
@@ -194,20 +193,15 @@ Interlock.FileManager = new function() {
         }
       };
 
-      Interlock.Crypto.cipherList();
-
-      /* waits until cipher list have been filled with the backend data */
-      $.when(Interlock.Crypto.cipherListCompleted).done(function () {
-        $.each(Interlock.Crypto.getCiphers(), function(index, cipher) {
-          /* adds non-password only ciphers and exclude base32 chipers */
-          if (cipher.key_format !== 'password' && cipher.key_format !== 'base32') {
-            $availableCiphers.push($(document.createElement('option')).attr('value', cipher.name)
-                                                                      .text(cipher.name));
-          }
-        });
-
-        $selectCiphers.append($availableCiphers);
+      $.each(Interlock.Crypto.getCiphers(), function(index, cipher) {
+        /* adds non-password only ciphers and exclude base32 chipers */
+        if (cipher.key_format !== 'password' && cipher.key_format !== 'base32') {
+          $availableCiphers.push($(document.createElement('option')).attr('value', cipher.name)
+                                                                    .text(cipher.name));
+        }
       });
+
+      $selectCiphers.append($availableCiphers);
 
       var elements = [$selectCiphers,
                       $(document.createElement('input')).attr('id', 'identifier')
@@ -476,6 +470,16 @@ Interlock.FileManager = new function() {
     return isPrivate;
   };
 
+  this.isTextSecureContact = function(inode, path) {
+    if (Interlock.FileManager.isFile(inode) &&
+        Interlock.Crypto.hasCipher('TextSecure') &&
+        inode.id.split('.').pop() === Interlock.Crypto.getCipherExt('TextSecure')) {
+      return true;
+    } else {
+      return false;
+    }
+  };
+
   /* dinamically creates the paste menu */
   this.pasteMenu = function(event) {
     $('ul.paste_menu').remove();
@@ -561,12 +565,14 @@ Interlock.FileManager = new function() {
     } else {
       menuEntries.push($(document.createElement('li')).text('Copy')
                                                       .click(function() {
-        sessionStorage.clipBoard = JSON.stringify({ 'action': 'copy', 'paths': path });
+        sessionStorage.clipBoard = JSON.stringify({ 'action': 'copy', 'paths': path,
+          'isSingleFile': (!multipleSelection && Interlock.FileManager.isFile($selectedInodes)) });
       }));
 
       menuEntries.push($(document.createElement('li')).text('Move')
                                                       .click(function() {
-        sessionStorage.clipBoard = JSON.stringify({ 'action': 'move', 'paths': path });
+        sessionStorage.clipBoard = JSON.stringify({ 'action': 'move', 'paths': path,
+          'isSingleFile': (!multipleSelection && Interlock.FileManager.isFile($selectedInodes)) });
       }));
     }
 
@@ -676,9 +682,9 @@ Interlock.FileManager = new function() {
             }
           }
 
-          /* add the compress action for directories */
           /* FIXME: the context menu actions should be conditionally appended
              in a more clean way in order to avoid code repetition */
+          /* add the compress action for directories */
           menuEntries.push($(document.createElement('li')).text('Compress')
                                                           .click(function() {
             var buttons = { 'Compress': function() { Interlock.FileManager.fileCompress({ src: [path], dst: $('#dst').val() }) } };
@@ -724,11 +730,10 @@ Interlock.FileManager = new function() {
           var $availableSignKeys = [$(document.createElement('option')).attr('value', '')
                                                                        .text('choose signing key')];
 
-          Interlock.Crypto.cipherList();
           Interlock.Crypto.keyList();
 
-          /* waits until cipher and key lists have been filled with the backend data */
-          $.when(Interlock.Crypto.cipherListCompleted, Interlock.Crypto.keyListCompleted).done(function () {
+          /* ensure Interlock.Crypto.keyList() is completed */
+          $.when(Interlock.Crypto.keyListCompleted).done(function () {
             $.each(Interlock.Crypto.getEncryptCiphers(), function(index, cipher) {
               $availableCiphers.push($(document.createElement('option')).attr('value', cipher.name)
                                                                         .text(cipher.name));
@@ -872,11 +877,10 @@ Interlock.FileManager = new function() {
           var $availableKeys = [$(document.createElement('option')).attr('value', '')
                                                                    .text('choose decryption key')];
 
-          Interlock.Crypto.cipherList();
           Interlock.Crypto.keyList();
 
-          /* waits until cipher and key lists have been filled with the backend data */
-          $.when(Interlock.Crypto.cipherListCompleted, Interlock.Crypto.keyListCompleted).done(function () {
+          /* ensure the Interlock.Crypto.keyList() is completed */
+          $.when(Interlock.Crypto.keyListCompleted).done(function () {
             $.each(Interlock.Crypto.getDecryptCiphers(), function(index, cipher) {
               $availableCiphers.push($(document.createElement('option')).attr('value', cipher.name)
                                                                         .text(cipher.name));
@@ -958,11 +962,10 @@ Interlock.FileManager = new function() {
 
           var $availableSignKeys = [$(document.createElement('option')).attr('value', '')
                                                                        .text('choose signing key')];
-          Interlock.Crypto.cipherList();
           Interlock.Crypto.keyList();
 
-          /* waits until cipher and key lists have been filled with the backend data */
-          $.when(Interlock.Crypto.cipherListCompleted, Interlock.Crypto.keyListCompleted).done(function () {
+          /* ensure the Interlock.Crypto.keyList() is completed */
+          $.when(Interlock.Crypto.keyListCompleted).done(function () {
             $.each(Interlock.Crypto.getSignKeys(), function(index, key) {
               $availableSignKeys.push($(document.createElement('option')).attr('value', key.path)
                                                                          .text(key.identifier));
@@ -1000,11 +1003,10 @@ Interlock.FileManager = new function() {
 
           var $availableVerifyKeys = [$(document.createElement('option')).attr('value', '')
                                                                          .text('choose a signature verification key')];
-          Interlock.Crypto.cipherList();
           Interlock.Crypto.keyList();
 
-          /* waits until cipher and key lists have been filled with the backend data */
-          $.when(Interlock.Crypto.cipherListCompleted, Interlock.Crypto.keyListCompleted).done(function () {
+          /* ensure the Interlock.Crypto.keyList() is completed */
+          $.when(Interlock.Crypto.keyListCompleted).done(function () {
             $.each(Interlock.Crypto.getVerifyKeys(), function(index, key) {
               $availableVerifyKeys.push($(document.createElement('option')).attr('value', key.path)
                                                                            .text(key.identifier));
@@ -1045,12 +1047,7 @@ Interlock.FileManager = new function() {
           if (inode.key.key_format !== 'password') {
             menuEntries.push($(document.createElement('li')).text('Key Info')
                                                             .click(function() {
-              Interlock.Crypto.cipherList();
-
-              /* waits until cipher list has been filled with the backend data */
-              $.when(Interlock.Crypto.cipherListCompleted).done(function () {
                 Interlock.Crypto.keyInfo(inode.key.path, inode.key.cipher);
-              });
             }));
           }
         }
@@ -1069,7 +1066,7 @@ Interlock.FileManager = new function() {
         } else {
           /* add the extract action for the supported archive files */
           if ($.inArray(($selectedInode.id.split('.').pop() || ''),
-              SUPPORTED_ARCHIVE_EXTENSIONS) >= 0) {
+              Interlock.FileManager.ARCHIVE_EXTENSIONS) >= 0) {
             menuEntries.push($(document.createElement('li')).text('Extract')
                                                           .click(function() {
               var buttons = { 'Extract': function() { Interlock.FileManager.fileExtract({ src: [path], dst: $('#dst').val() }) } };
@@ -1106,7 +1103,15 @@ Interlock.FileManager = new function() {
             Interlock.UI.modalFormDialog('open');
           }));
 
-          if (inode.size <= MAX_VIEW_SIZE) {
+          if (Interlock.Crypto.hasCipher('TextSecure') &&
+              Interlock.FileManager.isTextSecureContact($selectedInode, path)) {
+            menuEntries.push($(document.createElement('li')).text('TextSecure Msg')
+                                                            .click(function() {
+                                                              Interlock.TextSecure.chat(path);
+                                                            }));
+          }
+
+          if (inode.size <= Interlock.FileManager.MAX_VIEW_SIZE) {
             menuEntries.push($(document.createElement('li')).text('View')
                                                             .click(function() {
                                                               Interlock.FileManager.fileDownloadView(path);
@@ -1618,7 +1623,7 @@ Interlock.FileManager.fileCopyCallback = function(backendData, args) {
   try {
     if (backendData.status === 'OK') {
       Interlock.FileManager.fileList('mainView');
-      sessionStorage.clipBoard = JSON.stringify({ 'action': 'none', 'paths': undefined });;
+      sessionStorage.clipBoard = JSON.stringify({ 'action': 'none', 'paths': undefined, 'isSingleFile': false });
     } else {
       Interlock.Session.createEvent({'kind': backendData.status,
         'msg': '[Interlock.FileManager.fileCopy] ' + backendData.response});
@@ -1669,7 +1674,7 @@ Interlock.FileManager.fileMoveCallback = function(backendData) {
   try {
     if (backendData.status === 'OK') {
       Interlock.FileManager.fileList('mainView');
-      sessionStorage.clipBoard = JSON.stringify({ 'action': 'none', 'paths': undefined });;
+      sessionStorage.clipBoard = JSON.stringify({ 'action': 'none', 'paths': undefined, 'isSingleFile': false });
     } else {
       Interlock.Session.createEvent({'kind': backendData.status,
         'msg': '[Interlock.FileManager.fileMove] ' + backendData.response});
@@ -2114,5 +2119,5 @@ Interlock.FileManager.sortInodes = function(inodes) {
 };
 
 /* FIXME: add Inode class, and move all the inode methods here Interlock.Inode = function() { };
- * FIXME: cleanup from code repetition: all the file functions (fileCopy/Move/Delete/etc) 
+ * FIXME: cleanup from code repetition: all the file functions (fileCopy/Move/Delete/etc)
           are using very similar code snippets */

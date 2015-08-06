@@ -113,7 +113,7 @@ Interlock.UI = new function() {
             var keyPressed = e.keyCode || e.which;
 
             if (keyPressed === 13) {
-              $('button > span:contains("' + options.submitButton + '")').click();
+              $('button > span:contains("' + options.submitButton + '"):first').click();
 
               /* prevent event propagation */
               return false;

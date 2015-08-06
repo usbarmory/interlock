@@ -107,87 +107,90 @@
 <script>
   $(document).ready(function() {
     Interlock.FileManager.init();
-    Interlock.FileManager.fileList('mainView');
+    /* ensure Interlock.Crypto.cipherList() is completed */
+    $.when(Interlock.Crypto.cipherListCompleted).done(function () {
+      Interlock.FileManager.fileList('mainView');
 
-    $('#add_password').on('click', function(e) {
-      e.preventDefault();
-      var buttons = { 'Add Password': function() { Interlock.LUKS.addPwd({password: $('#password').val(), newpassword: $('#newpassword').val(), volume: $('#volume').val() }) } };
-        var elements = [$(document.createElement('p')).text('Specify the LUKS volume, a valid password and a new password.'),
-                        $(document.createElement('input')).attr('id', 'volume')
-                                                          .attr('name', 'volume')
-                                                          .attr('value', '')
-                                                          .attr('type', 'text')
-                                                          .attr('placeholder', 'volume')
-                                                          .addClass('text ui-widget-content ui-corner-all'),
-                        $(document.createElement('input')).attr('id', 'password')
-                                                          .attr('name', 'password')
-                                                          .attr('value', '')
-                                                          .attr('type', 'password')
-                                                          .attr('placeholder', 'password')
-                                                          .addClass('text ui-widget-content ui-corner-all'),
-                        $(document.createElement('input')).attr('id', 'newpassword')
-                                                          .attr('name', 'newpassword')
-                                                          .attr('value', '')
-                                                          .attr('type', 'password')
-                                                          .attr('placeholder', 'new password')
-                                                          .addClass('text ui-widget-content ui-corner-all')];
+      $('#add_password').on('click', function(e) {
+        e.preventDefault();
+        var buttons = { 'Add Password': function() { Interlock.LUKS.addPwd({password: $('#password').val(), newpassword: $('#newpassword').val(), volume: $('#volume').val() }) } };
+          var elements = [$(document.createElement('p')).text('Specify the LUKS volume, a valid password and a new password.'),
+                          $(document.createElement('input')).attr('id', 'volume')
+                                                            .attr('name', 'volume')
+                                                            .attr('value', '')
+                                                            .attr('type', 'text')
+                                                            .attr('placeholder', 'volume')
+                                                            .addClass('text ui-widget-content ui-corner-all'),
+                          $(document.createElement('input')).attr('id', 'password')
+                                                            .attr('name', 'password')
+                                                            .attr('value', '')
+                                                            .attr('type', 'password')
+                                                            .attr('placeholder', 'password')
+                                                            .addClass('text ui-widget-content ui-corner-all'),
+                          $(document.createElement('input')).attr('id', 'newpassword')
+                                                            .attr('name', 'newpassword')
+                                                            .attr('value', '')
+                                                            .attr('type', 'password')
+                                                            .attr('placeholder', 'new password')
+                                                            .addClass('text ui-widget-content ui-corner-all')];
 
-        Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
-          submitButton: 'Add Password', title: 'Add LUKS password' });
-        Interlock.UI.modalFormDialog('open');
-    });
+          Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
+            submitButton: 'Add Password', title: 'Add LUKS password' });
+          Interlock.UI.modalFormDialog('open');
+      });
 
-    $('#remove_password').on('click', function(e) {
-      e.preventDefault();
-      var buttons = { 'Delete Password': function() { Interlock.LUKS.removePwd({password: $('#password').val(), volume: $('#volume').val() }) } };
-        var elements = [$(document.createElement('p')).text('Specify the LUKS volume and the password to remove.'),
-                        $(document.createElement('input')).attr('id', 'volume')
-                                                          .attr('name', 'volume')
-                                                          .attr('value', '')
-                                                          .attr('type', 'text')
-                                                          .attr('placeholder', 'volume')
-                                                          .addClass('text ui-widget-content ui-corner-all'),
-                        $(document.createElement('input')).attr('id', 'password')
-                                                          .attr('name', 'password')
-                                                          .attr('value', '')
-                                                          .attr('type', 'password')
-                                                          .attr('placeholder', 'password')
-                                                          .addClass('text ui-widget-content ui-corner-all'),
-                        $(document.createElement('p')).addClass('warning')
-                                                      .text('WARNING: removing the last remaining passphrase ' +
-                                                            'makes the LUKS encrypted container permanently inaccessible. This is a feature, not a bug.')];
+      $('#remove_password').on('click', function(e) {
+        e.preventDefault();
+        var buttons = { 'Delete Password': function() { Interlock.LUKS.removePwd({password: $('#password').val(), volume: $('#volume').val() }) } };
+          var elements = [$(document.createElement('p')).text('Specify the LUKS volume and the password to remove.'),
+                          $(document.createElement('input')).attr('id', 'volume')
+                                                            .attr('name', 'volume')
+                                                            .attr('value', '')
+                                                            .attr('type', 'text')
+                                                            .attr('placeholder', 'volume')
+                                                            .addClass('text ui-widget-content ui-corner-all'),
+                          $(document.createElement('input')).attr('id', 'password')
+                                                            .attr('name', 'password')
+                                                            .attr('value', '')
+                                                            .attr('type', 'password')
+                                                            .attr('placeholder', 'password')
+                                                            .addClass('text ui-widget-content ui-corner-all'),
+                          $(document.createElement('p')).addClass('warning')
+                                                        .text('WARNING: removing the last remaining passphrase ' +
+                                                              'makes the LUKS encrypted container permanently inaccessible. This is a feature, not a bug.')];
 
-        Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
-          submitButton: 'Delete Password', title: 'Delete LUKS password' });
-        Interlock.UI.modalFormDialog('open');
-    });
+          Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
+            submitButton: 'Delete Password', title: 'Delete LUKS password' });
+          Interlock.UI.modalFormDialog('open');
+      });
 
-    $('#change_password').on('click', function(e) {
-      e.preventDefault();
-      var buttons = { 'Change Password': function() { Interlock.LUKS.changePwd({password: $('#password').val(), newpassword: $('#newpassword').val(), volume: $('#volume').val() }) } };
-        var elements = [$(document.createElement('p')).text('Specify the LUKS volume and the password to change.'),
-                        $(document.createElement('input')).attr('id', 'volume')
-                                                          .attr('name', 'volume')
-                                                          .attr('value', '')
-                                                          .attr('type', 'text')
-                                                          .attr('placeholder', 'volume')
-                                                          .addClass('text ui-widget-content ui-corner-all'),
-                        $(document.createElement('input')).attr('id', 'password')
-                                                          .attr('name', 'password')
-                                                          .attr('value', '')
-                                                          .attr('type', 'password')
-                                                          .attr('placeholder', 'password')
-                                                          .addClass('text ui-widget-content ui-corner-all'),
-                        $(document.createElement('input')).attr('id', 'newpassword')
-                                                          .attr('name', 'newpassword')
-                                                          .attr('value', '')
-                                                          .attr('type', 'password')
-                                                          .attr('placeholder', 'new password')
-                                                          .addClass('text ui-widget-content ui-corner-all')]
+      $('#change_password').on('click', function(e) {
+        e.preventDefault();
+        var buttons = { 'Change Password': function() { Interlock.LUKS.changePwd({password: $('#password').val(), newpassword: $('#newpassword').val(), volume: $('#volume').val() }) } };
+          var elements = [$(document.createElement('p')).text('Specify the LUKS volume and the password to change.'),
+                          $(document.createElement('input')).attr('id', 'volume')
+                                                            .attr('name', 'volume')
+                                                            .attr('value', '')
+                                                            .attr('type', 'text')
+                                                            .attr('placeholder', 'volume')
+                                                            .addClass('text ui-widget-content ui-corner-all'),
+                          $(document.createElement('input')).attr('id', 'password')
+                                                            .attr('name', 'password')
+                                                            .attr('value', '')
+                                                            .attr('type', 'password')
+                                                            .attr('placeholder', 'password')
+                                                            .addClass('text ui-widget-content ui-corner-all'),
+                          $(document.createElement('input')).attr('id', 'newpassword')
+                                                            .attr('name', 'newpassword')
+                                                            .attr('value', '')
+                                                            .attr('type', 'password')
+                                                            .attr('placeholder', 'new password')
+                                                            .addClass('text ui-widget-content ui-corner-all')]
 
-        Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
-          submitButton: 'Change Password', title: 'Change LUKS password' });
-        Interlock.UI.modalFormDialog('open');
+          Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
+            submitButton: 'Change Password', title: 'Change LUKS password' });
+          Interlock.UI.modalFormDialog('open');
+      });
     });
   });
 </script>

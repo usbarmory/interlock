@@ -54,6 +54,33 @@ Interlock.Crypto = new function() {
     });
   };
 
+  this.hasCipher = function(name) {
+    var cipherFound = false;
+
+    $.each(ciphers, function(index,cipher) {
+      if (cipher.name === name) {
+        cipherFound = true;
+
+        /* force exit from $.each() */
+        return true;
+      }
+    });
+
+    return cipherFound;;
+  };
+
+  this.getCipherExt = function(name) {
+    ext = '';
+
+    $.each(ciphers, function(index,cipher) {
+      if (cipher.name === name) {
+        ext = cipher.ext;
+      }
+    });
+
+    return ext;
+  };
+
   this.getCiphers = function(name) {
     selectedCiphers = [];
 

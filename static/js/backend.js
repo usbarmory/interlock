@@ -17,39 +17,42 @@ Interlock.Backend = new function() {
 
   /** @protected */
   this.API = {
-               'auth':      { 'login':    'auth/login',
-                              'logout':   'auth/logout',
-                              'refresh':  'auth/refresh',
-                              'powerOff': 'auth/poweroff' },
+               'auth':       { 'login':    'auth/login',
+                               'logout':   'auth/logout',
+                               'refresh':  'auth/refresh',
+                               'powerOff': 'auth/poweroff' },
 
-               'LUKS':      { 'addPwd':    'luks/add',
-                              'changePwd': 'luks/change',
-                              'removePwd': 'luks/remove'  },
+               'LUKS':       { 'addPwd':    'luks/add',
+                               'changePwd': 'luks/change',
+                               'removePwd': 'luks/remove'  },
 
-               'file':      { 'list':     'file/list',
-                              'upload':   'file/upload',
-                              'download': 'file/download',
-                              'delete':   'file/delete',
-                              'move':     'file/move',
-                              'copy':     'file/copy',
-                              'mkdir':    'file/mkdir',
-                              'encrypt':  'file/encrypt',
-                              'decrypt':  'file/decrypt',
-                              'verify':   'file/verify',
-                              'sign':     'file/sign',
-                              'extract':  'file/extract',
-                              'compress': 'file/compress' },
+               'file':       { 'list':     'file/list',
+                               'upload':   'file/upload',
+                               'download': 'file/download',
+                               'delete':   'file/delete',
+                               'move':     'file/move',
+                               'copy':     'file/copy',
+                               'mkdir':    'file/mkdir',
+                               'encrypt':  'file/encrypt',
+                               'decrypt':  'file/decrypt',
+                               'verify':   'file/verify',
+                               'sign':     'file/sign',
+                               'extract':  'file/extract',
+                               'compress': 'file/compress' },
 
-               'crypto':    { 'ciphers':     'crypto/ciphers',
-                              'keys':        'crypto/keys',
-                              'generateKey': 'crypto/gen_key',
-                              'uploadKey':   'crypto/upload_key',
-                              'keyInfo':     'crypto/key_info' },
+               'crypto':     { 'ciphers':     'crypto/ciphers',
+                               'keys':        'crypto/keys',
+                               'generateKey': 'crypto/gen_key',
+                               'uploadKey':   'crypto/upload_key',
+                               'keyInfo':     'crypto/key_info' },
 
-               'config':    { 'time': 'config/time' },
+               'config':     { 'time': 'config/time' },
 
-               'status':    { 'version': 'status/version',
-                              'running': 'status/running' }
+               'status':     { 'version': 'status/version',
+                               'running': 'status/running' },
+
+               'textsecure': { 'send':    'textsecure/send',
+                               'history': 'textsecure/history' }
              };
 
   this.API.prefix = '/api/';

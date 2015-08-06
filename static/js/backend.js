@@ -135,9 +135,9 @@ Interlock.Backend.APIRequest = function(APIMethod, HttpMethod, payload, doneCall
  *
  * @description
  * Basic validation of the backend response format. The response
- * must always contains both the 'status' and the 'response' key.
- * 'status must be OK|KO|INVALID|INVALID_SESSION.
- * 
+ * must always contain both the 'status' and the 'response' key.
+ * 'status' must be OK|KO|INVALID|INVALID_SESSION.
+ *
  * @param {Object} backendData
  * @returns {boolean} validationResult
  */

@@ -2119,5 +2119,5 @@ Interlock.FileManager.sortInodes = function(inodes) {
 };
 
 /* FIXME: add Inode class, and move all the inode methods here Interlock.Inode = function() { };
- * FIXME: cleanup from code repetition: all the file functions (fileCopy/Move/Delete/etc)
+ * FIXME: cleanup from code repetition: all the file functions (fileCopy/Move/Delete/etc).
           are using very similar code snippets */

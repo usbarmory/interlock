@@ -44,8 +44,10 @@ type cipherInterface interface {
 	Init() cipherInterface
 	// returns a fresh cipher instance
 	New() cipherInterface
+	// cipher enable
+	Enable() (cipherInterface, error)
 	// cipher activation
-	Activate(postAuth bool) (cipherInterface, error)
+	Activate(active bool) error
 	// provides cipher information
 	GetInfo() cipherInfo
 	// generate key

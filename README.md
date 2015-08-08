@@ -300,7 +300,7 @@ The feature is disabled by default and it depends on an external Go
 as follows:
 
 ```
-go get github.com/janimo/textsecure/cmd/textsecure
+go get -u github.com/janimo/textsecure/cmd/textsecure
 ```
 
 The functionality can be enabled by compiling INTERLOCK as shown in the

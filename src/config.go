@@ -92,7 +92,7 @@ func (c *config) EnableCiphers() (err error) {
 
 	for i := 0; i < len(c.Ciphers); i++ {
 		if val, ok := c.availableCiphers[c.Ciphers[i]]; ok {
-			c.enabledCiphers[c.Ciphers[i]], err = val.Activate(false)
+			c.enabledCiphers[c.Ciphers[i]], err = val.Enable()
 
 			if err != nil {
 				return err
@@ -106,9 +106,9 @@ func (c *config) EnableCiphers() (err error) {
 	return
 }
 
-func (c *config) ActivateCiphers() (err error) {
+func (c *config) ActivateCiphers(activate bool) (err error) {
 	for _, val := range c.enabledCiphers {
-		_, err = val.Activate(true)
+		err = val.Activate(activate)
 
 		if err != nil {
 			return

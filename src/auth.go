@@ -67,7 +67,7 @@ func authenticate(volume string, password string, dispose bool) (err error) {
 		}
 	}
 
-	err = conf.ActivateCiphers()
+	err = conf.ActivateCiphers(true)
 
 	return
 }
@@ -172,6 +172,8 @@ func logout(w http.ResponseWriter) (res jsonObject) {
 		"status":   "OK",
 		"response": nil,
 	}
+
+	conf.ActivateCiphers(false)
 
 	err := luksUnmount()
 

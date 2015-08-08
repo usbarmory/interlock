@@ -74,105 +74,42 @@ func (t *textSecure) New() cipherInterface {
 	return new(textSecure).Init()
 }
 
-func (t *textSecure) Activate(postAuth bool) (c cipherInterface, err error) {
-	if !postAuth {
-		if !register {
-			return t, nil
-		}
+func (t *textSecure) Enable() (c cipherInterface, err error) {
+	if register {
+		err = t.registerNumber()
 
-		dispose := false
-		volume := readLine("\nPlease enter encrypted volume name for TextSecure key storage: ")
-		disposePrompt := readLine("\nIf you would like to have the password disposed of after use enter YES all\nuppercase: ")
-
-		if disposePrompt == "YES" {
-			fmt.Println("\nWARNING: password will be destroyed after its use!\n(quit now if this is undesired)")
-			dispose = true
-		}
-
-		if !conf.testMode {
-			password := readPasswd("Please enter volume password (will not echo): ", true)
-
-			err := authenticate(volume, password, dispose)
-
-			if err != nil {
-				_ = luksUnmount()
-				_ = luksClose()
-				log.Fatal(err)
-			}
-		}
-
-		if needsRegistration() {
-			number := readLine("\nPlease enter the mobile number to be used for TextSecure registration: ")
-			output, err := os.OpenFile(numberPath(), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
-
-			if err != nil {
-				log.Fatalf("failed to save number: %v", err)
-			}
-
-			output.Write([]byte(number))
-			output.Close()
-		} else {
-			n, _ := registeredNumber()
-
-			if !conf.testMode {
-				_ = luksUnmount()
-				_ = luksClose()
-			}
-
-			log.Fatalf("TextSecure registration already present for number %s, delete %s contents to reset.", n, storagePath())
-		}
-	}
-
-	err = os.MkdirAll(storagePath(), 0700)
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	t.number, err = registeredNumber()
-
-	if err != nil {
-		err = errors.New("TextSecure cipher enabled but not registered, please restart with -r flag for registration.")
-		return
-	}
-
-	t.client = &textsecure.Client{
-		GetConfig:           t.getConfig,
-		GetVerificationCode: getVerificationCode,
-		GetStoragePassword:  getStoragePassword,
-		MessageHandler:      messageHandler,
-		RegistrationDone:    t.registrationDone,
-	}
-
-	err = textsecure.Setup(t.client)
-
-	if err != nil {
-		err = fmt.Errorf("failed to enable TextSecure cipher: %v", err)
-		return
-	}
-
-	if !postAuth && register {
-		log.Printf("TextSecure registration successful, locking volume and shutting down. Please restart to apply registration.", t.number)
-
-		if !conf.testMode {
-			_ = luksUnmount()
-			_ = luksClose()
+		if err != nil {
+			log.Fatal(err)
 		}
 
 		os.Exit(0)
 	}
 
-	status.Log(syslog.LOG_NOTICE, "enabling TextSecure message listener for %s", t.number)
+	return t, nil
+}
 
-	go func() {
-		err = textsecure.StartListening()
+func (t *textSecure) Activate(activate bool) (err error) {
+	err = t.setupClient()
 
-		if err != nil {
-			status.Log(syslog.LOG_ERR, "failed to enable TextSecure message listener: %v", err)
-		}
-	}()
+	if err != nil {
+		return
+	}
 
-	return t, err
+	if activate {
+		go func() {
+			status.Log(syslog.LOG_NOTICE, "starting TextSecure message listener for %s", t.number)
+			err = textsecure.StartListening()
+
+			if err != nil {
+				status.Log(syslog.LOG_ERR, "failed to enable TextSecure message listener: %v", err)
+			}
+		}()
+	} else {
+		status.Log(syslog.LOG_NOTICE, "stopping TextSecure message listener for %s", t.number)
+		textsecure.StopListening()
+	}
+
+	return
 }
 
 func (t *textSecure) GetInfo() cipherInfo {
@@ -514,6 +451,95 @@ func registeredNumber() (number string, err error) {
 	}
 
 	number = string(n)
+
+	return
+}
+
+func (t *textSecure) registerNumber() (err error) {
+	dispose := false
+	volume := readLine("\nPlease enter encrypted volume name for TextSecure key storage: ")
+	disposePrompt := readLine("\nIf you would like to have the password disposed of after use enter YES all\nuppercase: ")
+
+	if disposePrompt == "YES" {
+		fmt.Println("\nWARNING: password will be destroyed after its use!\n(quit now if this is undesired)")
+		dispose = true
+	}
+
+	if !conf.testMode {
+		password := readPasswd("Please enter volume password (will not echo): ", true)
+
+		err := authenticate(volume, password, dispose)
+
+		if err != nil {
+			_ = luksUnmount()
+			_ = luksClose()
+			log.Fatal(err)
+		}
+	}
+
+	if needsRegistration() {
+		number := readLine("\nPlease enter the mobile number to be used for TextSecure registration: ")
+		output, err := os.OpenFile(numberPath(), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+
+		if err != nil {
+			log.Fatalf("failed to save number: %v", err)
+		}
+
+		output.Write([]byte(number))
+		output.Close()
+	} else {
+		n, _ := registeredNumber()
+
+		if !conf.testMode {
+			_ = luksUnmount()
+			_ = luksClose()
+		}
+
+		log.Fatalf("TextSecure registration already present for number %s, delete %s contents to reset.", n, storagePath())
+	}
+
+	err = t.setupClient()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Printf("TextSecure registration successful, locking volume and shutting down. Please restart to apply registration.")
+
+	if !conf.testMode {
+		_ = luksUnmount()
+		_ = luksClose()
+	}
+
+	return
+}
+
+func (t *textSecure) setupClient() (err error) {
+	err = os.MkdirAll(storagePath(), 0700)
+
+	if err != nil {
+		return
+	}
+
+	t.number, err = registeredNumber()
+
+	if err != nil {
+		return errors.New("TextSecure cipher enabled but not registered, please restart with -r flag for registration.")
+	}
+
+	t.client = &textsecure.Client{
+		GetConfig:           t.getConfig,
+		GetVerificationCode: getVerificationCode,
+		GetStoragePassword:  getStoragePassword,
+		MessageHandler:      messageHandler,
+		RegistrationDone:    t.registrationDone,
+	}
+
+	err = textsecure.Setup(t.client)
+
+	if err != nil {
+		return fmt.Errorf("failed to enable TextSecure cipher: %v", err)
+	}
 
 	return
 }

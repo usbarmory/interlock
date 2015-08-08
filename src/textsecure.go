@@ -165,9 +165,7 @@ func (t *textSecure) Activate(postAuth bool) (c cipherInterface, err error) {
 	status.Log(syslog.LOG_NOTICE, "enabling TextSecure message listener for %s", t.number)
 
 	go func() {
-		// FIXME: currently there is no way to stop this, which is an
-		// issue when we logout (https://github.com/janimo/textsecure/issues/16)
-		err = textsecure.ListenForMessages()
+		err = textsecure.StartListening()
 
 		if err != nil {
 			status.Log(syslog.LOG_ERR, "failed to enable TextSecure message listener: %v", err)

@@ -136,10 +136,14 @@ Interlock.TextSecure.getHistoryCallback = function(backendData, args) {
  */
 Interlock.TextSecure.getHistory = function(contact) {
   try {
-    Interlock.UI.ajaxLoader('.ui-dialog');
-    Interlock.Backend.APIRequest(Interlock.Backend.API.textsecure.history, 'POST',
-      JSON.stringify({contact: contact}), 'TextSecure.getHistoryCallback',
-      null, {contact: contact});
+    /* ensure that the history poller for the selected contact is
+         still active before to actually refresh the chat history */
+    if (Interlock.TextSecure.historyPollerInterval[contact] > 0) {
+      Interlock.UI.ajaxLoader('.ui-dialog');
+      Interlock.Backend.APIRequest(Interlock.Backend.API.textsecure.history, 'POST',
+        JSON.stringify({contact: contact}), 'TextSecure.getHistoryCallback',
+        null, {contact: contact});
+    }
   } catch (e) {
     Interlock.Session.createEvent({'kind': 'critical',
       'msg': '[Interlock.TextSecure.getHistory] ' + e});

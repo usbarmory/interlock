@@ -76,7 +76,7 @@ Security tokens:
 
 * Time-based One-Time Password Algorithm (TOTP), RFC623 implementation (Google Authenticator)
 
-Messaging:
+Messaging and file sharing:
 
 * TextSecure protocol V2 via external library (https://github.com/janimo/textsecure)
 
@@ -294,6 +294,9 @@ A messaging functionality, which leverages on the Open Whisper Systems
 [TextSecure](https://github.com/WhisperSystems/TextSecure) protocol, provides
 communication with other TextSecure/Signal clients, including other INTERLOCK
 instances using this feature.
+
+The integration allows messaging with other TextSecure/Signal users as well as
+file sharing through attachments on chat sessions.
 
 The feature is disabled by default and it depends on an external Go
 [library](https://github.com/janimo/textsecure). The library can be installed

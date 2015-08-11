@@ -366,7 +366,7 @@ func saveAttachment(contact contactInfo, attachment io.Reader, name string, msg 
 	io.Copy(output, attachment)
 	status.Log(syslog.LOG_NOTICE, "saved attachment from %s %s\n", contact.Name, contact.Number)
 
-	name, _ = relativePath(output.Name())
+	name = relativePath(output.Name())
 	updateHistory(contact, "["+name+"]", "<", msg.Timestamp())
 
 	return

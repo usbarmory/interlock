@@ -36,13 +36,7 @@ func zipWriter(src []string, dst io.Writer) (written int64, err error) {
 		n := status.Notify(syslog.LOG_NOTICE, "adding %s to archive", path.Base(osPath))
 		defer status.Remove(n)
 
-		relPath, err := relativePath(osPath)
-
-		if err != nil {
-			return
-		}
-
-		relPath = strings.TrimPrefix(relPath, "/")
+		relPath := strings.TrimPrefix(relativePath(osPath), "/")
 		f, err = writer.Create(relPath)
 
 		if err != nil {
@@ -97,7 +91,7 @@ func zipPath(src []string, dst string) (err error) {
 			return
 		}
 
-		status.Log(syslog.LOG_NOTICE, "completed compression to %s", path.Base(dst))
+		status.Log(syslog.LOG_NOTICE, "completed compression to %s", relativePath(dst))
 	}()
 
 	return
@@ -120,7 +114,7 @@ func unzipFile(src string, dst string) (err error) {
 	go func() {
 		defer reader.Close()
 
-		n := status.Notify(syslog.LOG_NOTICE, "extracting %s", path.Base(src))
+		n := status.Notify(syslog.LOG_NOTICE, "extracting %s", relativePath(src))
 		defer status.Remove(n)
 
 		for _, f := range reader.Reader.File {
@@ -174,7 +168,7 @@ func unzipFile(src string, dst string) (err error) {
 			}
 		}
 
-		status.Log(syslog.LOG_NOTICE, "completed extraction of %s", path.Base(src))
+		status.Log(syslog.LOG_NOTICE, "completed extraction of %s", relativePath(src))
 	}()
 
 	return

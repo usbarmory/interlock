@@ -188,12 +188,7 @@ func getKey(path string) (k key, cipher cipherInterface, err error) {
 		format = format[1:]
 	}
 
-	relativePath, err := relativePath(path)
-
-	if err != nil {
-		return
-	}
-
+	relativePath := relativePath(path)
 	keyPath, err := filepath.Rel("/"+conf.KeyPath, relativePath)
 
 	if err != nil {

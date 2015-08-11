@@ -88,13 +88,12 @@ func absolutePath(subPath string) (path string, err error) {
 	return
 }
 
-func relativePath(path string) (subPath string, err error) {
-	if !strings.HasPrefix(path, conf.mountPoint) {
-		err = errors.New("invalid path")
-		return
+func relativePath(p string) (subPath string) {
+	if !strings.HasPrefix(p, conf.mountPoint) {
+		subPath = path.Base(p)
+	} else {
+		subPath = p[len(conf.mountPoint):]
 	}
-
-	subPath = path[len(conf.mountPoint):]
 
 	return
 }
@@ -287,7 +286,7 @@ func fileOp(src string, dst string, mode int) (err error) {
 				break
 			}
 
-			status.Log(syslog.LOG_NOTICE, "deleted %s", path.Base(src))
+			status.Log(syslog.LOG_NOTICE, "deleted %s", relativePath(src))
 		}
 	default:
 		err = errors.New("unsupported operation")
@@ -416,7 +415,7 @@ func fileUpload(w http.ResponseWriter, r *http.Request) {
 	}
 	defer osFile.Close()
 
-	n := status.Notify(syslog.LOG_NOTICE, "uploading %s", path.Base(osPath))
+	n := status.Notify(syslog.LOG_NOTICE, "uploading %s", relativePath(osPath))
 	defer status.Remove(n)
 
 	written, err := io.Copy(osFile, r.Body)
@@ -425,7 +424,7 @@ func fileUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	status.Log(syslog.LOG_INFO, "uploaded %s (%v bytes)", path.Base(osPath), written)
+	status.Log(syslog.LOG_INFO, "uploaded %s (%v bytes)", relativePath(osPath), written)
 }
 
 func fileDownload(w http.ResponseWriter, r *http.Request) (res jsonObject) {
@@ -500,7 +499,7 @@ func fileDownloadByID(w http.ResponseWriter, id string) {
 
 	fileName := path.Base(osPath)
 
-	n := status.Notify(syslog.LOG_NOTICE, "downloading %s", fileName)
+	n := status.Notify(syslog.LOG_NOTICE, "downloading %s", relativePath(osPath))
 	defer status.Remove(n)
 
 	if stat.IsDir() {
@@ -627,7 +626,7 @@ func fileEncrypt(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		defer input.Close()
 		defer output.Close()
 
-		n := status.Notify(syslog.LOG_INFO, "encrypting %s", path.Base(src))
+		n := status.Notify(syslog.LOG_INFO, "encrypting %s", relativePath(src))
 		defer status.Remove(n)
 
 		err = cipher.Encrypt(input, output, sign)
@@ -646,7 +645,7 @@ func fileEncrypt(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 			return
 		}
 
-		status.Log(syslog.LOG_NOTICE, "completed encryption of %s", path.Base(src))
+		status.Log(syslog.LOG_NOTICE, "completed encryption of %s", relativePath(src))
 	}()
 
 	res = jsonObject{
@@ -759,7 +758,7 @@ func fileDecrypt(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		defer input.Close()
 		defer output.Close()
 
-		n := status.Notify(syslog.LOG_INFO, "decrypting %s", path.Base(src))
+		n := status.Notify(syslog.LOG_INFO, "decrypting %s", relativePath(src))
 		defer status.Remove(n)
 
 		err = cipher.Decrypt(input, output, verify)
@@ -769,7 +768,7 @@ func fileDecrypt(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 			return
 		}
 
-		status.Log(syslog.LOG_NOTICE, "completed decryption of %s", path.Base(src))
+		status.Log(syslog.LOG_NOTICE, "completed decryption of %s", relativePath(src))
 	}()
 
 	res = jsonObject{
@@ -854,7 +853,7 @@ func fileSign(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		defer input.Close()
 		defer output.Close()
 
-		n := status.Notify(syslog.LOG_INFO, "signing %s", path.Base(src))
+		n := status.Notify(syslog.LOG_INFO, "signing %s", relativePath(src))
 		defer status.Remove(n)
 
 		err = cipher.Sign(input, output)
@@ -864,7 +863,7 @@ func fileSign(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 			return
 		}
 
-		status.Log(syslog.LOG_NOTICE, "completed signing of %s", path.Base(src))
+		status.Log(syslog.LOG_NOTICE, "completed signing of %s", relativePath(src))
 	}()
 
 	res = jsonObject{
@@ -946,7 +945,7 @@ func fileVerify(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		defer input.Close()
 		defer sig.Close()
 
-		n := status.Notify(syslog.LOG_INFO, "verifying %s", path.Base(src))
+		n := status.Notify(syslog.LOG_INFO, "verifying %s", relativePath(src))
 		defer status.Remove(n)
 
 		err = cipher.Verify(input, sig)
@@ -956,7 +955,7 @@ func fileVerify(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 			return
 		}
 
-		status.Log(syslog.LOG_NOTICE, "successful verification of %s", path.Base(src))
+		status.Log(syslog.LOG_NOTICE, "successful verification of %s", relativePath(src))
 	}()
 
 	res = jsonObject{

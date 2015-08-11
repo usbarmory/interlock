@@ -36,9 +36,10 @@ var numberPattern = regexp.MustCompile("^(?:\\+|00)[0-9]+$")
 var register = false
 
 type textSecure struct {
-	info   cipherInfo
-	client *textsecure.Client
-	number string
+	info             cipherInfo
+	client           *textsecure.Client
+	number           string
+	verificationType string
 
 	cipherInterface
 }
@@ -289,7 +290,7 @@ func (t *textSecure) getConfig() (*textsecure.Config, error) {
 
 	tsConf := textsecure.Config{
 		Tel:              t.number,
-		VerificationType: "sms",
+		VerificationType: t.verificationType,
 		StorageDir:       storagePath(),
 		LogLevel:         logLevel,
 	}
@@ -500,6 +501,7 @@ func (t *textSecure) registerNumber() (err error) {
 	}
 
 	if needsRegistration() {
+		t.verificationType = readLine("\nPlease specify the registration method (sms or voice): ")
 		number := readLine("\nPlease enter the mobile number to be used for TextSecure registration: ")
 		output, err := os.OpenFile(numberPath(), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 
@@ -587,7 +589,7 @@ func (t *textSecure) registrationDone() {
 }
 
 func getVerificationCode() string {
-	return readLine("Please enter the TextSecure verification code received over SMS: ")
+	return readLine("Please enter the TextSecure verification code (received over SMS or voice): ")
 }
 
 func getStoragePassword() string {

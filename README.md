@@ -332,8 +332,8 @@ this is automatically managed by the protocol library.
 
 The user registration is prompted when starting INTERLOCK, with the feature
 compiled in and enabled in the configuration file, and by passing the '-r'
-option flag. The registration process triggers, and prompts for, a SMS
-verification code transmitted to the specified number.
+option flag. The registration process triggers, and prompts for, a verification
+code transmitted to the specified number via SMS or voice per user preference.
 
 **NOTE**: Any existing TextSecure/Signal registration for the specified mobile
 number gets invalidated and taken over by INTERLOCK.

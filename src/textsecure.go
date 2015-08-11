@@ -29,6 +29,7 @@ import (
 
 const contactExt = "textsecure"
 const timeFormat = "Jan 02 15:04"
+const attachmentMsg = "INTERLOCK attachment: "
 const historySize = 10 * 1024
 
 var numberPattern = regexp.MustCompile("^(?:\\+|00)[0-9]+$")
@@ -168,7 +169,7 @@ func sendMessage(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		inKeyPath, private := detectKeyPath(attachmentPath)
 
 		if inKeyPath && private {
-			return errorResponse(errors.New("downloading private key(s) is not allowed"), "")
+			return errorResponse(errors.New("attaching private key(s) is not allowed"), "")
 		}
 
 		attachment, err = os.Open(attachmentPath)
@@ -178,13 +179,15 @@ func sendMessage(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		}
 		defer attachment.Close()
 
+		// append attachment name with INTERLOCK specific metadata format
+		msg = msg + " [" + attachmentMsg + path.Base(attachmentPath) + "]"
 		err = textsecure.SendAttachment(contact.Number, msg, attachment)
 
 		if err != nil {
 			return errorResponse(err, "")
 		}
 
-		err = updateHistory(contact, "["+path.Base(attachmentPath)+"] "+msg, ">", time.Now())
+		err = updateHistory(contact, msg, ">", time.Now())
 	} else {
 		err = textsecure.SendMessage(contact.Number, msg)
 
@@ -314,18 +317,31 @@ func messageHandler(msg *textsecure.Message) {
 		updateHistory(contact, msg.Message(), "<", msg.Timestamp())
 	}
 
-	for _, a := range msg.Attachments() {
-		name, err := saveAttachment(contact, a)
+	attachments := msg.Attachments()
+	attachmentPattern := regexp.MustCompile("\\[" + attachmentMsg + "(.*)\\]$")
+	m := attachmentPattern.FindStringSubmatch(msg.Message())
+
+	// assign random name by default, use name embedded in msg for
+	// attachment sent via INTERLOCK
+	name := ""
+
+	if len(attachments) == 1 && len(m) == 2 {
+		name = path.Base(m[1])
+	}
+
+	for _, a := range attachments {
+		err := saveAttachment(contact, a, name, msg)
 
 		if err != nil {
 			status.Error(err)
-		} else {
-			updateHistory(contact, "["+name+"]", "<", msg.Timestamp())
+			return
 		}
 	}
 }
 
-func saveAttachment(contact contactInfo, attachment io.Reader) (name string, err error) {
+func saveAttachment(contact contactInfo, attachment io.Reader, name string, msg *textsecure.Message) (err error) {
+	var output *os.File
+
 	attachmentPath := contact.AttachmentDir
 
 	err = os.MkdirAll(attachmentPath, 0700)
@@ -334,7 +350,12 @@ func saveAttachment(contact contactInfo, attachment io.Reader) (name string, err
 		return
 	}
 
-	output, err := ioutil.TempFile(attachmentPath, "attachment_")
+	if name == "" {
+		output, err = ioutil.TempFile(attachmentPath, "attachment_")
+	} else {
+		outputPath := filepath.Join(attachmentPath, name)
+		output, err = os.OpenFile(outputPath, os.O_WRONLY|os.O_CREATE|os.O_EXCL|os.O_TRUNC, 0600)
+	}
 
 	if err != nil {
 		return
@@ -345,15 +366,16 @@ func saveAttachment(contact contactInfo, attachment io.Reader) (name string, err
 	status.Log(syslog.LOG_NOTICE, "saved attachment from %s %s\n", contact.Name, contact.Number)
 
 	name, _ = relativePath(output.Name())
+	updateHistory(contact, "["+name+"]", "<", msg.Timestamp())
 
 	return
 }
 
 func parseContact(path string) (contact contactInfo, err error) {
 	contactPattern := regexp.MustCompile("^" + contactsPath() + "/(([^/]*) ((?:\\+|00)[0-9]+))\\." + contactExt + "$")
-	r := contactPattern.FindStringSubmatch(path)
+	m := contactPattern.FindStringSubmatch(path)
 
-	if len(r) == 0 {
+	if len(m) == 0 {
 		err = errors.New("invalid contact")
 		return
 	}
@@ -366,10 +388,10 @@ func parseContact(path string) (contact contactInfo, err error) {
 	}
 
 	contact = contactInfo{
-		Name:          r[2],
-		Number:        r[3],
+		Name:          m[2],
+		Number:        m[3],
 		HistoryPath:   path,
-		AttachmentDir: filepath.Join(attachmentsPath(), r[1]),
+		AttachmentDir: filepath.Join(attachmentsPath(), m[1]),
 	}
 
 	return

@@ -154,8 +154,11 @@ func login(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 
 func logout(w http.ResponseWriter) (res jsonObject) {
 	session.Clear()
-	// restore logging to syslog before unmounting encrypted partition
-	enableSyslog()
+
+	if !conf.Debug {
+		// restore logging to syslog before unmounting encrypted partition
+		enableSyslog()
+	}
 
 	sessionCookie := &http.Cookie{
 		Name:     "Interlock-Token",

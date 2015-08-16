@@ -103,12 +103,16 @@ func (t *textSecure) Activate(activate bool) (err error) {
 			err = textsecure.StartListening()
 
 			if err != nil {
-				status.Log(syslog.LOG_ERR, "failed to enable TextSecure message listener: %v", err)
+				status.Log(syslog.LOG_ERR, "failed to start TextSecure message listener: %v", err)
 			}
 		}()
 	} else {
 		status.Log(syslog.LOG_NOTICE, "stopping TextSecure message listener for %s", t.number)
-		textsecure.StopListening()
+		err = textsecure.StopListening()
+
+		if err != nil {
+			status.Log(syslog.LOG_ERR, "failed to stop TextSecure message listener: %v", err)
+		}
 	}
 
 	return

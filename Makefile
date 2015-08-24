@@ -1,5 +1,6 @@
 #!/bin/bash
 
+SHELL = /bin/bash
 GO ?= go
 GO_VERSION = $(shell ${GO} version)
 BUILD_GOPATH = $(CURDIR)

@@ -557,7 +557,7 @@ Interlock.FileManager = new function() {
       menuEntries.push($(document.createElement('li')).text('Copy')
                                                       .addClass('disabled'));
 
-      menuEntries.push($(document.createElement('li')).text('Move')
+      menuEntries.push($(document.createElement('li')).text('Cut (Move)')
                                                       .addClass('disabled'));
 
       menuEntries.push($(document.createElement('li')).text('Compress')
@@ -569,7 +569,7 @@ Interlock.FileManager = new function() {
           'isSingleFile': (!multipleSelection && Interlock.FileManager.isFile($selectedInodes)) });
       }));
 
-      menuEntries.push($(document.createElement('li')).text('Move')
+      menuEntries.push($(document.createElement('li')).text('Cut (Move)')
                                                       .click(function() {
         sessionStorage.clipBoard = JSON.stringify({ 'action': 'move', 'paths': path,
           'isSingleFile': (!multipleSelection && Interlock.FileManager.isFile($selectedInodes)) });
@@ -635,7 +635,7 @@ Interlock.FileManager = new function() {
                                                         .addClass('text ui-widget-content ui-corner-all'),
                           $(document.createElement('input')).attr('id', 'dst')
                                                             .attr('name', 'dst')
-                                                            .attr('value', $selectedInode.id + '.renamed')
+                                                            .attr('value', $selectedInode.id)
                                                             .attr('type', 'text')
                                                             .attr('placeholder', 'destination file or directory')
                                                             .addClass('text ui-widget-content ui-corner-all')];

@@ -15,6 +15,8 @@ The file manager allows uploading/downloading of files to/from the encrypted
 partition, as well as additional symmetric/asymmetric cryptographic operations
 on the individual files.
 
+![INTERLOCK screenshot](http://inversepath.com/images/interlock.png)
+
 Architecture
 ============
 

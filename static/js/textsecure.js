@@ -74,8 +74,8 @@ Interlock.TextSecure.chat = function(contact) {
   }
 
   Interlock.UI.modalFormConfigure({elements: elements, buttons: buttons,
-                                   noCancelButton: true, submitButton: 'Send',
-                                   title: contactName,
+                                   noCancelButton: true, noCloseButton:true,
+                                   submitButton: 'Send', title: contactName,
                                    height: 600, width: 800});
 
   Interlock.UI.modalFormDialog('open');

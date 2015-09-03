@@ -34,7 +34,7 @@ func init() {
 
 	flag.BoolVar(&conf.Debug, "d", false, "debug mode")
 	flag.BoolVar(&conf.testMode, "t", false, "test mode (WARNING: disables authentication)")
-	flag.StringVar(&conf.BindAddress, "b", "127.0.0.1:4430", "binding address:port pair")
+	flag.StringVar(&conf.BindAddress, "b", "0.0.0.0:4430", "binding address:port pair")
 }
 
 func enableSyslog() {

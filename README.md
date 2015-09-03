@@ -200,7 +200,7 @@ Options
 
 ```
   -h                   options help
-  -b="127.0.0.1:443"   binding address:port pair
+  -b="0.0.0.0:4430"    binding address:port pair
   -c="interlock.conf"  configuration file path
   -d=false:            debug mode
   -t=false:            test mode (WARNING: disables authentication)
@@ -248,7 +248,7 @@ and defaults.
         "debug": false,
         "static_path": "static",
         "set_time": false,
-        "bind_address": "127.0.0.1:4430",
+        "bind_address": "0.0.0.0:4430",
         "tls_cert": "certs/cert.pem",
         "tls_key": "certs/key.pem",
         "tls_client_ca": "",

@@ -127,8 +127,8 @@ Interlock.FileManager = new function() {
       };
 
       $.each(Interlock.Crypto.getCiphers(), function(index, cipher) {
-        /* adds non password-only ciphers */
-        if (cipher.key_format !== 'password') {
+        /* adds only ciphers with key formats supported by import key */
+        if (cipher.key_format === 'armor' || cipher.key_format === 'base32') {
           $availableCiphers.push($(document.createElement('option')).attr('value', cipher.name)
                                                                     .text(cipher.name));
         }
@@ -194,8 +194,8 @@ Interlock.FileManager = new function() {
       };
 
       $.each(Interlock.Crypto.getCiphers(), function(index, cipher) {
-        /* adds non-password only ciphers and exclude base32 chipers */
-        if (cipher.key_format !== 'password' && cipher.key_format !== 'base32') {
+        /* adds only ciphers with key formats supported by generate key */
+        if (cipher.key_format === 'armor') {
           $availableCiphers.push($(document.createElement('option')).attr('value', cipher.name)
                                                                     .text(cipher.name));
         }

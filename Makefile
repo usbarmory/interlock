@@ -2,7 +2,7 @@
 
 SHELL = /bin/bash
 GO ?= go
-GO_VERSION = $(shell ${GO} version)
+GO_VERSION = $(shell ${GO} version | cut -d' ' -f 3)
 BUILD_GOPATH = $(CURDIR)
 BUILD_TAGS = ""
 BUILD_USER = $(shell whoami)
@@ -14,7 +14,7 @@ all: build
 
 build:
 	@echo "compiling INTERLOCK with ${GO_VERSION}"
-	@if test "$(shell echo "${GO_VERSION} go1.5" | sort -V | tail -n 1 | cut -d' ' -f 3)" == "go1.5"; then \
+	@if test "$(shell echo -e "${GO_VERSION}\ngo1.5" | sort -V | tail -n 1)" != "go1.5"; then \
 		echo "detected go version >= 1.5"; \
 		cd src && GOPATH="${BUILD_GOPATH}" $(GO) build -v -tags ${BUILD_TAGS} -ldflags "-X 'main.InterlockBuild=${BUILD_USER}@${BUILD_HOST} on ${BUILD_DATE} ${BUILD_TAGS}'" -o ../interlock; \
 	else \

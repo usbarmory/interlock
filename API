@@ -27,7 +27,7 @@ cipher:
   {
     "name":        string,   # method name
     "info":        string,   # method information
-    "key_format":  string,   # supported key format ("password", "armor")
+    "key_format":  string,   # supported key format
     "enc":         boolean,  # encryption support
     "dec":         boolean,  # decryption support
     "sig":         boolean,  # signing support

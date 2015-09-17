@@ -1295,8 +1295,9 @@ Interlock.FileManager = new function() {
     xhr.open('POST', document.getElementById('upload_form').action, true);
 
     xhr.setRequestHeader('X-XSRFToken', sessionStorage.XSRFToken);
+    /* the path is URL encoded to support non-US-ASCII */
     xhr.setRequestHeader('X-UploadFilename',
-      sessionStorage.mainViewPwd + (sessionStorage.mainViewPwd.slice(-1) === '/' ? '' : '/') + path + fileName);
+      encodeURIComponent(sessionStorage.mainViewPwd + (sessionStorage.mainViewPwd.slice(-1) === '/' ? '' : '/') + path + fileName));
     xhr.setRequestHeader('X-ForceOverwrite', 'false');
 
     xhr.send(file);

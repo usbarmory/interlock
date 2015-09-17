@@ -14,6 +14,7 @@ import (
 	"log"
 	"log/syslog"
 	"net/http"
+	"net/url"
 	"os"
 	"path"
 	"path/filepath"
@@ -384,8 +385,15 @@ func fileUpload(w http.ResponseWriter, r *http.Request) {
 		}
 	}()
 
-	fileName := r.Header.Get("X-Uploadfilename")
+	encodedFileName := r.Header.Get("X-Uploadfilename")
 	overwrite := r.Header.Get("X-Forceoverwrite")
+
+	// the path is URL encoded to support non-US-ASCII
+	fileName, err := url.QueryUnescape(encodedFileName)
+
+	if err != nil {
+		return
+	}
 
 	osPath, err := absolutePath(fileName)
 

@@ -193,7 +193,8 @@ response:
 ## POST api/file/upload
 
 Upload files using the XMLHttpRequest (XHR) API. The destination full path of
-the file is specified by the "X-UploadFilename" HTTP custom header.
+the file is specified by the "X-UploadFilename" HTTP custom header, the path
+must be URL encoded.
 
 HTTP request headers:
   X-UploadFilename: string

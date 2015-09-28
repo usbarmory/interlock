@@ -186,7 +186,7 @@ func sendMessage(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 
 		// append attachment name with INTERLOCK specific metadata format
 		msg = msg + " [" + attachmentMsg + path.Base(attachmentPath) + "]"
-		err = textsecure.SendAttachment(contact.Number, msg, attachment)
+		_, err = textsecure.SendAttachment(contact.Number, msg, attachment)
 
 		if err != nil {
 			return errorResponse(err, "")
@@ -194,7 +194,7 @@ func sendMessage(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 
 		err = updateHistory(contact, msg, ">", time.Now())
 	} else {
-		err = textsecure.SendMessage(contact.Number, msg)
+		_, err = textsecure.SendMessage(contact.Number, msg)
 
 		if err != nil {
 			return errorResponse(err, "")
@@ -319,7 +319,8 @@ func messageHandler(msg *textsecure.Message) {
 	}
 
 	if msg.Message() != "" {
-		updateHistory(contact, msg.Message(), "<", msg.Timestamp())
+		t := time.Unix(int64(msg.Timestamp()/1000), 0)
+		updateHistory(contact, msg.Message(), "<", t)
 	}
 
 	attachments := msg.Attachments()
@@ -371,7 +372,8 @@ func saveAttachment(contact contactInfo, attachment io.Reader, name string, msg 
 	status.Log(syslog.LOG_NOTICE, "saved attachment from %s %s\n", contact.Name, contact.Number)
 
 	name = relativePath(output.Name())
-	updateHistory(contact, "["+name+"]", "<", msg.Timestamp())
+	t := time.Unix(int64(msg.Timestamp()/1000), 0)
+	updateHistory(contact, "["+name+"]", "<", t)
 
 	return
 }

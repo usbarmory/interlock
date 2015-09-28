@@ -1340,7 +1340,7 @@ Interlock.FileManager.fileListCallback = function(backendData, args) {
       });
     }
   } catch (e) {
-    Interlock.Session.createEvent({'kind': 'critical', 'msg': '[Interlock.Session.fileListCallback] ' + e});
+    Interlock.Session.createEvent({'kind': 'critical', 'msg': '[Interlock.FileManager.fileListCallback] ' + e});
   } finally {
     $('#upload_form > fieldset > .ajax_overlay').remove();
   }
@@ -1425,7 +1425,7 @@ Interlock.FileManager.fileDownloadCallback = function(backendData) {
     }
   } catch (e) {
     Interlock.Session.createEvent({'kind': 'critical',
-      'msg': '[Interlock.Session.fileDownloadCallback] ' + e});
+      'msg': '[Interlock.FileManager.fileDownloadCallback] ' + e});
   } finally {
     /* Ensure a proper clean-up of the download link */
     if (link && link.parentNode === document.body) {
@@ -1485,7 +1485,7 @@ Interlock.FileManager.fileDownloadViewCallback = function(backendData) {
         })
         .fail(function() {
           Interlock.Session.createEvent({'kind': 'critical',
-            'msg': '[Interlock.FileManager.getDownloadViewCallback] file download failed'});
+            'msg': '[Interlock.FileManager.fileDownloadViewCallback] file download failed'});
         });
     } else {
       Interlock.Session.createEvent({'kind': backendData.status,
@@ -1493,7 +1493,7 @@ Interlock.FileManager.fileDownloadViewCallback = function(backendData) {
     }
   } catch (e) {
     Interlock.Session.createEvent({'kind': 'critical',
-      'msg': '[Interlock.Session.fileDownloadViewCallback] ' + e});
+      'msg': '[Interlock.FileManager.fileDownloadViewCallback] ' + e});
   }
 };
 
@@ -1539,7 +1539,7 @@ Interlock.FileManager.fileDeleteCallback = function(backendData) {
     }
   } catch (e) {
     Interlock.Session.createEvent({'kind': 'critical',
-      'msg': '[Interlock.Session.fileDeleteCallback] ' + e});
+      'msg': '[Interlock.FileManager.fileDeleteCallback] ' + e});
   }
 };
 

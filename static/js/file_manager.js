@@ -1513,7 +1513,7 @@ Interlock.FileManager.fileDownloadView = function(path) {
       JSON.stringify({path: path}), 'FileManager.fileDownloadViewCallback');
   } catch (e) {
     Interlock.Session.createEvent({'kind': 'critical',
-      'msg': '[Interlock.FileManager.fileDownload] ' + e});
+      'msg': '[Interlock.FileManager.fileDownloadView] ' + e});
   }
 };
 

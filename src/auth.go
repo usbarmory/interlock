@@ -29,6 +29,10 @@ func randomString(size int) (c string, err error) {
 }
 
 func authenticate(volume string, password string, dispose bool) (err error) {
+	if conf.testMode {
+		return
+	}
+
 	if volume == "" {
 		err = errors.New("empty volume name")
 	}
@@ -100,9 +104,7 @@ func login(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		return errorResponse(errors.New("existing session"), "INVALID_SESSION")
 	}
 
-	if !conf.testMode {
-		err = authenticate(req["volume"].(string), req["password"].(string), req["dispose"].(bool))
-	}
+	err = authenticate(req["volume"].(string), req["password"].(string), req["dispose"].(bool))
 
 	if err != nil {
 		_ = luksUnmount()

@@ -66,18 +66,14 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 				// download is an exception as it is already
 				// protected from XSRF with its own unique
 				// handshake
-				if validSessionID || conf.testMode {
+				if validSessionID {
 					p, _ := url.ParseQuery(u.RawQuery)
 					fileDownloadByID(w, p["id"][0])
 					break
 				}
 				fallthrough
 			default:
-				if conf.testMode {
-					handleRequest(w, r)
-				} else {
-					sendResponse(w, jsonObject{"status": "INVALID_SESSION", "response": nil})
-				}
+				sendResponse(w, jsonObject{"status": "INVALID_SESSION", "response": nil})
 			}
 		} else if validSessionID && validXSRFToken {
 			handleRequest(w, r)

@@ -147,7 +147,7 @@ container permanently inaccessible. This is a feature, not a bug.
 The following sudo configuration (meant to be included in /etc/sudoers)
 illustrates the permission requirements for the user running the INTERLOCK
 server. The example assumes username 'interlock' with home directory
-'/home/interlock'.
+'/home/interlock' and volume_group set to its default ('lvmvolume').
 
 ```
 interlock ALL=(root) NOPASSWD:							\

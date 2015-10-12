@@ -261,10 +261,10 @@ func fileOp(src string, dst string, mode int) (err error) {
 			}
 
 			if mode == _copy {
-				args = []string{"-ran", src, dst}
+				args = []string{"-ra", src, dst}
 				cmd = "/bin/cp"
 			} else { // _move
-				args = []string{"-n", src, dst}
+				args = []string{src, dst}
 				cmd = "/bin/mv"
 			}
 

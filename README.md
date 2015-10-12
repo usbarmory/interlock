@@ -226,6 +226,8 @@ Configuration
 
 * bind_address: IP address, port pair.
 
+* tls: enable TLS.
+
 * tls_cert: HTTPS server TLS certificate.
 
 * tls_key: HTTPS server TLS key.
@@ -249,6 +251,7 @@ and defaults.
         "static_path": "static",
         "set_time": false,
         "bind_address": "0.0.0.0:4430",
+        "tls": true,
         "tls_cert": "certs/cert.pem",
         "tls_key": "certs/key.pem",
         "tls_client_ca": "",

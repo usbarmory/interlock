@@ -28,6 +28,7 @@ type config struct {
 	StaticPath  string   `json:"static_path"`
 	SetTime     bool     `json:"set_time"`
 	BindAddress string   `json:"bind_address"`
+	TLS         bool     `json:"tls"`
 	TLSCert     string   `json:"tls_cert"`
 	TLSKey      string   `json:"tls_key"`
 	TLSClientCA string   `json:"tls_client_ca"`
@@ -130,6 +131,7 @@ func (c *config) SetDefaults() {
 	c.Debug = false
 	c.StaticPath = "static"
 	c.SetTime = false
+	c.TLS = true
 	c.TLSCert = "certs/cert.pem"
 	c.TLSKey = "certs/key.pem"
 	c.KeyPath = "keys"

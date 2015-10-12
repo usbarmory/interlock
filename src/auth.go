@@ -118,12 +118,18 @@ func login(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		return errorResponse(err, "")
 	}
 
+	secure := true
+
+	if !conf.TLS {
+		secure = false
+	}
+
 	sessionCookie := &http.Cookie{
 		Name:     "Interlock-Token",
 		Value:    sessionID,
 		Path:     "/api",
 		MaxAge:   cookieAge,
-		Secure:   true,
+		Secure:   secure,
 		HttpOnly: true,
 	}
 

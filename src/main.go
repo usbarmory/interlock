@@ -128,7 +128,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if conf.TLSClientCA != "" {
+	if conf.TLS && conf.TLSClientCA != "" {
 		certPool := x509.NewCertPool()
 		{
 			clientCert, err := ioutil.ReadFile(conf.TLSClientCA)
@@ -151,8 +151,10 @@ func main() {
 		}
 
 		err = server.ListenAndServeTLS(conf.TLSCert, conf.TLSKey)
-	} else {
+	} else if conf.TLS {
 		err = http.ListenAndServeTLS(conf.BindAddress, conf.TLSCert, conf.TLSKey, nil)
+	} else {
+		err = http.ListenAndServe(conf.BindAddress, nil)
 	}
 
 	if err != nil {

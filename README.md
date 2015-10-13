@@ -240,11 +240,11 @@ Configuration
 
 * bind_address: IP address, port pair.
 
-* tls: "on"   use tls_cert and tls_key paths as HTTPS TLS keypair;
-       "off"  disable HTTPS;
-       "gen"  generate a new TLS keypair and save it to tls_cert and tls_key
-              paths when pointing to non existent files (otherwise behaves like
-              "on"), useful for testing and TOFU (Trust On First Use) schemes.
+* tls: "on"   use tls_cert and tls_key paths as HTTPS TLS keypair;  
+       "off"  disable HTTPS;  
+       "gen"  generate a new TLS keypair and save it to tls_cert and tls_key  
+              paths when pointing to non existent files (otherwise behaves like  
+              "on"), useful for testing and TOFU (Trust On First Use) schemes.  
 
 * tls_cert: HTTPS server TLS certificate.
 

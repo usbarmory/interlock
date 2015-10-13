@@ -3,6 +3,7 @@
   "static_path": "static",
   "set_time": false,
   "bind_address": "0.0.0.0:4430",
+  "tls": "on",
   "tls_cert": "certs/cert.pem",
   "tls_key": "certs/key.pem",
   "tls_client_ca": "",

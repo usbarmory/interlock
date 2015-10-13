@@ -1,14 +1,14 @@
 Introduction
 ============
 
-INTERLOCK
+INTERLOCK | https://github.com/inversepath/interlock  
 Copyright (c) 2015 Inverse Path S.r.l.
 
 The INTERLOCK application is a file encryption front-end developed, but not
 limited to, usage with the [USB armory](http://inversepath.com/usbarmory).
 
 The goal of the package is to expose a web-based file manager for an encrypted
-partition running on the device hosting the JSON application server (i.e. USB
+partition running on the device hosting the JSON application server (e.g. USB
 armory).
 
 The file manager allows uploading/downloading of files to/from the encrypted
@@ -16,6 +16,20 @@ partition, as well as additional symmetric/asymmetric cryptographic operations
 on the individual files.
 
 ![INTERLOCK screenshot](http://inversepath.com/images/interlock.png)
+
+Authors
+=======
+
+Andrea Barisani <andrea@inversepath.com>  
+Daniele Bianco  <danbia@inversepath.com>  
+
+Documentation
+=============
+
+The main documentation is included in the present
+[file](https://github.com/inversepath/interlock/blob/master/README.md),
+additional information can be found on the
+[project wiki](https://github.com/inversepath/interlock/wiki).
 
 Architecture
 ============
@@ -226,7 +240,11 @@ Configuration
 
 * bind_address: IP address, port pair.
 
-* tls: enable TLS.
+* tls: "on"   use tls_cert and tls_key paths as HTTPS TLS keypair;
+       "off"  disable HTTPS;
+       "gen"  generate a new TLS keypair and save it to tls_cert and tls_key
+              paths when pointing to non existent files (otherwise behaves like
+              "on"), useful for testing and TOFU (Trust On First Use) schemes.
 
 * tls_cert: HTTPS server TLS certificate.
 
@@ -243,7 +261,7 @@ Configuration
 * ciphers: array of cipher names to enable.
 
 The following example illustrates the configuration file format (plain JSON)
-and defaults.
+and its default values.
 
 ```
 {
@@ -251,7 +269,7 @@ and defaults.
         "static_path": "static",
         "set_time": false,
         "bind_address": "0.0.0.0:4430",
-        "tls": true,
+        "tls": "on",
         "tls_cert": "certs/cert.pem",
         "tls_key": "certs/key.pem",
         "tls_client_ca": "",
@@ -361,16 +379,10 @@ unknown contacts trigger automatic creation of a contact file with name
 All contact files reside on the encrypted partition managed by INTERLOCK and,
 being regular files, benefit from the available file operations.
 
-Authors
-=======
-
-Andrea Barisani <andrea@inversepath.com>  
-Daniele Bianco  <danbia@inversepath.com>  
-
 License
 =======
 
-INTERLOCK | https://github.com/inversepath/interlock
+INTERLOCK | https://github.com/inversepath/interlock  
 Copyright (c) 2015 Inverse Path S.r.l.
 
 Permission to use, copy, modify, and distribute this software for any purpose

@@ -311,8 +311,8 @@ through standard syslog facility.
 TextSecure support
 ==================
 
-**NOTE**: this feature is currently experimental, compilation with this feature
-enabled might fail as the external library API is subject to change.
+**NOTE**: compilation with this feature enabled might fail as the external
+library API is still subject to change.
 
 A messaging functionality, which leverages on the Open Whisper Systems
 [TextSecure](https://github.com/WhisperSystems/TextSecure) protocol, provides

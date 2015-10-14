@@ -120,7 +120,7 @@ func login(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 
 	secure := true
 
-	if conf.TLS != "off" {
+	if conf.TLS == "off" {
 		secure = false
 	}
 

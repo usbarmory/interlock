@@ -574,6 +574,10 @@ func fileEncrypt(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		return errorResponse(errors.New("encryption requested but not supported by cipher"), "")
 	}
 
+	if keyPath == "" {
+		return errorResponse(errors.New("encryption key not specified"), "")
+	}
+
 	if cipher.GetInfo().KeyFormat != "password" {
 		keyPath = filepath.Join(conf.mountPoint, keyPath)
 		key, _, err := getKey(keyPath)
@@ -699,6 +703,10 @@ func fileDecrypt(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 
 	if !cipher.GetInfo().Dec {
 		return errorResponse(errors.New("decryption requested but not supported by cipher"), "")
+	}
+
+	if keyPath == "" {
+		return errorResponse(errors.New("decryption key not specified"), "")
 	}
 
 	suffix := "." + cipher.GetInfo().Extension

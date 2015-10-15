@@ -147,6 +147,8 @@ func (c *config) SetMountPoint() error {
 }
 
 func (c *config) Set(configPath string) (err error) {
+	debugFlag := conf.Debug
+
 	f, err := os.Open(configPath)
 
 	if err != nil {
@@ -161,6 +163,10 @@ func (c *config) Set(configPath string) (err error) {
 	}
 
 	err = json.Unmarshal(b, &c)
+
+	if debugFlag {
+		conf.Debug = true
+	}
 
 	return
 }

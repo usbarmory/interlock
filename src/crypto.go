@@ -75,7 +75,7 @@ type cipherInterface interface {
 func ciphers(w http.ResponseWriter) (res jsonObject) {
 	ciphers := []cipherInfo{}
 
-	for _, v := range conf.availableCiphers {
+	for _, v := range conf.enabledCiphers {
 		ciphers = append(ciphers, v.GetInfo())
 	}
 

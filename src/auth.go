@@ -71,7 +71,7 @@ func authenticate(volume string, password string, dispose bool) (err error) {
 		}
 	}
 
-	err = conf.ActivateCiphers(true)
+	conf.ActivateCiphers(true)
 
 	return
 }

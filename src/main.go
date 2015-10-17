@@ -83,7 +83,7 @@ func main() {
 	log.SetFlags(log.Ldate | log.Ltime)
 	log.SetOutput(os.Stdout)
 
-	log.Printf("starting INTERLOCK %s (%s)\n", InterlockVersion, InterlockBuild)
+	log.Printf("starting INTERLOCK %s - %s\n", InterlockVersion, InterlockBuild)
 
 	if *configPath != "" {
 		err = conf.Set(*configPath)

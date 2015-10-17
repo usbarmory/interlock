@@ -123,7 +123,7 @@ Requirements & Operation
 ========================
 
 The use of INTERLOCK is coupled with the presence of at least one LUKS
-encrypted partition, its initial creation is pre-requisite left to the user.
+encrypted partition, its initial creation is left to the user.
 
 An example setup using cryptsetup and LVM2 follows. The example uses a microSD
 partition to illustrate typical USB armory setup, the partition (mmcblk0p2) is
@@ -224,7 +224,7 @@ The optional TextSecure support (see related section for details) implements
 the following additional flag:
 
 ```
-  -r=false: textsecure registration
+  -r=false:            textsecure registration
 ```
 
 Configuration

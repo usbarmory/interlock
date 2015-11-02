@@ -57,7 +57,7 @@ Design goals:
 * Minimum amount of external dependencies, currently no code outside of Go
   standard and supplementary libraries is required for the basic server binary.
 
-  NOTE: TextSecure support can be optionally enabled at compile time, it
+  NOTE: Signal/TextSecure support can be optionally enabled at compile time, it
   currently requires an external dependency, see related section for details.
 
 * Authentication process directly tied to LUKS partition locking/unlocking.
@@ -94,7 +94,7 @@ Security tokens:
 
 Messaging and file sharing:
 
-* TextSecure protocol V2 via external library (https://github.com/janimo/textsecure)
+* Signal/TextSecure protocol V2 via external library (https://github.com/janimo/textsecure)
 
 Key Storage
 ===========
@@ -220,11 +220,11 @@ Options
   -t=false:            test mode (WARNING: disables authentication)
 ```
 
-The optional TextSecure support (see related section for details) implements
-the following additional flag:
+The optional Signal/TextSecure support (see related section for details)
+implements the following additional flag:
 
 ```
-  -r=false:            textsecure registration
+  -r=false:            signal/textsecure registration
 ```
 
 Configuration
@@ -308,18 +308,18 @@ on disk.
 Any non-debug log generated outside an unauthenticated session is issued
 through standard syslog facility.
 
-TextSecure support
-==================
+Signal/TextSecure support
+=========================
 
 **NOTE**: compilation with this feature enabled might fail as the external
 library API is still subject to change.
 
 A messaging functionality, which leverages on the Open Whisper Systems
 [TextSecure](https://github.com/WhisperSystems/TextSecure) protocol, provides
-communication with other TextSecure/Signal clients, including other INTERLOCK
+communication with other Signal/TextSecure clients, including other INTERLOCK
 instances using this feature.
 
-The integration allows messaging with other TextSecure/Signal users as well as
+The integration allows messaging with other Signal/TextSecure users as well as
 file sharing through attachments on chat sessions.
 
 The feature is disabled by default and it depends on an external Go
@@ -351,15 +351,15 @@ configuration parameter (see Configuration section), to enable it.
 ```
 
 A pre-defined directory structure, stored on the encrypted filesystem under the
-key storage path, is assigned to TextSecure operation and holds generated keys,
-this is automatically managed by the protocol library.
+key storage path, is assigned to hold generated keys, this is automatically
+managed by the protocol library.
 
 The user registration is prompted when starting INTERLOCK, with the feature
 compiled in and enabled in the configuration file, and by passing the '-r'
 option flag. The registration process triggers, and prompts for, a verification
 code transmitted to the specified number via SMS or voice per user preference.
 
-**NOTE**: Any existing TextSecure/Signal registration for the specified mobile
+**NOTE**: Any existing Signal/TextSecure registration for the specified mobile
 number gets invalidated and taken over by INTERLOCK.
 
 A contact is represented by a file that can be regularly managed with the

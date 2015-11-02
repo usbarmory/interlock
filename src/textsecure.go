@@ -52,14 +52,14 @@ type contactInfo struct {
 }
 
 func init() {
-	flag.BoolVar(&register, "r", false, "textsecure registration")
+	flag.BoolVar(&register, "r", false, "signal/textsecure registration")
 	conf.SetAvailableCipher(new(textSecure).Init())
 }
 
 func (t *textSecure) Init() (c cipherInterface) {
 	t.info = cipherInfo{
 		Name:        "TextSecure",
-		Description: "TextSecure/Signal protocol V2",
+		Description: "TextSecure (Signal) protocol V2",
 		KeyFormat:   "binary",
 		Enc:         false,
 		Dec:         false,
@@ -508,7 +508,7 @@ func (t *textSecure) registerNumber() (err error) {
 
 	if needsRegistration() {
 		t.verificationType = readLine("\nPlease specify the registration method (sms or voice): ")
-		number := readLine("\nPlease enter the mobile number to be used for TextSecure registration: ")
+		number := readLine("\nPlease enter the mobile number to be used for registration: ")
 		output, err := os.OpenFile(numberPath(), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 
 		if err != nil {
@@ -525,7 +525,7 @@ func (t *textSecure) registerNumber() (err error) {
 			_ = luksClose()
 		}
 
-		log.Fatalf("TextSecure registration already present for number %s, delete %s contents to reset.", n, storagePath())
+		log.Fatalf("%s is already registered, delete %s contents to reset.", n, storagePath())
 	}
 
 	err = t.setupClient()
@@ -534,7 +534,7 @@ func (t *textSecure) registerNumber() (err error) {
 		log.Fatal(err)
 	}
 
-	log.Printf("TextSecure registration successful, locking volume and shutting down. Please restart to apply registration.")
+	log.Printf("Registration successful, locking volume and shutting down, please restart application.")
 
 	if !conf.testMode {
 		_ = luksUnmount()
@@ -591,7 +591,7 @@ func numberPath() string {
 }
 
 func (t *textSecure) registrationDone() {
-	log.Printf("TextSecure registration complete for %s\n", t.number)
+	log.Printf("Registration complete for %s\n", t.number)
 }
 
 func getVerificationCode() string {

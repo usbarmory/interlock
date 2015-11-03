@@ -336,7 +336,7 @@ func messageHandler(msg *textsecure.Message) {
 	}
 
 	for _, a := range attachments {
-		err := saveAttachment(contact, a, name, msg)
+		err := saveAttachment(contact, a.R, name, msg)
 
 		if err != nil {
 			status.Error(err)

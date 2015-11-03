@@ -8,6 +8,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"log/syslog"
 	"os"
@@ -119,12 +120,14 @@ func main() {
 	err = registerHandlers(conf.StaticPath)
 
 	if err != nil {
+		fmt.Println(err)
 		log.Fatal(err)
 	}
 
 	err = startServer()
 
 	if err != nil {
+		fmt.Println(err)
 		log.Fatal(err)
 	}
 }

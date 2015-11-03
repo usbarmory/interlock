@@ -47,7 +47,7 @@ Interlock.TextSecure.chat = function(contact) {
                                                        .attr('cols', 2)
                                                        .attr('rows', 4)
                                                        .attr('spellcheck',false)
-                                                       .attr('placeholder', 'Send TextSecure message')
+                                                       .attr('placeholder', 'Send Signal/TextSecure message')
                                                        .addClass('text ui-widget-content ui-corner-all key')];
 
   var buttons = {  'Close': function() {

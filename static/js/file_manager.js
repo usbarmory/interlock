@@ -1105,7 +1105,7 @@ Interlock.FileManager = new function() {
 
           if (Interlock.Crypto.hasCipher('TextSecure') &&
               Interlock.FileManager.isTextSecureContact($selectedInode, path)) {
-            menuEntries.push($(document.createElement('li')).text('TextSecure')
+            menuEntries.push($(document.createElement('li')).text('Signal/TextSecure')
                                                             .click(function() {
                                                               Interlock.TextSecure.chat(path);
                                                             }));

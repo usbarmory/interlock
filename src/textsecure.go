@@ -99,19 +99,19 @@ func (t *textSecure) Activate(activate bool) (err error) {
 
 	if activate {
 		go func() {
-			status.Log(syslog.LOG_NOTICE, "starting TextSecure message listener for %s", t.number)
+			status.Log(syslog.LOG_NOTICE, "starting Signal/TextSecure message listener for %s", t.number)
 			err = textsecure.StartListening()
 
 			if err != nil {
-				status.Log(syslog.LOG_ERR, "failed to start TextSecure message listener: %v", err)
+				status.Log(syslog.LOG_ERR, "failed to start Signal/TextSecure message listener: %v", err)
 			}
 		}()
 	} else {
-		status.Log(syslog.LOG_NOTICE, "stopping TextSecure message listener for %s", t.number)
+		status.Log(syslog.LOG_NOTICE, "stopping Signal/TextSecure message listener for %s", t.number)
 		err = textsecure.StopListening()
 
 		if err != nil {
-			status.Log(syslog.LOG_ERR, "failed to stop TextSecure message listener: %v", err)
+			status.Log(syslog.LOG_ERR, "failed to stop Signal/TextSecure message listener: %v", err)
 		}
 	}
 

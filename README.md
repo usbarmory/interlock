@@ -12,8 +12,9 @@ partition running on the device hosting the JSON application server (e.g. USB
 armory).
 
 The file manager allows uploading/downloading of files to/from the encrypted
-partition, as well as additional symmetric/asymmetric cryptographic operations
-on the individual files.
+partition, as well as symmetric/asymmetric cryptographic operations on the
+individual files. Additionally secure messaging and file sharing is supported
+with an optional built-in Signal/TextSecure client.
 
 ![INTERLOCK screenshot](http://inversepath.com/images/interlock.png)
 

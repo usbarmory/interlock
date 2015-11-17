@@ -260,6 +260,16 @@ func fileOp(src string, dst string, mode int) (err error) {
 				break
 			}
 
+			if stat.IsDir() {
+				d := filepath.Join(dst, path.Base(src))
+				stat, err = os.Stat(d)
+
+				if err == nil {
+					err = fmt.Errorf("path %s exists", d)
+					break
+				}
+			}
+
 			if mode == _copy {
 				args = []string{"-ra", src, dst}
 				cmd = "/bin/cp"

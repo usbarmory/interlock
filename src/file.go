@@ -427,6 +427,7 @@ func fileUpload(w http.ResponseWriter, r *http.Request) {
 	}
 
 	osFile, err := os.Create(osPath)
+	_ = osFile.Chmod(0600)
 
 	if err != nil {
 		return

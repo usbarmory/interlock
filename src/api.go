@@ -19,7 +19,7 @@ func registerHandlers(staticPath string) (err error) {
 	_, err = os.Stat(conf.StaticPath)
 
 	if err != nil {
-		return fmt.Errorf("invalid path for static files: %s", staticPath)
+		return fmt.Errorf("invalid path for static files: %v", err)
 	}
 
 	http.Handle("/", http.StripPrefix("/", http.FileServer(http.Dir(staticPath))))

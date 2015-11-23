@@ -134,11 +134,10 @@ html, body, img, h1, div {
   cursor: pointer;
 }
 
-.actions ul li#import_key,
-.actions ul li#generate_key {
+.float_right li {
   float: right;
-  margin-left: 5px;
-  margin-right: 0px;
+  margin-top: -5px;
+  padding: 5px;
 }
 
 input[type="checkbox"] {

@@ -13,7 +13,6 @@
  * FileManager instance class
  */
 Interlock.FileManager = new function() {
-  /* @private */
   /* set default pwd and sorting rule for the main file manager
      and the browsing view */
   sessionStorage.mainViewPwd = sessionStorage.mainViewPwd || '/';
@@ -25,6 +24,8 @@ Interlock.FileManager = new function() {
   sessionStorage.browsingViewSortAsc = true;
 
   sessionStorage.clipBoard = sessionStorage.clipBoard || JSON.stringify({ 'action': 'none', 'paths': undefined, 'isSingleFile': false });
+
+  /** @private */
 
   /** @protected */
   /* max file dimension (bytes) allowed by file view action */
@@ -293,7 +294,9 @@ Interlock.FileManager = new function() {
       var mtime = inode.mtime || 0;
       var path = sessionStorage[view + 'Pwd'] + (sessionStorage[view + 'Pwd'].slice(-1) === '/' ? '' : '/') + inode.name;
 
-      var $inode = $(document.createElement('tr')).attr('id', inode.name);
+      /* adds the '_' prefix to the inode name in order to prevent
+         id collisions in the CSS */
+      var $inode = $(document.createElement('tr')).attr('id', '_' + inode.name);
       var $inodeName = $(document.createElement('td')).text(inode.name);
       var $inodeSize = $(document.createElement('td')).text(size);
       var $inodeMtime = $(document.createElement('td')).text(Interlock.UI.convertToTimeString(mtime));
@@ -339,10 +342,10 @@ Interlock.FileManager = new function() {
         $inode.on('contextmenu', function(e) {
           /* automatically selects the inode right-clicked by the user if this
              has not been previously selected */
-          if (!document.getElementById(inode.name).className.match(/ui-selected/)) {
+          if (!document.getElementById('_' + inode.name).className.match(/ui-selected/)) {
             $('.ui-selected').map(function() { $(this).removeClass('ui-selected') });
 
-            document.getElementById(inode.name).className = document.getElementById(inode.name).className + ' ui-selected';
+            document.getElementById('_' + inode.name).className = document.getElementById('_' + inode.name).className + ' ui-selected';
           }
 
           Interlock.FileManager.contextMenu(e, inode);
@@ -550,7 +553,7 @@ Interlock.FileManager = new function() {
                                                      .css({top: pageY + 'px', left: e.pageX + 'px'});
 
     var path = $selectedInodes.map(function() {
-      return sessionStorage['mainViewPwd'] + (sessionStorage['mainViewPwd'].slice(-1) === '/' ? '' : '/') + this.id;
+      return sessionStorage['mainViewPwd'] + (sessionStorage['mainViewPwd'].slice(-1) === '/' ? '' : '/') + this.id.substring(1);
     }).get();
 
     if (Interlock.FileManager.isPrivate($selectedInodes)) {
@@ -584,7 +587,7 @@ Interlock.FileManager = new function() {
                                                     .addClass('text ui-widget-content ui-corner-all')];
 
       $.each($selectedInodes, function(index, $selectedInode) {
-        elements.push($(document.createElement('p')).text($selectedInode.id)
+        elements.push($(document.createElement('p')).text($selectedInode.id.substring(1))
                                                     .addClass('text ui-widget-content ui-corner-all')
                                                     .addClass(Interlock.FileManager.isDirectory($selectedInode) ? 'directory' : 'file'));
       });
@@ -618,7 +621,7 @@ Interlock.FileManager = new function() {
     } else {
       /* single inode selected */
       $selectedInode = $selectedInodes[0];
-      path = sessionStorage['mainViewPwd'] + (sessionStorage['mainViewPwd'].slice(-1) === '/' ? '' : '/') + $selectedInode.id;
+      path = sessionStorage['mainViewPwd'] + (sessionStorage['mainViewPwd'].slice(-1) === '/' ? '' : '/') + $selectedInode.id.substring(1);
 
       /* disable move/copy for every key file or directory */
       if (Interlock.FileManager.isPrivate($selectedInode)) {
@@ -635,7 +638,7 @@ Interlock.FileManager = new function() {
                                                         .addClass('text ui-widget-content ui-corner-all'),
                           $(document.createElement('input')).attr('id', 'dst')
                                                             .attr('name', 'dst')
-                                                            .attr('value', $selectedInode.id)
+                                                            .attr('value', $selectedInode.id.substring(1))
                                                             .attr('type', 'text')
                                                             .attr('placeholder', 'destination file or directory')
                                                             .addClass('text ui-widget-content ui-corner-all')];
@@ -658,7 +661,7 @@ Interlock.FileManager = new function() {
 
           if (clipBoard.action !== undefined && clipBoard.paths !== undefined) {
              var dst = sessionStorage['mainViewPwd'] + (sessionStorage['mainViewPwd'].slice(-1) === '/' ? '' : '/') +
-                       $selectedInode.id;
+                       $selectedInode.id.substring(1);
              var paths = [].concat.apply([], [clipBoard.paths]);
 
              switch (clipBoard.action) {

@@ -201,6 +201,13 @@ make
 This compiles the 'interlock' binary that can be executed with options
 illustrated in the next section.
 
+Alternatively you can automatically download, compile and install the package,
+under your GOPATH, as follows:
+
+```
+go get -u github.com/inversepath/interlock/cmd/interlock
+```
+
 When cross compiling from a non-arm host for an arm target ensure that the
 following compilation variables are set:
 
@@ -339,8 +346,15 @@ should be used when issuing the make command:
 make with_textsecure
 ```
 
-Additionally the "TextSecure" entry must be added to the "ciphers"
-configuration parameter (see Configuration section), to enable it.
+Alternatively you can automatically download, compile and install the package,
+under your GOPATH, as follows:
+
+```
+go get -u -tags textsecure github.com/inversepath/interlock/cmd/interlock
+```
+
+The "TextSecure" entry must be added to the "ciphers" configuration parameter
+(see Configuration section), to enable it.
 
 ```
         "ciphers": [

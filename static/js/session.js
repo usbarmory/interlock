@@ -465,9 +465,9 @@ Interlock.Session.refresh = function() {
 Interlock.Session.getVersionCallback = function(backendData) {
   try {
     if (backendData.status === 'OK' &&
-        backendData.response.version && backendData.response.build) {
-      sessionStorage.InterlockVersion = backendData.response.version + ' | build: ' +
-                                        backendData.response.build;
+        backendData.response.version) {
+      sessionStorage.InterlockVersion = backendData.response.version +
+                                        (backendData.response.build ? ' | build: ' + backendData.response.build : '');
     } else {
       Interlock.Session.createEvent({'kind': backendData.status,
                                      'msg': '[Interlock.Session.getVersionCallback] ' + backendData.response});

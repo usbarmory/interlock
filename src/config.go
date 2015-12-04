@@ -55,7 +55,7 @@ func (c *config) SetAvailableCipher(cipher cipherInterface) {
 }
 
 func (c *config) GetCipher(cipherName string) (cipher cipherInterface, err error) {
-	cipher, ok := conf.enabledCiphers[cipherName]
+	cipher, ok := c.enabledCiphers[cipherName]
 
 	if !ok {
 		err = errors.New("invalid cipher")
@@ -147,7 +147,7 @@ func (c *config) SetMountPoint() error {
 }
 
 func (c *config) Set(configPath string) (err error) {
-	debugFlag := conf.Debug
+	debugFlag := c.Debug
 
 	f, err := os.Open(configPath)
 
@@ -165,7 +165,7 @@ func (c *config) Set(configPath string) (err error) {
 	err = json.Unmarshal(b, &c)
 
 	if debugFlag {
-		conf.Debug = true
+		c.Debug = true
 	}
 
 	return

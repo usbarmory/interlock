@@ -12,7 +12,6 @@ import (
 	"log"
 	"log/syslog"
 	"os"
-	"path"
 	"path/filepath"
 )
 
@@ -75,19 +74,13 @@ func main() {
 		log.Println("*** WARNING *** authentication disabled (test mode switch enabled)")
 	}
 
-	err := os.Chdir(path.Dir(os.Args[0]))
-
-	if err != nil {
-		log.Fatal(err)
-	}
-
 	log.SetFlags(log.Ldate | log.Ltime)
 	log.SetOutput(os.Stdout)
 
 	log.Printf("starting INTERLOCK %s - %s\n", InterlockVersion, InterlockBuild)
 
 	if *configPath != "" {
-		err = conf.Set(*configPath)
+		err := conf.Set(*configPath)
 
 		if err != nil {
 			log.Fatal(err)
@@ -96,7 +89,7 @@ func main() {
 		log.Printf("configuration file %s successfully parsed", *configPath)
 	}
 
-	err = conf.SetMountPoint()
+	err := conf.SetMountPoint()
 
 	if err != nil {
 		log.Fatal(err)

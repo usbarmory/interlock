@@ -16,7 +16,7 @@ import (
 	"path/filepath"
 )
 
-var configPath = flag.String("c", "", "configuration file path")
+var configPath = flag.String("c", "interlock.conf", "configuration file path")
 
 func init() {
 	if os.Geteuid() == 0 {

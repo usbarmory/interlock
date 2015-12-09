@@ -5,7 +5,7 @@ INTERLOCK | https://github.com/inversepath/interlock
 Copyright (c) 2015 Inverse Path S.r.l.
 
 The INTERLOCK application is a file encryption front-end developed, but not
-limited to, usage with the [USB armory](http://inversepath.com/usbarmory).
+limited to, usage with the [USB armory](https://inversepath.com/usbarmory).
 
 The goal of the package is to expose a web-based file manager for an encrypted
 partition running on the device hosting the JSON application server (e.g. USB
@@ -16,7 +16,7 @@ partition, as well as symmetric/asymmetric cryptographic operations on the
 individual files. Additionally secure messaging and file sharing is supported
 with an optional built-in Signal/TextSecure client.
 
-![INTERLOCK screenshot](http://inversepath.com/images/interlock.png)
+![INTERLOCK screenshot](https://inversepath.com/images/interlock.png)
 
 Authors
 =======

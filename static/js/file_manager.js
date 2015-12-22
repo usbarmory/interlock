@@ -155,7 +155,7 @@ Interlock.FileManager = new function() {
                                                         .attr('placeholder', 'private')
                                                         .attr('type', 'checkbox')
                                                         .addClass('text ui-widget-content ui-corner-all'),
-                      $(document.createElement('label')).text('private (leave it unchecked for public key)')
+                      $(document.createElement('label')).text('private (leave unchecked when importing public keys)')
                                                         .attr('for', 'private'),
                       $(document.createElement('input')).attr('id', 'key_format')
                                                         .attr('name', 'key_format')

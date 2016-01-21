@@ -1,5 +1,3 @@
-#!/bin/bash
-
 SHELL = /bin/bash
 GO ?= go
 GO_VERSION = $(shell ${GO} version | cut -d' ' -f 3)

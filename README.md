@@ -110,7 +110,7 @@ generated server-side.
 The key storage directory structure is the following:
 
 ```
-<key_path>/<private|public>/<cipher_name>/<key_identifier>.<key_format>
+<key_path>/<cipher_name>/<private|public>/<key_identifier>.<key_format>
 ```
 
 Once uploaded in their respective directory, private keys can only be deleted

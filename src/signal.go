@@ -71,7 +71,7 @@ func (t *Signal) Init() (c cipherInterface) {
 }
 
 func (t *Signal) New() cipherInterface {
-	// the Signal cipher is always a single instance
+	// this cipher is always a single instance
 	return t
 }
 

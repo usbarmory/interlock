@@ -118,13 +118,11 @@ func (c *config) EnableCiphers() (err error) {
 }
 
 func (c *config) ActivateCiphers(activate bool) {
-	for name, val := range c.enabledCiphers {
+	for _, val := range c.enabledCiphers {
 		err := val.Activate(activate)
 
-		// activation errors are treated as non fatal
 		if err != nil {
 			log.Print(err)
-			delete(c.enabledCiphers, name)
 		}
 	}
 }

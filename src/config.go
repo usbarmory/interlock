@@ -107,11 +107,7 @@ func (c *config) EnableCiphers() (err error) {
 
 	for i := 0; i < len(c.Ciphers); i++ {
 		if val, ok := c.availableCiphers[c.Ciphers[i]]; ok {
-			c.enabledCiphers[c.Ciphers[i]], err = val.Enable()
-
-			if err != nil {
-				return err
-			}
+			c.enabledCiphers[c.Ciphers[i]] = val
 		} else {
 			c.PrintAvailableCiphers()
 			return fmt.Errorf("unsupported cipher name %s", c.Ciphers[i])

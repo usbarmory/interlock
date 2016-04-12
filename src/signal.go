@@ -75,10 +75,6 @@ func (t *Signal) New() cipherInterface {
 	return t
 }
 
-func (t *Signal) Enable() (c cipherInterface, err error) {
-	return t, nil
-}
-
 func (t *Signal) Activate(activate bool) (err error) {
 	err = t.setupClient()
 

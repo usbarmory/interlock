@@ -107,6 +107,45 @@ func (t *Signal) GetInfo() cipherInfo {
 	return t.info
 }
 
+func (t *Signal) GenKey(i string, e string) (p string, s string, err error) {
+	err = errors.New("cipher does not support key generation")
+	return
+}
+
+func (t *Signal) GetKeyInfo(k key) (i string, err error) {
+	i = "Signal library private data"
+	return
+}
+
+func (t *Signal) SetPassword(password string) error {
+	return errors.New("cipher does not support passwords")
+}
+
+func (t *Signal) SetKey(k key) error {
+	return errors.New("cipher does not support explicit key set")
+}
+
+func (t *Signal) Encrypt(input *os.File, output *os.File, _ bool) error {
+	return errors.New("cipher does not support encryption")
+}
+
+func (t *Signal) Decrypt(input *os.File, output *os.File, verify bool) error {
+	return errors.New("cipher does not support decryption")
+}
+
+func (t *Signal) Sign(input *os.File, output *os.File) error {
+	return errors.New("cipher does not support signin")
+}
+
+func (t *Signal) GenOTP(timestamp int64) (otp string, exp int64, err error) {
+	err = errors.New("cipher does not support OTP generation")
+	return
+}
+
+func (t *Signal) Verify(input *os.File, signature *os.File) error {
+	return errors.New("cipher does not support signature verification")
+}
+
 func (t *Signal) HandleRequest(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 	switch r.RequestURI {
 	case "/api/Signal/register":
@@ -117,6 +156,73 @@ func (t *Signal) HandleRequest(w http.ResponseWriter, r *http.Request) (res json
 		res = downloadHistory(w, r)
 	default:
 		res = notFound(w)
+	}
+
+	return
+}
+
+func (t *Signal) registerNumber(w http.ResponseWriter, r *http.Request) (res jsonObject) {
+	var verificationType string
+	var verificationCode string
+
+	req, err := parseRequest(r)
+
+	if err != nil {
+		return errorResponse(err, "")
+	}
+
+	err = validateRequest(req, []string{"contact:s"})
+
+	if err != nil {
+		return errorResponse(err, "")
+	}
+
+	if !needsRegistration() {
+		n, _ := registeredNumber()
+		return errorResponse(fmt.Errorf("%s is already registered, delete %s contents to reset", n, storagePath()), "")
+	}
+
+	output, err := os.OpenFile(numberPath(), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+
+	if err != nil {
+		return errorResponse(fmt.Errorf("failed to save number: %v", err), "")
+	}
+
+	output.Write([]byte(req["contact"].(string)))
+	output.Close()
+
+	if f, ok := req["type"]; ok {
+		verificationType = f.(string)
+	}
+
+	if c, ok := req["code"]; ok {
+		verificationCode = c.(string)
+	}
+
+	if verificationCode == "" && verificationType == "" {
+		return errorResponse(errors.New("type or code must be specified"), "")
+	}
+
+	if verificationCode != "" && verificationType != "" {
+		return errorResponse(errors.New("type or code cannot be both specified"), "")
+	}
+
+	if verificationType != "" {
+		log.Printf("deferring Signal registration for %s, waiting for verification code", req["contact"])
+
+		t.verificationType = verificationType
+		err = t.setupClient()
+
+	}
+
+	if verificationCode != "" {
+		log.Printf("received Signal registration verification code for %s", req["contact"])
+
+		t.verificationCode = verificationCode
+	}
+
+	if err != nil {
+		return errorResponse(err, "")
 	}
 
 	return
@@ -287,6 +393,68 @@ func (t *Signal) getConfig() (*textsecure.Config, error) {
 	}
 
 	return &tsConf, nil
+}
+
+func (t *Signal) setupClient() (err error) {
+	err = os.MkdirAll(storagePath(), 0700)
+
+	if err != nil {
+		return
+	}
+
+	t.number, err = registeredNumber()
+
+	if err != nil {
+		return errors.New("Signal cipher enabled but not registered")
+	}
+
+	t.client = &textsecure.Client{
+		GetConfig:           t.getConfig,
+		GetVerificationCode: t.getVerificationCode,
+		GetStoragePassword:  getStoragePassword,
+		MessageHandler:      messageHandler,
+		RegistrationDone:    t.registrationDone,
+	}
+
+	if needsRegistration() {
+		go func() {
+			err = textsecure.Setup(t.client)
+
+			if err != nil {
+				status.Log(syslog.LOG_ERR, "failed to enable Signal cipher: %v", err)
+			}
+		}()
+
+		err = errors.New("Signal registration in progress")
+	} else {
+		err = textsecure.Setup(t.client)
+	}
+
+	return
+}
+
+func (t *Signal) getVerificationCode() (code string) {
+	start := time.Now()
+
+	for {
+		if t.verificationCode == "" {
+			time.Sleep(100 * time.Millisecond)
+			continue
+		} else {
+			code = t.verificationCode
+		}
+
+		if time.Since(start) > 60 * time.Second {
+			log.Printf("timed out while waiting for Signal verification code for %s\n", t.number)
+			break
+		}
+	}
+
+	return
+}
+
+func (t *Signal) registrationDone() {
+	log.Printf("Registration complete for %s\n", t.number)
 }
 
 func messageHandler(msg *textsecure.Message) {
@@ -472,111 +640,6 @@ func registeredNumber() (number string, err error) {
 	return
 }
 
-func (t *Signal) registerNumber(w http.ResponseWriter, r *http.Request) (res jsonObject) {
-	var verificationType string
-	var verificationCode string
-
-	req, err := parseRequest(r)
-
-	if err != nil {
-		return errorResponse(err, "")
-	}
-
-	err = validateRequest(req, []string{"contact:s"})
-
-	if err != nil {
-		return errorResponse(err, "")
-	}
-
-	if !needsRegistration() {
-		n, _ := registeredNumber()
-		return errorResponse(fmt.Errorf("%s is already registered, delete %s contents to reset", n, storagePath()), "")
-	}
-
-	output, err := os.OpenFile(numberPath(), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
-
-	if err != nil {
-		return errorResponse(fmt.Errorf("failed to save number: %v", err), "")
-	}
-
-	output.Write([]byte(req["contact"].(string)))
-	output.Close()
-
-	if f, ok := req["type"]; ok {
-		verificationType = f.(string)
-	}
-
-	if c, ok := req["code"]; ok {
-		verificationCode = c.(string)
-	}
-
-	if verificationCode == "" && verificationType == "" {
-		return errorResponse(errors.New("type or code must be specified"), "")
-	}
-
-	if verificationCode != "" && verificationType != "" {
-		return errorResponse(errors.New("type or code cannot be both specified"), "")
-	}
-
-	if verificationType != "" {
-		log.Printf("deferring Signal registration for %s, waiting for verification code", req["contact"])
-
-		t.verificationType = verificationType
-		err = t.setupClient()
-
-	}
-
-	if verificationCode != "" {
-		log.Printf("received Signal registration verification code for %s", req["contact"])
-
-		t.verificationCode = verificationCode
-	}
-
-	if err != nil {
-		return errorResponse(err, "")
-	}
-
-	return
-}
-
-func (t *Signal) setupClient() (err error) {
-	err = os.MkdirAll(storagePath(), 0700)
-
-	if err != nil {
-		return
-	}
-
-	t.number, err = registeredNumber()
-
-	if err != nil {
-		return errors.New("Signal cipher enabled but not registered")
-	}
-
-	t.client = &textsecure.Client{
-		GetConfig:           t.getConfig,
-		GetVerificationCode: t.getVerificationCode,
-		GetStoragePassword:  getStoragePassword,
-		MessageHandler:      messageHandler,
-		RegistrationDone:    t.registrationDone,
-	}
-
-	if needsRegistration() {
-		go func() {
-			err = textsecure.Setup(t.client)
-
-			if err != nil {
-				status.Log(syslog.LOG_ERR, "failed to enable Signal cipher: %v", err)
-			}
-		}()
-
-		err = errors.New("Signal registration in progress")
-	} else {
-		err = textsecure.Setup(t.client)
-	}
-
-	return
-}
-
 func storagePath() string {
 	return filepath.Join(conf.mountPoint, conf.KeyPath, "signal", "private")
 }
@@ -589,60 +652,6 @@ func numberPath() string {
 	return filepath.Join(storagePath(), "number")
 }
 
-func (t *Signal) registrationDone() {
-	log.Printf("Registration complete for %s\n", t.number)
-}
-
-func (t *Signal) getVerificationCode() (code string) {
-	start := time.Now()
-
-	for {
-		if t.verificationCode == "" {
-			time.Sleep(100 * time.Millisecond)
-			continue
-		} else {
-			code = t.verificationCode
-		}
-
-		if time.Since(start) > 60 * time.Second {
-			log.Printf("timed out while waiting for Signal verification code for %s\n", t.number)
-			break
-		}
-	}
-
-	return
-}
-
 func getStoragePassword() string {
 	return ""
-}
-
-func (t *Signal) GenKey(i string, e string) (p string, s string, err error) {
-	err = errors.New("cipher does not support key generation")
-	return
-}
-
-func (t *Signal) GetKeyInfo(k key) (i string, err error) {
-	i = "Signal library private data"
-	return
-}
-
-func (t *Signal) SetPassword(password string) error {
-	return errors.New("cipher does not support passwords")
-}
-
-func (t *Signal) Encrypt(input *os.File, output *os.File, _ bool) error {
-	return errors.New("cipher does not support encryption")
-}
-
-func (t *Signal) Decrypt(input *os.File, output *os.File, verify bool) error {
-	return errors.New("cipher does not support decryption")
-}
-
-func (t *Signal) Sign(input *os.File, output *os.File) error {
-	return errors.New("cipher does not support signin")
-}
-
-func (t *Signal) Verify(input *os.File, signature *os.File) error {
-	return errors.New("cipher does not support signature verification")
 }

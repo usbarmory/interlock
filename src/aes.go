@@ -14,6 +14,7 @@ import (
 	"crypto/sha256"
 	"errors"
 	"io"
+	"net/http"
 	"os"
 
 	"golang.org/x/crypto/pbkdf2"
@@ -257,5 +258,10 @@ func (a *aes256OFB) Verify(i *os.File, s *os.File) error {
 
 func (a *aes256OFB) GenOTP(timestamp int64) (otp string, exp int64, err error) {
 	err = errors.New("cipher does not support OTP generation")
+	return
+}
+
+func (a *aes256OFB) HandleRequest(w http.ResponseWriter, r *http.Request) (res jsonObject) {
+	res = notFound(w)
 	return
 }

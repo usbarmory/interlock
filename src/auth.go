@@ -30,6 +30,7 @@ func randomString(size int) (c string, err error) {
 
 func authenticate(volume string, password string, dispose bool) (err error) {
 	if conf.testMode {
+		conf.ActivateCiphers(true)
 		return
 	}
 

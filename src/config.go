@@ -54,6 +54,20 @@ func (c *config) SetAvailableCipher(cipher cipherInterface) {
 	c.availableCiphers[cipher.GetInfo().Name] = cipher
 }
 
+func (c *config) GetAvailableCipher(cipherName string) (cipher cipherInterface, err error) {
+	cipher, ok := c.availableCiphers[cipherName]
+
+	if !ok {
+		err = errors.New("invalid cipher")
+		return
+	}
+
+	// get a fresh instance
+	cipher = cipher.New()
+
+	return
+}
+
 func (c *config) GetCipher(cipherName string) (cipher cipherInterface, err error) {
 	cipher, ok := c.enabledCiphers[cipherName]
 

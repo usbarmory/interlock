@@ -21,6 +21,6 @@ build:
 	fi
 	@echo "done compiling INTERLOCK"
 
-with_textsecure: BUILD_GOPATH = "$(CURDIR):${GOPATH}"
-with_textsecure: BUILD_TAGS = "textsecure"
-with_textsecure: build
+with_signal: BUILD_GOPATH = "$(CURDIR):${GOPATH}"
+with_signal: BUILD_TAGS = "signal"
+with_signal: build

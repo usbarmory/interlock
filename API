@@ -457,33 +457,59 @@ response:
     }
   }
 
-# TextSecure API Methods
+# Signal API Methods
 
   api/
-    textsecure/     send
+    Signal/         status, register, send
 
-## POST api/textsecure/send
+## POST api/Signal/register
 
-Transmits a TextSecure message to the contact identified with the file
-specified in the "contact" attribute.
+Registers a Signal number, this is a 2-step process requiring verification of a
+code received over SMS or voice.
+
+verification request:
+  {
+    "contact":     string    # contact identifier (e.g. mobile number)
+    "type":        string    # voice | sms
+  }
+
+verification response:
+  {
+    "status":      string,   # OK | KO | INVALID_SESSION | INVALID
+    "response":    string    # verification code
+  }
+
+registration request:
+  {
+    "contact":     string    # contact identifier (e.g. mobile number)
+    "code":        string    # verification code
+  }
+
+registration response:
+  {
+    "status":      string,   # OK | KO | INVALID_SESSION | INVALID
+    "response":    string    # error string
+  }
+
+## POST api/Signal/send
+
+Transmits a Signal message.
 
 request:
   {
-    "contact":     string    # contact file path
+    "contact":     string    # contact identifier
     "msg":         string    # text message
      ############  optional: ############
     "attachment":  string    # attachment path
   }
 
-## POST api/textsecure/history
+## POST api/Signal/history
 
-Retrieve last messages history for the contact identified with the file
-specified in the "contact" attribute. The response payload is the raw history
-content.
+Retrieve chat history for a contact.
 
 request:
   {
-    "contact":     string    # contact file path
+    "contact":     string    # contact identifier
   }
 
 response:

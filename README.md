@@ -14,7 +14,7 @@ armory).
 The file manager allows uploading/downloading of files to/from the encrypted
 partition, as well as symmetric/asymmetric cryptographic operations on the
 individual files. Additionally secure messaging and file sharing is supported
-with an optional built-in Signal/TextSecure client.
+with an optional built-in Signal client.
 
 ![INTERLOCK screenshot](https://inversepath.com/images/interlock.png)
 
@@ -58,8 +58,8 @@ Design goals:
 * Minimum amount of external dependencies, currently no code outside of Go
   standard and supplementary libraries is required for the basic server binary.
 
-  NOTE: Signal/TextSecure support can be optionally enabled at compile time, it
-  currently requires an external dependency, see related section for details.
+  NOTE: Signal support can be optionally enabled at compile time, it currently
+  requires an external dependency, see related section for details.
 
 * Authentication process directly tied to LUKS partition locking/unlocking.
 
@@ -95,7 +95,7 @@ Security tokens:
 
 Messaging and file sharing:
 
-* Signal/TextSecure protocol V2 via external library (https://github.com/janimo/textsecure)
+* Signal protocol V2 via external library (https://github.com/janimo/textsecure)
 
 Key Storage
 ===========
@@ -228,13 +228,6 @@ Options
   -t=false:            test mode (WARNING: disables authentication)
 ```
 
-The optional Signal/TextSecure support (see related section for details)
-implements the following additional flag:
-
-```
-  -r=false:            signal/textsecure registration
-```
-
 Configuration
 =============
 
@@ -316,19 +309,19 @@ on disk.
 Any non-debug log generated outside an unauthenticated session is issued
 through standard syslog facility.
 
-Signal/TextSecure support
-=========================
+Signal support
+==============
 
 **NOTE**: compilation with this feature enabled might fail as the external
 library API is still subject to change.
 
 A messaging functionality, which leverages on the Open Whisper Systems
-[TextSecure](https://github.com/WhisperSystems/TextSecure) protocol, provides
-communication with other Signal/TextSecure clients, including other INTERLOCK
-instances using this feature.
+[Signal](https://github.com/WhisperSystems/Signal-Android) protocol, provides
+communication with other Signal, including other INTERLOCK instances using this
+feature.
 
-The integration allows messaging with other Signal/TextSecure users as well as
-file sharing through attachments on chat sessions.
+The integration allows messaging with other Signal users as well as file
+sharing through attachments on chat sessions.
 
 The feature is disabled by default and it depends on an external Go
 [library](https://github.com/janimo/textsecure). The library can be installed
@@ -339,29 +332,29 @@ go get -u github.com/janimo/textsecure/cmd/textsecure
 ```
 
 The functionality can be enabled by compiling INTERLOCK as shown in the
-'Compiling' section, with the exception that the 'with_textsecure' target
+'Compiling' section, with the exception that the 'with_signal' target
 should be used when issuing the make command:
 
 ```
-make with_textsecure
+make with_signal
 ```
 
 Alternatively you can automatically download, compile and install the package,
 under your GOPATH, as follows:
 
 ```
-go get -u -tags textsecure github.com/inversepath/interlock/cmd/interlock
+go get -u -tags signal github.com/inversepath/interlock/cmd/interlock
 ```
 
-The "TextSecure" entry must be added to the "ciphers" configuration parameter
-(see Configuration section), to enable it.
+The "Signal" entry must be added to the "ciphers" configuration parameter (see
+Configuration section), to enable it.
 
 ```
         "ciphers": [
                 "OpenPGP",
                 "AES-256-OFB",
                 "TOTP",
-                "TextSecure"
+                "Signal"
         ]
 ```
 
@@ -369,27 +362,29 @@ A pre-defined directory structure, stored on the encrypted filesystem under the
 key storage path, is assigned to hold generated keys, this is automatically
 managed by the protocol library.
 
-The user registration is prompted when starting INTERLOCK, with the feature
-compiled in and enabled in the configuration file, and by passing the '-r'
-option flag. The registration process triggers, and prompts for, a verification
-code transmitted to the specified number via SMS or voice per user preference.
+The user registration can be accomplished in the web interface, after logging
+in. using a dedicated action presented when the feature is compiled in and
+enabled in the configuration file. The registration process triggers, and
+prompts for, a verification code transmitted to the specified number via SMS or
+voice per user preference.
 
-**NOTE**: Any existing Signal/TextSecure registration for the specified mobile
-number gets invalidated and taken over by INTERLOCK.
+**NOTE**: Any existing Signal registration for the specified mobile number gets
+invalidated and taken over by INTERLOCK.
 
-A contact is represented by a file that can be regularly managed with the
-built-in file manager. The contact file stores the chat history and is used as
-the entry point for starting a chat with the right click menu.
+A contact is represented by a directory that can be regularly managed with the
+built-in file manager. The contact directory stores the chat history,
+attachments and is used as the entry point for starting a chat using the right
+click menu.
 
-The contact files must respect to the following naming scheme and are located
-under the top level 'textsecure/contacts' directory:
+The contact directories must respect to the following naming scheme and must be
+located under the top level 'signal' directory:
 
 ```
-<contact_name number>.textsecure # e.g. John Doe +3912345678.textsecure
+signal/$name $number # e.g. signal/John Doe +3912345678
 ```
 
-New contacts can be uploaded using the file manager while incoming messages for
-unknown contacts trigger automatic creation of a contact file with name
+New contacts can be create using the file manager while incoming messages for
+unknown contacts trigger automatic creation of a contact directory with name
 'Unknown' and the originating number.
 
 All contact files reside on the encrypted partition managed by INTERLOCK and,

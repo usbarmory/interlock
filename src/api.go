@@ -7,13 +7,15 @@
 package main
 
 import (
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"net/url"
 	"os"
+	"regexp"
 )
+
+var URIPattern = regexp.MustCompile("/api/([A-Za-z0-9]+)/([a-z0-9_]+)")
 
 func registerHandlers(staticPath string) (err error) {
 	_, err = os.Stat(conf.StaticPath)
@@ -55,6 +57,10 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	default:
 		validSessionID, validXSRFToken, err := session.Validate(r)
+
+		if err != nil {
+			log.Print(err.Error())
+		}
 
 		if !(validSessionID && validXSRFToken) {
 			u, _ := url.Parse(r.RequestURI)
@@ -139,16 +145,20 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 		res = versionStatus(w)
 	case "/api/status/running":
 		res = runningStatus(w)
-	case "/api/textsecure/send", "/api/textsecure/history":
-		cipher, err := conf.GetCipher("TextSecure")
-
-		if err != nil {
-			res = errorResponse(errors.New("textsecure support not enabled at build time"), "")
-		} else {
-			res = cipher.HandleRequest(w, r)
-		}
 	default:
-		res = notFound(w)
+		m := URIPattern.FindStringSubmatch(r.RequestURI)
+
+		if len(m) == 3 {
+			cipher, err := conf.GetAvailableCipher(m[1])
+
+			if err != nil {
+				res = notFound(w)
+			} else {
+				res = cipher.HandleRequest(w, r)
+			}
+		} else {
+			res = notFound(w)
+		}
 	}
 
 	if res != nil {

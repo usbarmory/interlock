@@ -44,10 +44,10 @@ type Signal struct {
 }
 
 type contactInfo struct {
-	Name          string
-	Number        string
-	HistoryPath   string
-	AttachmentDir string
+	Name        string
+	Number      string
+	Directory   string
+	HistoryPath string
 }
 
 func init() {
@@ -84,20 +84,10 @@ func (t *Signal) Activate(activate bool) (err error) {
 
 	if activate {
 		go func() {
-			status.Log(syslog.LOG_NOTICE, "starting Signal message listener for %s", t.number)
-			err = textsecure.StartListening()
-
-			if err != nil {
-				status.Log(syslog.LOG_ERR, "failed to start Signal message listener: %v", err)
-			}
+			t.start()
 		}()
 	} else {
-		status.Log(syslog.LOG_NOTICE, "stopping Signal message listener for %s", t.number)
-		err = textsecure.StopListening()
-
-		if err != nil {
-			status.Log(syslog.LOG_ERR, "failed to stop Signal message listener: %v", err)
-		}
+		t.stop()
 	}
 
 	return
@@ -179,7 +169,13 @@ func (t *Signal) registerNumber(w http.ResponseWriter, r *http.Request) (res jso
 
 	if !needsRegistration() {
 		n, _ := registeredNumber()
-		return errorResponse(fmt.Errorf("%s is already registered, delete %s contents to reset", n, storagePath()), "")
+		return errorResponse(fmt.Errorf("%s is already registered, delete %s to reset", n, filepath.Join(conf.KeyPath, "signal")), "")
+	}
+
+	err = os.MkdirAll(storagePath(), 0700)
+
+	if err != nil {
+		return
 	}
 
 	output, err := os.OpenFile(numberPath(), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
@@ -208,21 +204,21 @@ func (t *Signal) registerNumber(w http.ResponseWriter, r *http.Request) (res jso
 	}
 
 	if verificationType != "" {
-		log.Printf("deferring Signal registration for %s, waiting for verification code", req["contact"])
-
 		t.verificationType = verificationType
 		err = t.setupClient()
-
 	}
 
 	if verificationCode != "" {
-		log.Printf("received Signal registration verification code for %s", req["contact"])
-
 		t.verificationCode = verificationCode
 	}
 
 	if err != nil {
 		return errorResponse(err, "")
+	}
+
+	res = jsonObject{
+		"status":   "OK",
+		"response": nil,
 	}
 
 	return
@@ -251,7 +247,7 @@ func sendMessage(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		return errorResponse(err, "")
 	}
 
-	contact, err := parseContact(contactID)
+	contact, err := getContact(contactID)
 
 	if err != nil {
 		return errorResponse(err, "")
@@ -327,7 +323,7 @@ func downloadHistory(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		return errorResponse(err, "")
 	}
 
-	contact, err := parseContact(contactID)
+	contact, err := getContact(contactID)
 
 	if err != nil {
 		return errorResponse(err, "")
@@ -402,6 +398,12 @@ func (t *Signal) setupClient() (err error) {
 		return
 	}
 
+	err = os.MkdirAll(contactsPath(), 0700)
+
+	if err != nil {
+		return
+	}
+
 	t.number, err = registeredNumber()
 
 	if err != nil {
@@ -425,7 +427,7 @@ func (t *Signal) setupClient() (err error) {
 			}
 		}()
 
-		err = errors.New("Signal registration in progress")
+		log.Printf("Signal registration in progress, waiting verification code for %s", t.number)
 	} else {
 		err = textsecure.Setup(t.client)
 	}
@@ -441,10 +443,12 @@ func (t *Signal) getVerificationCode() (code string) {
 			time.Sleep(100 * time.Millisecond)
 			continue
 		} else {
+			log.Printf("received Signal registration verification code for %s", t.number)
 			code = t.verificationCode
+			break
 		}
 
-		if time.Since(start) > 60 * time.Second {
+		if time.Since(start) > 60*time.Second {
 			log.Printf("timed out while waiting for Signal verification code for %s\n", t.number)
 			break
 		}
@@ -454,7 +458,26 @@ func (t *Signal) getVerificationCode() (code string) {
 }
 
 func (t *Signal) registrationDone() {
-	log.Printf("Registration complete for %s\n", t.number)
+	log.Printf("registration complete for %s\n", t.number)
+	t.start()
+}
+
+func (t *Signal) start() {
+	status.Log(syslog.LOG_NOTICE, "starting Signal message listener for %s", t.number)
+	err := textsecure.StartListening()
+
+	if err != nil {
+		status.Log(syslog.LOG_ERR, "failed to start Signal message listener: %v", err)
+	}
+}
+
+func (t *Signal) stop() {
+	status.Log(syslog.LOG_NOTICE, "stopping Signal message listener for %s", t.number)
+	err := textsecure.StopListening()
+
+	if err != nil {
+		status.Log(syslog.LOG_ERR, "failed to stop Signal message listener: %v", err)
+	}
 }
 
 func messageHandler(msg *textsecure.Message) {
@@ -503,18 +526,16 @@ func messageHandler(msg *textsecure.Message) {
 func saveAttachment(contact contactInfo, attachment io.Reader, name string, msg *textsecure.Message) (err error) {
 	var output *os.File
 
-	attachmentPath := contact.AttachmentDir
-
-	err = os.MkdirAll(attachmentPath, 0700)
+	err = os.MkdirAll(contact.Directory, 0700)
 
 	if err != nil {
 		return
 	}
 
 	if name == "" {
-		output, err = ioutil.TempFile(attachmentPath, "attachment_")
+		output, err = ioutil.TempFile(contact.Directory, "attachment_")
 	} else {
-		outputPath := filepath.Join(attachmentPath, name)
+		outputPath := filepath.Join(contact.Directory, name)
 		output, err = os.OpenFile(outputPath, os.O_WRONLY|os.O_CREATE|os.O_EXCL|os.O_TRUNC, 0600)
 	}
 
@@ -533,14 +554,7 @@ func saveAttachment(contact contactInfo, attachment io.Reader, name string, msg 
 	return
 }
 
-func parseContact(identifier string) (contact contactInfo, err error) {
-	// detect path traversal
-	_, err = absolutePath(identifier)
-
-	if err != nil {
-		return
-	}
-
+func parseContact(identifier string) (name string, number string, err error) {
 	m := contactPattern.FindStringSubmatch(identifier)
 
 	if len(m) == 0 {
@@ -548,22 +562,24 @@ func parseContact(identifier string) (contact contactInfo, err error) {
 		return
 	}
 
-	path := filepath.Join(contactsPath(), identifier)
-
-	contact = contactInfo{
-		Name:          m[2],
-		Number:        m[3],
-		HistoryPath:   filepath.Join(path, "history"),
-		AttachmentDir: path,
-	}
+	name = m[2]
+	number = m[3]
 
 	return
 }
 
-func getContact(number string) (contact contactInfo, err error) {
-	if !numberPattern.MatchString(number) {
-		err = fmt.Errorf("invalid contact number format: %s", number)
-		return
+func getContact(identifier string) (contact contactInfo, err error) {
+	var name string
+	var number string
+
+	if numberPattern.MatchString(identifier) {
+		number = identifier
+	} else {
+		name, number, err = parseContact(identifier)
+
+		if err != nil {
+			return
+		}
 	}
 
 	err = os.MkdirAll(contactsPath(), 0700)
@@ -574,25 +590,44 @@ func getContact(number string) (contact contactInfo, err error) {
 
 	contacts, err := filepath.Glob(contactsPath() + "/" + "*" + number)
 
-	if err != nil {
-		return
-	}
-
 	if len(contacts) == 0 {
+		if name == "" {
+			name = "Unknown"
+		}
+
 		contact = contactInfo{
-			Name:          "Unknown",
-			Number:        number,
-			HistoryPath:   filepath.Join(contactsPath(), "Unknown "+number, "history"),
-			AttachmentDir: filepath.Join(contactsPath(), "Unknown "+number),
+			Name:        name,
+			Number:      number,
+			Directory:   filepath.Join(contactsPath(), name+" "+number),
+			HistoryPath: filepath.Join(contactsPath(), name+" "+number, "history"),
 		}
 	} else {
-		contact, err = parseContact(contacts[0])
+		identifier = path.Base(contacts[0])
+		name, number, err = parseContact(identifier)
+
+		if err != nil {
+			return
+		}
+
+		path := filepath.Join(contactsPath(), identifier)
+		contact = contactInfo{
+			Name:        name,
+			Number:      number,
+			Directory:   path,
+			HistoryPath: filepath.Join(path, "history"),
+		}
 	}
 
 	return
 }
 
 func updateHistory(contact contactInfo, msg string, prefix string, t time.Time) (err error) {
+	err = os.MkdirAll(contact.Directory, 0700)
+
+	if err != nil {
+		return
+	}
+
 	output, err := os.OpenFile(contact.HistoryPath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
 
 	if err != nil {

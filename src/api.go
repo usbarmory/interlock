@@ -58,10 +58,6 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 	default:
 		validSessionID, validXSRFToken, err := session.Validate(r)
 
-		if err != nil {
-			log.Print(err.Error())
-		}
-
 		if !(validSessionID && validXSRFToken) {
 			u, _ := url.Parse(r.RequestURI)
 

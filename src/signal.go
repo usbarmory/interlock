@@ -26,7 +26,7 @@ import (
 	"github.com/janimo/textsecure"
 )
 
-const timeFormat = "Jan 02 15:04"
+const timeFormat = "Jan 02 15:04 MST"
 const attachmentMsg = "INTERLOCK attachment: "
 const historySize = 10 * 1024
 
@@ -172,21 +172,6 @@ func (t *Signal) registerNumber(w http.ResponseWriter, r *http.Request) (res jso
 		return errorResponse(fmt.Errorf("%s is already registered, delete %s to reset", n, filepath.Join(conf.KeyPath, "signal")), "")
 	}
 
-	err = os.MkdirAll(storagePath(), 0700)
-
-	if err != nil {
-		return
-	}
-
-	output, err := os.OpenFile(numberPath(), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
-
-	if err != nil {
-		return errorResponse(fmt.Errorf("failed to save number: %v", err), "")
-	}
-
-	output.Write([]byte(req["contact"].(string)))
-	output.Close()
-
 	if f, ok := req["type"]; ok {
 		verificationType = f.(string)
 	}
@@ -203,8 +188,28 @@ func (t *Signal) registerNumber(w http.ResponseWriter, r *http.Request) (res jso
 		return errorResponse(errors.New("type or code cannot be both specified"), "")
 	}
 
+	err = os.MkdirAll(storagePath(), 0700)
+
+	if err != nil {
+		return
+	}
+
+	output, err := os.OpenFile(numberPath(), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+
+	if err != nil {
+		return errorResponse(fmt.Errorf("failed to save number: %v", err), "")
+	}
+
+	output.Write([]byte(req["contact"].(string)))
+	output.Close()
+
 	if verificationType != "" {
 		t.verificationType = verificationType
+
+		if t.client != nil {
+			t.stop()
+		}
+
 		err = t.setupClient()
 	}
 
@@ -281,7 +286,7 @@ func sendMessage(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 			return errorResponse(err, "")
 		}
 
-		err = updateHistory(contact, msg, ">", time.Now())
+		err = updateHistory(contact, msg, "->", time.Now())
 	} else {
 		_, err = textsecure.SendMessage(contact.Number, msg)
 
@@ -289,7 +294,7 @@ func sendMessage(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 			return errorResponse(err, "")
 		}
 
-		err = updateHistory(contact, msg, ">", time.Now())
+		err = updateHistory(contact, msg, "->", time.Now())
 	}
 
 	if err != nil {
@@ -410,12 +415,14 @@ func (t *Signal) setupClient() (err error) {
 		return errors.New("Signal cipher enabled but not registered")
 	}
 
-	t.client = &textsecure.Client{
-		GetConfig:           t.getConfig,
-		GetVerificationCode: t.getVerificationCode,
-		GetStoragePassword:  getStoragePassword,
-		MessageHandler:      messageHandler,
-		RegistrationDone:    t.registrationDone,
+	if t.client == nil {
+		t.client = &textsecure.Client{
+			GetConfig:           t.getConfig,
+			GetVerificationCode: t.getVerificationCode,
+			GetStoragePassword:  getStoragePassword,
+			MessageHandler:      messageHandler,
+			RegistrationDone:    t.registrationDone,
+		}
 	}
 
 	if needsRegistration() {
@@ -498,7 +505,7 @@ func messageHandler(msg *textsecure.Message) {
 
 	if msg.Message() != "" {
 		t := time.Unix(int64(msg.Timestamp()/1000), 0)
-		updateHistory(contact, msg.Message(), "<", t)
+		updateHistory(contact, msg.Message(), "<-", t)
 	}
 
 	attachments := msg.Attachments()
@@ -549,7 +556,7 @@ func saveAttachment(contact contactInfo, attachment io.Reader, name string, msg 
 
 	name = relativePath(output.Name())
 	t := time.Unix(int64(msg.Timestamp()/1000), 0)
-	updateHistory(contact, "["+name+"]", "<", t)
+	updateHistory(contact, "["+name+"]", "<-", t)
 
 	return
 }

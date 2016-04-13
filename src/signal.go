@@ -167,6 +167,12 @@ func (t *Signal) registerNumber(w http.ResponseWriter, r *http.Request) (res jso
 		return errorResponse(err, "")
 	}
 
+	contact := req["contact"].(string)
+
+	if !numberPattern.MatchString(contact) {
+		return errorResponse(errors.New("invalid contact"), "")
+	}
+
 	if !needsRegistration() {
 		n, _ := registeredNumber()
 		return errorResponse(fmt.Errorf("%s is already registered, delete %s to reset", n, filepath.Join(conf.KeyPath, "signal")), "")
@@ -197,10 +203,10 @@ func (t *Signal) registerNumber(w http.ResponseWriter, r *http.Request) (res jso
 	output, err := os.OpenFile(numberPath(), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 
 	if err != nil {
-		return errorResponse(fmt.Errorf("failed to save number: %v", err), "")
+		return errorResponse(fmt.Errorf("failed to save registration contact: %v", err), "")
 	}
 
-	output.Write([]byte(req["contact"].(string)))
+	output.Write([]byte(contact))
 	output.Close()
 
 	if verificationType != "" {

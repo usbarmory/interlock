@@ -39,7 +39,7 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch r.RequestURI {
 	case "/api/auth/login":
-		// On a successful login the "Interlock-Token" is returned as cookie via the
+		// On a successful login the "INTERLOCK-Token" is returned as cookie via the
 		// "Set-Cookie" header in HTTP response.
 		//
 		// The XSRF protection token "X-SRFToken" is returned in the response payload.

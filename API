@@ -1,4 +1,4 @@
-Interlock API
+INTERLOCK API
 =============
 
 # Main API Objects (data types definitions from JSON.org)
@@ -72,7 +72,7 @@ error response:
 
 ## POST api/auth/login
 
-On a successful login the "Interlock-Token" is returned as cookie via the
+On a successful login the "INTERLOCK-Token" is returned as cookie via the
 "Set-Cookie" header in HTTP response.
 
 The XSRF protection token "X-XSRFToken" is returned in the response payload.
@@ -100,7 +100,7 @@ response:
   }
 
 'Set-Cookie' header example:
-Set-Cookie: Interlock-Token=DQAAAK...Eaem_vYg; Path=/;
+Set-Cookie: INTERLOCK-Token=DQAAAK...Eaem_vYg; Path=/;
             Expires=Wed, 30 Jan 2015 22:23:01 GMT; Secure; HttpOnly
 
 ## GET api/auth/refresh
@@ -118,7 +118,7 @@ response:
 
 ## POST api/auth/logout
 
-Invalidate the current session 'Interlock-Token' cookie and unmount the
+Invalidate the current session 'INTERLOCK-Token' cookie and unmount the
 encrypted partition.
 
 ## POST api/auth/poweroff
@@ -422,8 +422,8 @@ response:
   {
     "status":      string,   # OK | KO | INVALID_SESSION | INVALID
     "response": {
-      "version" :  string,   # Interlock version
-      "build":     string    # Interlock build information
+      "revision" : string,   # revision
+      "build":     string    # build information
     }
   }
 

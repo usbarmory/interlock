@@ -21,10 +21,8 @@ import (
 const bufferSize = 20
 
 // build information, initialized at compile time (see Makefile)
-var InterlockBuild string
-
-// release version
-var InterlockVersion = "1.0"
+var INTERLOCKBuild string
+var INTERLOCKRevision string
 
 type statusBuffer struct {
 	sync.Mutex
@@ -106,8 +104,8 @@ func versionStatus(w http.ResponseWriter) (res jsonObject) {
 	res = jsonObject{
 		"status": "OK",
 		"response": map[string]interface{}{
-			"version": InterlockVersion,
-			"build":   InterlockBuild,
+			"revision": INTERLOCKRevision,
+			"build":    INTERLOCKBuild,
 		},
 	}
 

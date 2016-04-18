@@ -65,7 +65,7 @@ func (o *openPGP) GetInfo() cipherInfo {
 func (o *openPGP) GenKey(identifier string, email string) (pubKey string, secKey string, err error) {
 	buf := bytes.NewBuffer(nil)
 	header := map[string]string{
-		"Version": fmt.Sprintf("INTERLOCK %s OpenPGP generated key", InterlockVersion),
+		"Version": fmt.Sprintf("INTERLOCK %s OpenPGP generated key", INTERLOCKRevision),
 	}
 
 	entity, err := openpgp.NewEntity(identifier, "", email, nil)

@@ -23,7 +23,6 @@ import (
 const mountPoint = ".interlock-mnt"
 
 type config struct {
-	// exported
 	Debug       bool     `json:"debug"`
 	StaticPath  string   `json:"static_path"`
 	SetTime     bool     `json:"set_time"`
@@ -36,7 +35,6 @@ type config struct {
 	VolumeGroup string   `json:"volume_group"`
 	Ciphers     []string `json:"ciphers"`
 
-	// internal
 	availableCiphers map[string]cipherInterface
 	enabledCiphers   map[string]cipherInterface
 	mountPoint       string

@@ -248,13 +248,12 @@ Interlock.FileManager = new function() {
                                                $(document.createElement('option')).attr('value', 'voice')
                                                                                   .text('send verification code via voice call')];
 
-
       $selectVerificationCodeMethod.append($availableVerificationCodeMethods);
 
       var buttons = {
-        'Request Code': function() {
+        'Request code': function() {
           Interlock.Signal.requestVerifyCode($('#contact').val(), $('#type').val())
-          }
+        }
       };
 
       var elements = [$(document.createElement('input')).attr('id', 'contact')
@@ -265,8 +264,14 @@ Interlock.FileManager = new function() {
                       $selectVerificationCodeMethod];
 
       Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
-        submitButton: '', title: 'Signal Registration (step 1: Request Verification Code)', height: 250, width: 400 });
+        submitButton: '', title: 'Signal Registration (step 1: request verification code)', height: 250, width: 400 });
       Interlock.UI.modalFormDialog('open');
+    });
+
+    $.when(Interlock.Crypto.cipherListCompleted).done(function () {
+      if (Interlock.Crypto.hasCipher('Signal') === true) {
+        $('#signal_registration').show();
+      }
     });
   };
 

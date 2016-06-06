@@ -253,7 +253,7 @@ Interlock.Signal.requestVerifyCodeCallback = function(backendData, args) {
         };
 
         Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
-          submitButton: 'Register', title: 'Signal Registration (step 2: Insert Verification Code)', height: 250, width: 400 });
+          submitButton: 'Register', title: 'Signal Registration (step 2: insert verification code)', height: 250, width: 400 });
         Interlock.UI.modalFormDialog('open');
    } else {
       Interlock.Session.createEvent({'kind': backendData.status,
@@ -278,6 +278,20 @@ Interlock.Signal.requestVerifyCodeCallback = function(backendData, args) {
  */
 Interlock.Signal.requestVerifyCode = function(contact, type) {
   try {
+    if (contact === '') {
+      Interlock.Session.createEvent({'kind': 'critical',
+              'msg': '[Interlock.Signal.verifyCode] please insert a valid mobile phone number'});
+
+      return false;
+    }
+
+    if (type === '') {
+      Interlock.Session.createEvent({'kind': 'critical',
+              'msg': '[Interlock.Signal.verifyCode] please choose a verification method'});
+
+      return false;
+    }
+
     Interlock.Backend.APIRequest(Interlock.Backend.API.Signal.register, 'POST',
       JSON.stringify({contact: contact, type: type}), 'Signal.requestVerifyCodeCallback',
       null, {contact: contact, type: type });
@@ -327,6 +341,13 @@ Interlock.Signal.registrationCallback = function(backendData, args) {
  */
 Interlock.Signal.registration = function(contact, code) {
   try {
+    if (code === '') {
+      Interlock.Session.createEvent({'kind': 'critical',
+              'msg': '[Interlock.Signal.registration] please insert a valid verification code'});
+
+      return false;
+    }
+
     Interlock.Backend.APIRequest(Interlock.Backend.API.Signal.register, 'POST',
       JSON.stringify({contact: contact, code: code}), 'Signal.registrationCallback',
       null, {contact: contact, code: code });

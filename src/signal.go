@@ -440,10 +440,7 @@ func (t *Signal) getVerificationCode() (code string) {
 	start := time.Now()
 
 	for {
-		if t.verificationCode == "" {
-			time.Sleep(100 * time.Millisecond)
-			continue
-		} else {
+		if t.verificationCode != "" {
 			log.Printf("received Signal registration verification code for %s", t.number)
 			code = t.verificationCode
 			break
@@ -453,6 +450,8 @@ func (t *Signal) getVerificationCode() (code string) {
 			log.Printf("timed out while waiting for Signal verification code for %s\n", t.number)
 			break
 		}
+
+		time.Sleep(100 * time.Millisecond)
 	}
 
 	return

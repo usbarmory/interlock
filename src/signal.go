@@ -252,13 +252,7 @@ func sendMessage(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 	}
 
 	msg := req["msg"].(string)
-	contactID, err := absolutePath(req["contact"].(string))
-
-	if err != nil {
-		return errorResponse(err, "")
-	}
-
-	contact, err := getContact(contactID)
+	contact, err := getContact(req["contact"].(string))
 
 	if err != nil {
 		return errorResponse(err, "")
@@ -328,13 +322,7 @@ func downloadHistory(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		return errorResponse(err, "")
 	}
 
-	contactID, err := absolutePath(req["contact"].(string))
-
-	if err != nil {
-		return errorResponse(err, "")
-	}
-
-	contact, err := getContact(contactID)
+	contact, err := getContact(req["contact"].(string))
 
 	if err != nil {
 		return errorResponse(err, "")

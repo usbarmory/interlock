@@ -232,7 +232,7 @@ Interlock.Signal.requestVerifyCodeCallback = function(backendData, args) {
   try {
     if (backendData.status === 'OK') {
         Interlock.UI.modalFormDialog('close');
- 
+
         var elements = [$(document.createElement('input')).attr('id', 'contact')
                                                           .attr('name', 'contact')
                                                           .attr('placeholder', 'mobile number (including the country code)')
@@ -300,7 +300,6 @@ Interlock.Signal.requestVerifyCode = function(contact, type) {
       'msg': '[Interlock.Signal.verifyCode] ' + e});
   }
 };
-
 
 /**
  * @function

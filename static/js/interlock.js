@@ -1,5 +1,5 @@
 /** INTERLOCK | https://github.com/inversepath/interlock
- * Copyright (c) 2015 Inverse Path S.r.l.
+ * Copyright (c) 2015-2016 Inverse Path S.r.l.
  *
  * Use of this source code is governed by the license
  * that can be found in the LICENSE file.
@@ -42,7 +42,7 @@ if (sessionStorageSupported() && fileAPISupported()) {
   Interlock.Modules.LUKS = new $.Deferred();
   Interlock.Modules.fileManager = new $.Deferred();
   Interlock.Modules.crypto = new $.Deferred();
-  Interlock.Modules.textSecure = new $.Deferred();
+  Interlock.Modules.Signal = new $.Deferred();
 
   $.getScript('/js/ui.js')
     .done(function(script, textStatus) {
@@ -52,7 +52,7 @@ if (sessionStorageSupported() && fileAPISupported()) {
         console.log('[Interlock.UI] failed to load module: ' + e + '\n');
   });
 
-  /* backend module and textSecure depends on UI */
+  /* backend module and Signal depends on UI */
   $.when(Interlock.Modules.UI).done(function() {
     $.getScript('/js/backend.js')
       .done(function(script, textStatus) {
@@ -62,12 +62,12 @@ if (sessionStorageSupported() && fileAPISupported()) {
           console.log('[Interlock.Backend] failed to load module: ' + e + '\n');
     })
 
-    $.getScript('/js/textsecure.js')
-      .done(function(script, textStatus) {
-        Interlock.Modules.textSecure.resolve();
+    $.getScript('/js/signal.js')
+      .done(function(script, Signal) {
+        Interlock.Modules.Signal.resolve();
       })
       .fail(function(jqxhr, settings, e) {
-          console.log('[Interlock.TextSecure] failed to load module: ' + e + '\n');
+          console.log('[Interlock.Signal] failed to load module: ' + e + '\n');
     })
   });
 
@@ -83,7 +83,7 @@ if (sessionStorageSupported() && fileAPISupported()) {
   });
 
   /* the remaining Interlock modules depends on UI, backend and session,
-     apart from file manager that also depends on textsecure and crypto */
+     apart from file manager that also depends on Signal and crypto */
   $.when(Interlock.Modules.UI, Interlock.Modules.backend, Interlock.Modules.session).done(function() {
     $.getScript('/js/config.js')
       .done(function(script, textStatus) {
@@ -111,7 +111,7 @@ if (sessionStorageSupported() && fileAPISupported()) {
   });
 
   $.when(Interlock.Modules.UI, Interlock.Modules.backend, Interlock.Modules.crypto,
-         Interlock.Modules.session, Interlock.Modules.textSecure).done(function() {
+         Interlock.Modules.session, Interlock.Modules.Signal).done(function() {
     $.getScript('/js/file_manager.js')
       .done(function(script, textStatus) {
         Interlock.Modules.fileManager.resolve();
@@ -124,7 +124,7 @@ if (sessionStorageSupported() && fileAPISupported()) {
   $.when(Interlock.Modules.UI, Interlock.Modules.backend,
          Interlock.Modules.session, Interlock.Modules.config,
          Interlock.Modules.fileManager, Interlock.Modules.LUKS,
-         Interlock.Modules.crypto, Interlock.Modules.textSecure).done(function() {
+         Interlock.Modules.crypto, Interlock.Modules.Signal).done(function() {
 
     Interlock.Session.createEvent({'kind': 'info',
       'msg': '[Interlock] application modules successfully loaded\n'});

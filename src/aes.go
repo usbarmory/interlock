@@ -20,12 +20,12 @@ import (
 	"golang.org/x/crypto/pbkdf2"
 )
 
-/* Symmetric file encryption using AES256OFB, key is derived from password
- * using PBKDF2 with SHA256 and 4096 rounds. The salt, initialization vector
- * are prepended to the encrypted file, the HMAC for authentication is
- * appended:
- *
- * salt (8 bytes) || iv (16 bytes) || ciphertext || hmac (32 bytes) */
+// Symmetric file encryption using AES256OFB, key is derived from password
+// using PBKDF2 with SHA256 and 4096 rounds. The salt, initialization vector
+// are prepended to the encrypted file, the HMAC for authentication is
+// appended:
+//
+// salt (8 bytes) || iv (16 bytes) || ciphertext || hmac (32 bytes)
 
 type aes256OFB struct {
 	info     cipherInfo
@@ -56,10 +56,6 @@ func (a *aes256OFB) Init() (c cipherInterface) {
 
 func (a *aes256OFB) New() cipherInterface {
 	return new(aes256OFB).Init()
-}
-
-func (a *aes256OFB) Enable() (c cipherInterface, err error) {
-	return a, nil
 }
 
 func (a *aes256OFB) Activate(activate bool) (err error) {

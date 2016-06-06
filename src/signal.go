@@ -26,7 +26,7 @@ import (
 	"github.com/janimo/textsecure"
 )
 
-const timeFormat = "Jan 02 15:04"
+const timeFormat = "Jan 02 15:04 MST"
 const attachmentMsg = "INTERLOCK attachment: "
 const historySize = 10 * 1024
 
@@ -44,10 +44,10 @@ type Signal struct {
 }
 
 type contactInfo struct {
-	Name          string
-	Number        string
-	HistoryPath   string
-	AttachmentDir string
+	Name        string
+	Number      string
+	Directory   string
+	HistoryPath string
 }
 
 func init() {
@@ -71,12 +71,8 @@ func (t *Signal) Init() (c cipherInterface) {
 }
 
 func (t *Signal) New() cipherInterface {
-	// the Signal cipher is always a single instance
+	// this cipher is always a single instance
 	return t
-}
-
-func (t *Signal) Enable() (c cipherInterface, err error) {
-	return t, nil
 }
 
 func (t *Signal) Activate(activate bool) (err error) {
@@ -88,20 +84,10 @@ func (t *Signal) Activate(activate bool) (err error) {
 
 	if activate {
 		go func() {
-			status.Log(syslog.LOG_NOTICE, "starting Signal message listener for %s", t.number)
-			err = textsecure.StartListening()
-
-			if err != nil {
-				status.Log(syslog.LOG_ERR, "failed to start Signal message listener: %v", err)
-			}
+			t.start()
 		}()
 	} else {
-		status.Log(syslog.LOG_NOTICE, "stopping Signal message listener for %s", t.number)
-		err = textsecure.StopListening()
-
-		if err != nil {
-			status.Log(syslog.LOG_ERR, "failed to stop Signal message listener: %v", err)
-		}
+		t.stop()
 	}
 
 	return
@@ -109,6 +95,45 @@ func (t *Signal) Activate(activate bool) (err error) {
 
 func (t *Signal) GetInfo() cipherInfo {
 	return t.info
+}
+
+func (t *Signal) GenKey(i string, e string) (p string, s string, err error) {
+	err = errors.New("cipher does not support key generation")
+	return
+}
+
+func (t *Signal) GetKeyInfo(k key) (i string, err error) {
+	i = "Signal library private data"
+	return
+}
+
+func (t *Signal) SetPassword(password string) error {
+	return errors.New("cipher does not support passwords")
+}
+
+func (t *Signal) SetKey(k key) error {
+	return errors.New("cipher does not support explicit key set")
+}
+
+func (t *Signal) Encrypt(input *os.File, output *os.File, _ bool) error {
+	return errors.New("cipher does not support encryption")
+}
+
+func (t *Signal) Decrypt(input *os.File, output *os.File, verify bool) error {
+	return errors.New("cipher does not support decryption")
+}
+
+func (t *Signal) Sign(input *os.File, output *os.File) error {
+	return errors.New("cipher does not support signin")
+}
+
+func (t *Signal) GenOTP(timestamp int64) (otp string, exp int64, err error) {
+	err = errors.New("cipher does not support OTP generation")
+	return
+}
+
+func (t *Signal) Verify(input *os.File, signature *os.File) error {
+	return errors.New("cipher does not support signature verification")
 }
 
 func (t *Signal) HandleRequest(w http.ResponseWriter, r *http.Request) (res jsonObject) {
@@ -121,6 +146,90 @@ func (t *Signal) HandleRequest(w http.ResponseWriter, r *http.Request) (res json
 		res = downloadHistory(w, r)
 	default:
 		res = notFound(w)
+	}
+
+	return
+}
+
+func (t *Signal) registerNumber(w http.ResponseWriter, r *http.Request) (res jsonObject) {
+	var verificationType string
+	var verificationCode string
+
+	req, err := parseRequest(r)
+
+	if err != nil {
+		return errorResponse(err, "")
+	}
+
+	err = validateRequest(req, []string{"contact:s"})
+
+	if err != nil {
+		return errorResponse(err, "")
+	}
+
+	contact := req["contact"].(string)
+
+	if !numberPattern.MatchString(contact) {
+		return errorResponse(errors.New("invalid contact"), "")
+	}
+
+	if !needsRegistration() {
+		n, _ := registeredNumber()
+		return errorResponse(fmt.Errorf("%s is already registered, delete %s to reset", n, filepath.Join(conf.KeyPath, "signal")), "")
+	}
+
+	if f, ok := req["type"]; ok {
+		verificationType = f.(string)
+	}
+
+	if c, ok := req["code"]; ok {
+		verificationCode = c.(string)
+	}
+
+	if verificationCode == "" && verificationType == "" {
+		return errorResponse(errors.New("type or code must be specified"), "")
+	}
+
+	if verificationCode != "" && verificationType != "" {
+		return errorResponse(errors.New("type or code cannot be both specified"), "")
+	}
+
+	err = os.MkdirAll(storagePath(), 0700)
+
+	if err != nil {
+		return
+	}
+
+	output, err := os.OpenFile(numberPath(), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
+
+	if err != nil {
+		return errorResponse(fmt.Errorf("failed to save registration contact: %v", err), "")
+	}
+
+	output.Write([]byte(contact))
+	output.Close()
+
+	if verificationType != "" {
+		t.verificationType = verificationType
+
+		if t.client != nil {
+			t.stop()
+		}
+
+		err = t.setupClient()
+	}
+
+	if verificationCode != "" {
+		t.verificationCode = verificationCode
+	}
+
+	if err != nil {
+		return errorResponse(err, "")
+	}
+
+	res = jsonObject{
+		"status":   "OK",
+		"response": nil,
 	}
 
 	return
@@ -149,7 +258,7 @@ func sendMessage(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		return errorResponse(err, "")
 	}
 
-	contact, err := parseContact(contactID)
+	contact, err := getContact(contactID)
 
 	if err != nil {
 		return errorResponse(err, "")
@@ -183,7 +292,7 @@ func sendMessage(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 			return errorResponse(err, "")
 		}
 
-		err = updateHistory(contact, msg, ">", time.Now())
+		err = updateHistory(contact, msg, "->", time.Now())
 	} else {
 		_, err = textsecure.SendMessage(contact.Number, msg)
 
@@ -191,7 +300,7 @@ func sendMessage(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 			return errorResponse(err, "")
 		}
 
-		err = updateHistory(contact, msg, ">", time.Now())
+		err = updateHistory(contact, msg, "->", time.Now())
 	}
 
 	if err != nil {
@@ -225,7 +334,7 @@ func downloadHistory(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		return errorResponse(err, "")
 	}
 
-	contact, err := parseContact(contactID)
+	contact, err := getContact(contactID)
 
 	if err != nil {
 		return errorResponse(err, "")
@@ -293,6 +402,97 @@ func (t *Signal) getConfig() (*textsecure.Config, error) {
 	return &tsConf, nil
 }
 
+func (t *Signal) setupClient() (err error) {
+	err = os.MkdirAll(storagePath(), 0700)
+
+	if err != nil {
+		return
+	}
+
+	err = os.MkdirAll(contactsPath(), 0700)
+
+	if err != nil {
+		return
+	}
+
+	t.number, err = registeredNumber()
+
+	if err != nil {
+		return errors.New("Signal cipher enabled but not registered")
+	}
+
+	if t.client == nil {
+		t.client = &textsecure.Client{
+			GetConfig:           t.getConfig,
+			GetVerificationCode: t.getVerificationCode,
+			GetStoragePassword:  getStoragePassword,
+			MessageHandler:      messageHandler,
+			RegistrationDone:    t.registrationDone,
+		}
+	}
+
+	if needsRegistration() {
+		go func() {
+			err = textsecure.Setup(t.client)
+
+			if err != nil {
+				status.Log(syslog.LOG_ERR, "failed to enable Signal cipher: %v", err)
+			}
+		}()
+
+		log.Printf("Signal registration in progress, waiting verification code for %s", t.number)
+	} else {
+		err = textsecure.Setup(t.client)
+	}
+
+	return
+}
+
+func (t *Signal) getVerificationCode() (code string) {
+	start := time.Now()
+
+	for {
+		if t.verificationCode == "" {
+			time.Sleep(100 * time.Millisecond)
+			continue
+		} else {
+			log.Printf("received Signal registration verification code for %s", t.number)
+			code = t.verificationCode
+			break
+		}
+
+		if time.Since(start) > 60*time.Second {
+			log.Printf("timed out while waiting for Signal verification code for %s\n", t.number)
+			break
+		}
+	}
+
+	return
+}
+
+func (t *Signal) registrationDone() {
+	log.Printf("registration complete for %s\n", t.number)
+	t.start()
+}
+
+func (t *Signal) start() {
+	status.Log(syslog.LOG_NOTICE, "starting Signal message listener for %s", t.number)
+	err := textsecure.StartListening()
+
+	if err != nil {
+		status.Log(syslog.LOG_ERR, "failed to start Signal message listener: %v", err)
+	}
+}
+
+func (t *Signal) stop() {
+	status.Log(syslog.LOG_NOTICE, "stopping Signal message listener for %s", t.number)
+	err := textsecure.StopListening()
+
+	if err != nil {
+		status.Log(syslog.LOG_ERR, "failed to stop Signal message listener: %v", err)
+	}
+}
+
 func messageHandler(msg *textsecure.Message) {
 	status.Log(syslog.LOG_NOTICE, "received message from %s\n", msg.Source())
 
@@ -311,7 +511,7 @@ func messageHandler(msg *textsecure.Message) {
 
 	if msg.Message() != "" {
 		t := time.Unix(int64(msg.Timestamp()/1000), 0)
-		updateHistory(contact, msg.Message(), "<", t)
+		updateHistory(contact, msg.Message(), "<-", t)
 	}
 
 	attachments := msg.Attachments()
@@ -339,18 +539,16 @@ func messageHandler(msg *textsecure.Message) {
 func saveAttachment(contact contactInfo, attachment io.Reader, name string, msg *textsecure.Message) (err error) {
 	var output *os.File
 
-	attachmentPath := contact.AttachmentDir
-
-	err = os.MkdirAll(attachmentPath, 0700)
+	err = os.MkdirAll(contact.Directory, 0700)
 
 	if err != nil {
 		return
 	}
 
 	if name == "" {
-		output, err = ioutil.TempFile(attachmentPath, "attachment_")
+		output, err = ioutil.TempFile(contact.Directory, "attachment_")
 	} else {
-		outputPath := filepath.Join(attachmentPath, name)
+		outputPath := filepath.Join(contact.Directory, name)
 		output, err = os.OpenFile(outputPath, os.O_WRONLY|os.O_CREATE|os.O_EXCL|os.O_TRUNC, 0600)
 	}
 
@@ -364,19 +562,12 @@ func saveAttachment(contact contactInfo, attachment io.Reader, name string, msg 
 
 	name = relativePath(output.Name())
 	t := time.Unix(int64(msg.Timestamp()/1000), 0)
-	updateHistory(contact, "["+name+"]", "<", t)
+	updateHistory(contact, "["+name+"]", "<-", t)
 
 	return
 }
 
-func parseContact(identifier string) (contact contactInfo, err error) {
-	// detect path traversal
-	_, err = absolutePath(identifier)
-
-	if err != nil {
-		return
-	}
-
+func parseContact(identifier string) (name string, number string, err error) {
 	m := contactPattern.FindStringSubmatch(identifier)
 
 	if len(m) == 0 {
@@ -384,22 +575,24 @@ func parseContact(identifier string) (contact contactInfo, err error) {
 		return
 	}
 
-	path := filepath.Join(contactsPath(), identifier)
-
-	contact = contactInfo{
-		Name:          m[2],
-		Number:        m[3],
-		HistoryPath:   filepath.Join(path, "history"),
-		AttachmentDir: path,
-	}
+	name = m[2]
+	number = m[3]
 
 	return
 }
 
-func getContact(number string) (contact contactInfo, err error) {
-	if !numberPattern.MatchString(number) {
-		err = fmt.Errorf("invalid contact number format: %s", number)
-		return
+func getContact(identifier string) (contact contactInfo, err error) {
+	var name string
+	var number string
+
+	if numberPattern.MatchString(identifier) {
+		number = identifier
+	} else {
+		name, number, err = parseContact(identifier)
+
+		if err != nil {
+			return
+		}
 	}
 
 	err = os.MkdirAll(contactsPath(), 0700)
@@ -410,25 +603,44 @@ func getContact(number string) (contact contactInfo, err error) {
 
 	contacts, err := filepath.Glob(contactsPath() + "/" + "*" + number)
 
-	if err != nil {
-		return
-	}
-
 	if len(contacts) == 0 {
+		if name == "" {
+			name = "Unknown"
+		}
+
 		contact = contactInfo{
-			Name:          "Unknown",
-			Number:        number,
-			HistoryPath:   filepath.Join(contactsPath(), "Unknown "+number, "history"),
-			AttachmentDir: filepath.Join(contactsPath(), "Unknown "+number),
+			Name:        name,
+			Number:      number,
+			Directory:   filepath.Join(contactsPath(), name+" "+number),
+			HistoryPath: filepath.Join(contactsPath(), name+" "+number, "history"),
 		}
 	} else {
-		contact, err = parseContact(contacts[0])
+		identifier = path.Base(contacts[0])
+		name, number, err = parseContact(identifier)
+
+		if err != nil {
+			return
+		}
+
+		path := filepath.Join(contactsPath(), identifier)
+		contact = contactInfo{
+			Name:        name,
+			Number:      number,
+			Directory:   path,
+			HistoryPath: filepath.Join(path, "history"),
+		}
 	}
 
 	return
 }
 
 func updateHistory(contact contactInfo, msg string, prefix string, t time.Time) (err error) {
+	err = os.MkdirAll(contact.Directory, 0700)
+
+	if err != nil {
+		return
+	}
+
 	output, err := os.OpenFile(contact.HistoryPath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0600)
 
 	if err != nil {
@@ -476,111 +688,6 @@ func registeredNumber() (number string, err error) {
 	return
 }
 
-func (t *Signal) registerNumber(w http.ResponseWriter, r *http.Request) (res jsonObject) {
-	var verificationType string
-	var verificationCode string
-
-	req, err := parseRequest(r)
-
-	if err != nil {
-		return errorResponse(err, "")
-	}
-
-	err = validateRequest(req, []string{"contact:s"})
-
-	if err != nil {
-		return errorResponse(err, "")
-	}
-
-	if !needsRegistration() {
-		n, _ := registeredNumber()
-		return errorResponse(fmt.Errorf("%s is already registered, delete %s contents to reset", n, storagePath()), "")
-	}
-
-	output, err := os.OpenFile(numberPath(), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
-
-	if err != nil {
-		return errorResponse(fmt.Errorf("failed to save number: %v", err), "")
-	}
-
-	output.Write([]byte(req["contact"].(string)))
-	output.Close()
-
-	if f, ok := req["type"]; ok {
-		verificationType = f.(string)
-	}
-
-	if c, ok := req["code"]; ok {
-		verificationCode = c.(string)
-	}
-
-	if verificationCode == "" && verificationType == "" {
-		return errorResponse(errors.New("type or code must be specified"), "")
-	}
-
-	if verificationCode != "" && verificationType != "" {
-		return errorResponse(errors.New("type or code cannot be both specified"), "")
-	}
-
-	if verificationType != "" {
-		log.Printf("deferring Signal registration for %s, waiting for verification code", req["contact"])
-
-		t.verificationType = verificationType
-		err = t.setupClient()
-
-	}
-
-	if verificationCode != "" {
-		log.Printf("received Signal registration verification code for %s", req["contact"])
-
-		t.verificationCode = verificationCode
-	}
-
-	if err != nil {
-		return errorResponse(err, "")
-	}
-
-	return
-}
-
-func (t *Signal) setupClient() (err error) {
-	err = os.MkdirAll(storagePath(), 0700)
-
-	if err != nil {
-		return
-	}
-
-	t.number, err = registeredNumber()
-
-	if err != nil {
-		return errors.New("Signal cipher enabled but not registered")
-	}
-
-	t.client = &textsecure.Client{
-		GetConfig:           t.getConfig,
-		GetVerificationCode: t.getVerificationCode,
-		GetStoragePassword:  getStoragePassword,
-		MessageHandler:      messageHandler,
-		RegistrationDone:    t.registrationDone,
-	}
-
-	if needsRegistration() {
-		go func() {
-			err = textsecure.Setup(t.client)
-
-			if err != nil {
-				status.Log(syslog.LOG_ERR, "failed to enable Signal cipher: %v", err)
-			}
-		}()
-
-		err = errors.New("Signal registration in progress")
-	} else {
-		err = textsecure.Setup(t.client)
-	}
-
-	return
-}
-
 func storagePath() string {
 	return filepath.Join(conf.mountPoint, conf.KeyPath, "signal", "private")
 }
@@ -593,60 +700,6 @@ func numberPath() string {
 	return filepath.Join(storagePath(), "number")
 }
 
-func (t *Signal) registrationDone() {
-	log.Printf("Registration complete for %s\n", t.number)
-}
-
-func (t *Signal) getVerificationCode() (code string) {
-	start := time.Now()
-
-	for {
-		if t.verificationCode == "" {
-			time.Sleep(100 * time.Millisecond)
-			continue
-		} else {
-			code = t.verificationCode
-		}
-
-		if time.Since(start) > 60 * time.Second {
-			log.Printf("timed out while waiting for Signal verification code for %s\n", t.number)
-			break
-		}
-	}
-
-	return
-}
-
 func getStoragePassword() string {
 	return ""
-}
-
-func (t *Signal) GenKey(i string, e string) (p string, s string, err error) {
-	err = errors.New("cipher does not support key generation")
-	return
-}
-
-func (t *Signal) GetKeyInfo(k key) (i string, err error) {
-	i = "Signal library private data"
-	return
-}
-
-func (t *Signal) SetPassword(password string) error {
-	return errors.New("cipher does not support passwords")
-}
-
-func (t *Signal) Encrypt(input *os.File, output *os.File, _ bool) error {
-	return errors.New("cipher does not support encryption")
-}
-
-func (t *Signal) Decrypt(input *os.File, output *os.File, verify bool) error {
-	return errors.New("cipher does not support decryption")
-}
-
-func (t *Signal) Sign(input *os.File, output *os.File) error {
-	return errors.New("cipher does not support signin")
-}
-
-func (t *Signal) Verify(input *os.File, signature *os.File) error {
-	return errors.New("cipher does not support signature verification")
 }

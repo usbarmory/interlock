@@ -29,7 +29,7 @@ func (s *sessionData) Validate(r *http.Request) (validSessionID bool, validXSRFT
 	validSessionID = false
 	validXSRFToken = false
 
-	sessionID, err := r.Cookie("Interlock-Token")
+	sessionID, err := r.Cookie("INTERLOCK-Token")
 
 	if err != nil {
 		return

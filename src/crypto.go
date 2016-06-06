@@ -44,9 +44,7 @@ type cipherInterface interface {
 	Init() cipherInterface
 	// returns a fresh cipher instance
 	New() cipherInterface
-	// cipher enable
-	Enable() (cipherInterface, error)
-	// cipher activation
+	// post-auth cipher activation
 	Activate(active bool) error
 	// provides cipher information
 	GetInfo() cipherInfo
@@ -68,7 +66,7 @@ type cipherInterface interface {
 	Verify(src *os.File, sig *os.File) error
 	// One Time Password
 	GenOTP(timestamp int64) (otp string, exp int64, err error)
-	// direct request handling
+	// cipher specific API request handler
 	HandleRequest(http.ResponseWriter, *http.Request) jsonObject
 }
 

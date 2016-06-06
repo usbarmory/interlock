@@ -53,10 +53,6 @@ func (o *openPGP) New() cipherInterface {
 	return new(openPGP).Init()
 }
 
-func (o *openPGP) Enable() (c cipherInterface, err error) {
-	return o, nil
-}
-
 func (o *openPGP) Activate(activate bool) (err error) {
 	// no activation required
 	return
@@ -69,7 +65,7 @@ func (o *openPGP) GetInfo() cipherInfo {
 func (o *openPGP) GenKey(identifier string, email string) (pubKey string, secKey string, err error) {
 	buf := bytes.NewBuffer(nil)
 	header := map[string]string{
-		"Version": fmt.Sprintf("INTERLOCK %s OpenPGP generated key", InterlockVersion),
+		"Version": fmt.Sprintf("INTERLOCK %s OpenPGP generated key", INTERLOCKRevision),
 	}
 
 	entity, err := openpgp.NewEntity(identifier, "", email, nil)
@@ -146,6 +142,37 @@ func (o *openPGP) SetPassword(password string) (err error) {
 	return
 }
 
+// workaround for https://github.com/golang/go/issues/15353
+func readEntityWithoutExpiredSubkeys(packets *packet.Reader) (entity *openpgp.Entity, err error) {
+	var p packet.Packet
+	var q []packet.Packet
+
+	for {
+		p, err = packets.Next()
+
+		if err == io.EOF {
+			break
+		}
+
+		switch pkt := p.(type) {
+		case *packet.Signature:
+			if pkt.SigType == packet.SigTypeSubkeyBinding && pkt.KeyExpired(time.Now()) {
+				continue
+			}
+		}
+
+		q = append(q, p)
+	}
+
+	for i, _ := range q {
+		packets.Unread(q[len(q)-1-i])
+	}
+
+	entity, err = openpgp.ReadEntity(packets)
+
+	return
+}
+
 func (o *openPGP) SetKey(k key) (err error) {
 	keyPath := filepath.Join(conf.mountPoint, k.Path)
 	keyFile, err := os.Open(keyPath)
@@ -162,7 +189,7 @@ func (o *openPGP) SetKey(k key) (err error) {
 	}
 
 	reader := packet.NewReader(keyBlock.Body)
-	entity, err := openpgp.ReadEntity(reader)
+	entity, err := readEntityWithoutExpiredSubkeys(reader)
 
 	if err != nil {
 		return

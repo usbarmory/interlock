@@ -23,7 +23,6 @@ import (
 const mountPoint = ".interlock-mnt"
 
 type config struct {
-	// exported
 	Debug       bool     `json:"debug"`
 	StaticPath  string   `json:"static_path"`
 	SetTime     bool     `json:"set_time"`
@@ -36,7 +35,6 @@ type config struct {
 	VolumeGroup string   `json:"volume_group"`
 	Ciphers     []string `json:"ciphers"`
 
-	// internal
 	availableCiphers map[string]cipherInterface
 	enabledCiphers   map[string]cipherInterface
 	mountPoint       string
@@ -107,11 +105,7 @@ func (c *config) EnableCiphers() (err error) {
 
 	for i := 0; i < len(c.Ciphers); i++ {
 		if val, ok := c.availableCiphers[c.Ciphers[i]]; ok {
-			c.enabledCiphers[c.Ciphers[i]], err = val.Enable()
-
-			if err != nil {
-				return err
-			}
+			c.enabledCiphers[c.Ciphers[i]] = val
 		} else {
 			c.PrintAvailableCiphers()
 			return fmt.Errorf("unsupported cipher name %s", c.Ciphers[i])
@@ -122,13 +116,11 @@ func (c *config) EnableCiphers() (err error) {
 }
 
 func (c *config) ActivateCiphers(activate bool) {
-	for name, val := range c.enabledCiphers {
+	for _, val := range c.enabledCiphers {
 		err := val.Activate(activate)
 
-		// activation errors are treated as non fatal
 		if err != nil {
 			log.Print(err)
-			delete(c.enabledCiphers, name)
 		}
 	}
 }

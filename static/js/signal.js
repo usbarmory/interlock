@@ -231,8 +231,6 @@ Interlock.Signal.send = function(contact, msg, attachment) {
 Interlock.Signal.requestVerifyCodeCallback = function(backendData, args) {
   try {
     if (backendData.status === 'OK') {
-    } else {
-      if (backendData.response[0].match(/registration\sin\sprogress/)) {
         Interlock.UI.modalFormDialog('close');
  
         var elements = [$(document.createElement('input')).attr('id', 'contact')
@@ -257,8 +255,7 @@ Interlock.Signal.requestVerifyCodeCallback = function(backendData, args) {
         Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
           submitButton: 'Register', title: 'Signal Registration (step 2: Insert Verification Code)', height: 250, width: 400 });
         Interlock.UI.modalFormDialog('open');
-      }
-
+   } else {
       Interlock.Session.createEvent({'kind': backendData.status,
         'msg': '[Interlock.Signal.verifyCallback] ' + backendData.response});
     }
@@ -306,6 +303,7 @@ Interlock.Signal.requestVerifyCode = function(contact, type) {
 Interlock.Signal.registrationCallback = function(backendData, args) {
   try {
     if (backendData.status === 'OK') {
+        Interlock.UI.modalFormDialog('close');
     } else {
       Interlock.Session.createEvent({'kind': backendData.status,
         'msg': '[Interlock.Signal.registrationCallback] ' + backendData.response});

@@ -258,7 +258,7 @@ Interlock.FileManager = new function() {
 
       var elements = [$(document.createElement('input')).attr('id', 'contact')
                                                         .attr('name', 'contact')
-                                                        .attr('placeholder', 'mobile number with country code (e.g. +123456789 or 00123456789)')
+                                                        .attr('placeholder', 'mobile number with country code (e.g. +123456789)')
                                                         .attr('type', 'text')
                                                         .addClass('text ui-widget-content ui-corner-all'),
                       $selectVerificationCodeMethod];

@@ -242,29 +242,29 @@ Interlock.FileManager = new function() {
                                                                              .attr('name', 'type');
 
       var $availableVerificationCodeMethods = [$(document.createElement('option')).attr('value', '')
-                                                                                  .text('choose a verification method'),
+                                                                                  .text('choose verification method'),
                                                $(document.createElement('option')).attr('value', 'sms')
-                                                                                  .text('send verification code via SMS'),
+                                                                                  .text('SMS'),
                                                $(document.createElement('option')).attr('value', 'voice')
-                                                                                  .text('send verification code via voice call')];
+                                                                                  .text('voice call')];
 
       $selectVerificationCodeMethod.append($availableVerificationCodeMethods);
 
       var buttons = {
-        'Request code': function() {
+        'Request verification code': function() {
           Interlock.Signal.requestVerifyCode($('#contact').val(), $('#type').val())
         }
       };
 
       var elements = [$(document.createElement('input')).attr('id', 'contact')
                                                         .attr('name', 'contact')
-                                                        .attr('placeholder', 'mobile number (including the country code)')
+                                                        .attr('placeholder', 'mobile number with country code (e.g. +123456789 or 00123456789)')
                                                         .attr('type', 'text')
                                                         .addClass('text ui-widget-content ui-corner-all'),
                       $selectVerificationCodeMethod];
 
       Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
-        submitButton: '', title: 'Signal Registration (step 1: request verification code)', height: 250, width: 400 });
+        submitButton: '', title: 'Signal registration (step 1)', height: 250, width: 400 });
       Interlock.UI.modalFormDialog('open');
     });
 

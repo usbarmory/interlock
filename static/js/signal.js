@@ -235,7 +235,7 @@ Interlock.Signal.requestVerifyCodeCallback = function(backendData, args) {
 
         var elements = [$(document.createElement('input')).attr('id', 'contact')
                                                           .attr('name', 'contact')
-                                                          .attr('placeholder', 'mobile number (including the country code)')
+                                                          .attr('placeholder', 'mobile number with country code (e.g. +123456789 or 00123456789)')
                                                           .attr('type', 'text')
                                                           .attr('value', args.contact)
                                                           .attr('disabled', 'true')
@@ -253,7 +253,7 @@ Interlock.Signal.requestVerifyCodeCallback = function(backendData, args) {
         };
 
         Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
-          submitButton: 'Register', title: 'Signal Registration (step 2: insert verification code)', height: 250, width: 400 });
+          submitButton: 'Register', title: 'Signal registration (step 2)', height: 250, width: 400 });
         Interlock.UI.modalFormDialog('open');
    } else {
       Interlock.Session.createEvent({'kind': backendData.status,

@@ -17,6 +17,16 @@ import (
 
 var URIPattern = regexp.MustCompile("/api/([A-Za-z0-9]+)/([a-z0-9_]+)")
 
+func nonCachingHandler(h http.Handler) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Add("Cache-Control", "no-cache, no-store, max-age=0, must-revalidate")
+		w.Header().Set("Pragma", "no-cache")
+		w.Header().Set("Expires", "Fri, 07 Jan 1981 00:00:00 GMT")
+
+		h.ServeHTTP(w, r)
+	}
+}
+
 func registerHandlers(staticPath string) (err error) {
 	_, err = os.Stat(conf.StaticPath)
 
@@ -24,7 +34,10 @@ func registerHandlers(staticPath string) (err error) {
 		return fmt.Errorf("invalid path for static files: %v", err)
 	}
 
-	http.Handle("/", http.StripPrefix("/", http.FileServer(http.Dir(staticPath))))
+	staticDir := http.Dir(staticPath)
+	staticHandler := nonCachingHandler(http.FileServer(staticDir))
+
+	http.Handle("/", http.StripPrefix("/", staticHandler))
 	http.HandleFunc("/api/", apiHandler)
 
 	return

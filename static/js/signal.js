@@ -301,6 +301,7 @@ Interlock.Signal.requestVerifyCode = function(contact, type) {
   }
 };
 
+
 /**
  * @function
  * @public
@@ -316,7 +317,16 @@ Interlock.Signal.requestVerifyCode = function(contact, type) {
 Interlock.Signal.registrationCallback = function(backendData, args) {
   try {
     if (backendData.status === 'OK') {
+        var msg = 'Finalizing Signal registration, check Application Logs for completion and cipher enabling.';
+        var elements = [$(document.createElement('p')).text(msg)
+                                                      .attr('id', 'msg')
+                                                      .attr('spellcheck', false)];
+        var buttons = { 'OK': function() { Interlock.UI.modalFormDialog('close'); } };
+
         Interlock.UI.modalFormDialog('close');
+        Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
+          title: 'Signal Registration', noCancelButton: true, height: 250, width: 400 });
+        Interlock.UI.modalFormDialog('open');
     } else {
       Interlock.Session.createEvent({'kind': backendData.status,
         'msg': '[Interlock.Signal.registrationCallback] ' + backendData.response});

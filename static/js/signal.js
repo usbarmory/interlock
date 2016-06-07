@@ -235,7 +235,7 @@ Interlock.Signal.requestVerifyCodeCallback = function(backendData, args) {
 
         var elements = [$(document.createElement('input')).attr('id', 'contact')
                                                           .attr('name', 'contact')
-                                                          .attr('placeholder', 'mobile number with country code (e.g. +123456789)')
+                                                          .attr('placeholder', 'phone number with country code (e.g. +123456789)')
                                                           .attr('type', 'text')
                                                           .attr('value', args.contact)
                                                           .attr('disabled', 'true')
@@ -280,7 +280,7 @@ Interlock.Signal.requestVerifyCode = function(contact, type) {
   try {
     if (contact === '') {
       Interlock.Session.createEvent({'kind': 'critical',
-              'msg': '[Interlock.Signal.verifyCode] please insert a valid mobile phone number'});
+              'msg': '[Interlock.Signal.verifyCode] please insert a valid phone number'});
 
       return false;
     }

@@ -14,7 +14,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"log/syslog"
 	"net/http"
 	"os"
@@ -77,9 +76,15 @@ func (t *Signal) New() cipherInterface {
 }
 
 func (t *Signal) Activate(activate bool) (err error) {
-	err = t.setupClient()
+	if activate {
+		err = t.setupClient()
 
-	if err != nil {
+		if err != nil {
+			return
+		}
+	}
+
+	if needsRegistration() {
 		return
 	}
 
@@ -411,7 +416,7 @@ func (t *Signal) setupClient() (err error) {
 	t.number, err = registeredNumber()
 
 	if err != nil {
-		return errors.New("error retrieving Signal registration number")
+		return errors.New("skipping Signal cipher setup, no registered number")
 	}
 
 	if t.client == nil {
@@ -440,7 +445,7 @@ func (t *Signal) setupClient() (err error) {
 			}
 		}()
 
-		log.Printf("Signal registration in progress, waiting verification code for %s", t.number)
+		status.Log(syslog.LOG_NOTICE, "Signal registration in progress, waiting verification code for %s", t.number)
 	} else {
 		err = textsecure.Setup(t.client)
 	}
@@ -453,13 +458,13 @@ func (t *Signal) getVerificationCode() (code string) {
 
 	for {
 		if t.verificationCode != "" {
-			log.Printf("received Signal registration verification code for %s", t.number)
+			status.Log(syslog.LOG_NOTICE, "received Signal registration verification code for %s", t.number)
 			code = t.verificationCode
 			break
 		}
 
 		if time.Since(start) > 60*time.Second {
-			log.Printf("timed out while waiting for Signal verification code for %s\n", t.number)
+			status.Log(syslog.LOG_ERR, "timed out while waiting for Signal verification code for %s\n", t.number)
 			break
 		}
 
@@ -470,7 +475,7 @@ func (t *Signal) getVerificationCode() (code string) {
 }
 
 func (t *Signal) registrationDone() {
-	log.Printf("registration complete for %s\n", t.number)
+	status.Log(syslog.LOG_NOTICE, "registration complete for %s\n", t.number)
 	t.registering = false
 	t.start()
 }

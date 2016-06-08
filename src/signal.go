@@ -38,7 +38,7 @@ type Signal struct {
 	number           string
 	verificationType string
 	verificationCode string
-	registering      bool
+	registering      int
 
 	cipherInterface
 }
@@ -84,14 +84,12 @@ func (t *Signal) Activate(activate bool) (err error) {
 		}
 	}
 
-	if needsRegistration() {
-		return
-	}
-
 	if activate {
-		go func() {
-			t.start()
-		}()
+		if needsRegistration() {
+			go func() {
+				t.start()
+			}()
+		}
 	} else {
 		t.stop()
 	}
@@ -413,6 +411,8 @@ func (t *Signal) setupClient() (err error) {
 		return
 	}
 
+	t.verificationCode = ""
+	t.registering = 0
 	t.number, err = registeredNumber()
 
 	if err != nil {
@@ -430,22 +430,21 @@ func (t *Signal) setupClient() (err error) {
 	}
 
 	if needsRegistration() {
-		if t.registering {
+		if t.registering > 0 {
 			return fmt.Errorf("Signal registration in progress, waiting verification code for %s", t.number)
 		}
 
-		t.registering = true
+		t.registering = status.Notify(syslog.LOG_NOTICE, "Signal registration in progress, waiting verification code for %s", t.number)
 
 		go func() {
 			err = textsecure.Setup(t.client)
 
 			if err != nil {
 				status.Log(syslog.LOG_ERR, "failed to enable Signal cipher: %v", err)
-				t.registering = false
+				status.Remove(t.registering)
+				t.registering = 0
 			}
 		}()
-
-		status.Log(syslog.LOG_NOTICE, "Signal registration in progress, waiting verification code for %s", t.number)
 	} else {
 		err = textsecure.Setup(t.client)
 	}
@@ -476,7 +475,8 @@ func (t *Signal) getVerificationCode() (code string) {
 
 func (t *Signal) registrationDone() {
 	status.Log(syslog.LOG_NOTICE, "registration complete for %s\n", t.number)
-	t.registering = false
+	status.Remove(t.registering)
+	t.registering = 0
 	t.start()
 }
 

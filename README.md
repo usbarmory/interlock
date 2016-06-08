@@ -32,6 +32,12 @@ The main documentation is included in the present
 additional information can be found on the
 [project wiki](https://github.com/inversepath/interlock/wiki).
 
+Binary Releases
+===============
+
+Pre-compiled binary releases for ARM targets are available
+[here](https://github.com/inversepath/interlock/releases).
+
 Architecture
 ============
 

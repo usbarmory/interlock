@@ -336,6 +336,12 @@ func downloadHistory(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		return errorResponse(err, "")
 	}
 
+	_, err = os.Stat(contact.HistoryPath)
+
+	if err != nil {
+		updateHistory(contact, "[new contact history created]", "", time.Now())
+	}
+
 	input, err := os.Open(contact.HistoryPath)
 
 	if err != nil {

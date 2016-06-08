@@ -1,5 +1,5 @@
 /** INTERLOCK | https://github.com/inversepath/interlock
- * Copyright (c) 2015 Inverse Path S.r.l.
+ * Copyright (c) 2015-2016 Inverse Path S.r.l.
  *
  * Use of this source code is governed by the license
  * that can be found in the LICENSE file.
@@ -234,6 +234,44 @@ Interlock.FileManager = new function() {
       Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
         submitButton: 'Generate key', title: 'Generate a new key', });
       Interlock.UI.modalFormDialog('open');
+    });
+
+    /* register the on 'click' event to the Signal registration button */
+    $('#signal_registration').on('click', function() {
+      var $selectVerificationCodeMethod = $(document.createElement('select')).attr('id', 'type')
+                                                                             .attr('name', 'type');
+
+      var $availableVerificationCodeMethods = [$(document.createElement('option')).attr('value', '')
+                                                                                  .text('choose verification method'),
+                                               $(document.createElement('option')).attr('value', 'sms')
+                                                                                  .text('SMS'),
+                                               $(document.createElement('option')).attr('value', 'voice')
+                                                                                  .text('voice call')];
+
+      $selectVerificationCodeMethod.append($availableVerificationCodeMethods);
+
+      var buttons = {
+        'Request verification code': function() {
+          Interlock.Signal.requestVerifyCode($('#contact').val(), $('#type').val())
+        }
+      };
+
+      var elements = [$(document.createElement('input')).attr('id', 'contact')
+                                                        .attr('name', 'contact')
+                                                        .attr('placeholder', 'phone number with country code (e.g. +123456789)')
+                                                        .attr('type', 'text')
+                                                        .addClass('text ui-widget-content ui-corner-all'),
+                      $selectVerificationCodeMethod];
+
+      Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
+        submitButton: '', title: 'Signal registration (step 1)', height: 250, width: 400 });
+      Interlock.UI.modalFormDialog('open');
+    });
+
+    $.when(Interlock.Crypto.cipherListCompleted).done(function () {
+      if (Interlock.Crypto.hasCipher('Signal') === true) {
+        $('#signal_registration').show();
+      }
     });
   };
 
@@ -473,10 +511,10 @@ Interlock.FileManager = new function() {
     return isPrivate;
   };
 
-  this.isTextSecureContact = function(inode, path) {
-    if (Interlock.FileManager.isFile(inode) &&
-        Interlock.Crypto.hasCipher('TextSecure') &&
-        inode.id.split('.').pop() === Interlock.Crypto.getCipherExt('TextSecure')) {
+  this.isSignalContact = function(inode, path) {
+    if (Interlock.FileManager.isDirectory(inode) &&
+        Interlock.Crypto.hasCipher('Signal') &&
+        path.match(/^\/signal\/.+\s\+\d+$/)) {
       return true;
     } else {
       return false;
@@ -656,6 +694,13 @@ Interlock.FileManager = new function() {
           menuEntries.push($(document.createElement('li')).text('Download (zip archive)')
                                                           .addClass('disabled'));
         } else {
+          if (Interlock.Crypto.hasCipher('Signal') &&
+              Interlock.FileManager.isSignalContact($selectedInode, path)) {
+            menuEntries.push($(document.createElement('li')).text('Signal')
+                                                            .click(function() {
+                                                              Interlock.Signal.chat($selectedInode.id.substring(1));
+                                                            }));
+          }
 
           var clipBoard = JSON.parse(sessionStorage.clipBoard);
 
@@ -1105,14 +1150,6 @@ Interlock.FileManager = new function() {
               submitButton: 'Compress', title: 'Compress' });
             Interlock.UI.modalFormDialog('open');
           }));
-
-          if (Interlock.Crypto.hasCipher('TextSecure') &&
-              Interlock.FileManager.isTextSecureContact($selectedInode, path)) {
-            menuEntries.push($(document.createElement('li')).text('Signal/TextSecure')
-                                                            .click(function() {
-                                                              Interlock.TextSecure.chat(path);
-                                                            }));
-          }
 
           if (inode.size <= Interlock.FileManager.MAX_VIEW_SIZE) {
             menuEntries.push($(document.createElement('li')).text('View')

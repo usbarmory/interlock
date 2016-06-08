@@ -1,5 +1,5 @@
 /** INTERLOCK | https://github.com/inversepath/interlock
- * Copyright (c) 2015 Inverse Path S.r.l.
+ * Copyright (c) 2015-2016 Inverse Path S.r.l.
  *
  * Use of this source code is governed by the license
  * that can be found in the LICENSE file.
@@ -464,9 +464,8 @@ Interlock.Session.refresh = function() {
  */
 Interlock.Session.getVersionCallback = function(backendData) {
   try {
-    if (backendData.status === 'OK' &&
-        backendData.response.version) {
-      sessionStorage.InterlockVersion = backendData.response.version +
+    if (backendData.status === 'OK') {
+      sessionStorage.InterlockVersion = (backendData.response.revision ? backendData.response.revision : '') +
                                         (backendData.response.build ? ' | build: ' + backendData.response.build : '');
     } else {
       Interlock.Session.createEvent({'kind': backendData.status,

@@ -52,6 +52,20 @@ func (c *config) SetAvailableCipher(cipher cipherInterface) {
 	c.availableCiphers[cipher.GetInfo().Name] = cipher
 }
 
+func (c *config) GetAvailableCipher(cipherName string) (cipher cipherInterface, err error) {
+	cipher, ok := c.availableCiphers[cipherName]
+
+	if !ok {
+		err = errors.New("invalid cipher")
+		return
+	}
+
+	// get a fresh instance
+	cipher = cipher.New()
+
+	return
+}
+
 func (c *config) GetCipher(cipherName string) (cipher cipherInterface, err error) {
 	cipher, ok := c.enabledCiphers[cipherName]
 
@@ -91,11 +105,7 @@ func (c *config) EnableCiphers() (err error) {
 
 	for i := 0; i < len(c.Ciphers); i++ {
 		if val, ok := c.availableCiphers[c.Ciphers[i]]; ok {
-			c.enabledCiphers[c.Ciphers[i]], err = val.Enable()
-
-			if err != nil {
-				return err
-			}
+			c.enabledCiphers[c.Ciphers[i]] = val
 		} else {
 			c.PrintAvailableCiphers()
 			return fmt.Errorf("unsupported cipher name %s", c.Ciphers[i])
@@ -106,13 +116,11 @@ func (c *config) EnableCiphers() (err error) {
 }
 
 func (c *config) ActivateCiphers(activate bool) {
-	for name, val := range c.enabledCiphers {
+	for _, val := range c.enabledCiphers {
 		err := val.Activate(activate)
 
-		// activation errors are treated as non fatal
 		if err != nil {
 			log.Print(err)
-			delete(c.enabledCiphers, name)
 		}
 	}
 }

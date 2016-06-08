@@ -1,5 +1,5 @@
 /** INTERLOCK | https://github.com/inversepath/interlock
- * Copyright (c) 2015 Inverse Path S.r.l.
+ * Copyright (c) 2015-2016 Inverse Path S.r.l.
  *
  * Use of this source code is governed by the license
  * that can be found in the LICENSE file.
@@ -51,8 +51,9 @@ Interlock.Backend = new function() {
                'status':     { 'version': 'status/version',
                                'running': 'status/running' },
 
-               'textsecure': { 'send':    'textsecure/send',
-                               'history': 'textsecure/history' }
+               'Signal': { 'send':     'Signal/send',
+                           'history':  'Signal/history',
+                           'register': 'Signal/register' }
              };
 
   this.API.prefix = '/api/';

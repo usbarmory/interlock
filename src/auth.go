@@ -30,6 +30,7 @@ func randomString(size int) (c string, err error) {
 
 func authenticate(volume string, password string, dispose bool) (err error) {
 	if conf.testMode {
+		conf.ActivateCiphers(true)
 		return
 	}
 
@@ -125,7 +126,7 @@ func login(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 	}
 
 	sessionCookie := &http.Cookie{
-		Name:     "Interlock-Token",
+		Name:     "INTERLOCK-Token",
 		Value:    sessionID,
 		Path:     "/api",
 		MaxAge:   cookieAge,
@@ -169,7 +170,7 @@ func logout(w http.ResponseWriter) (res jsonObject) {
 	}
 
 	sessionCookie := &http.Cookie{
-		Name:     "Interlock-Token",
+		Name:     "INTERLOCK-Token",
 		Value:    "delete",
 		Path:     "/api",
 		MaxAge:   -1,

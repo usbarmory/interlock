@@ -14,9 +14,6 @@ with or without fee is hereby granted, provided that the above copyright notice
 and this permission notice appear in all copies.
 
 Additional copyright notices:
-        src/cmd.go:readPasswd(),getch() - Copyright (c) 2012 Chris Howey
-        (adapted from https://github.com/howeyc/gopass)
-
         TextSecure client package for Go - Jani Monoses
         https://github.com/janimo/textsecure/cmd/textsecure
 

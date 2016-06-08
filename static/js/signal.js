@@ -317,7 +317,9 @@ Interlock.Signal.requestVerifyCode = function(contact, type) {
 Interlock.Signal.registrationCallback = function(backendData, args) {
   try {
     if (backendData.status === 'OK') {
-        var msg = 'Finalizing Signal registration, check Application Logs for completion and cipher enabling.';
+        var msg = 'Finalizing Signal registration, check Application Logs for completion and cipher enabling. ' +
+                  'Once registration is complete contacts can be added as directories with path "signal/$name $number", ' +
+                  'a chat session can be started using the right click menu on the contact directory.';
         var elements = [$(document.createElement('p')).text(msg)
                                                       .attr('id', 'msg')
                                                       .attr('spellcheck', false)];

@@ -240,6 +240,10 @@ func sendMessage(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 	var attachmentPath string
 	var attachment *os.File
 
+	if needsRegistration() {
+		return errorResponse(errors.New("Signal is not registered, please register before sending messages"), "")
+	}
+
 	req, err := parseRequest(r)
 
 	if err != nil {

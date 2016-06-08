@@ -363,7 +363,7 @@ key storage path, is assigned to hold generated keys, this is automatically
 managed by the protocol library.
 
 The user registration can be accomplished in the web interface, after logging
-in. using a dedicated action presented when the feature is compiled in and
+in, using a dedicated action presented when the feature is compiled in and
 enabled in the configuration file. The registration process triggers, and
 prompts for, a verification code transmitted to the specified number via SMS or
 voice per user preference.
@@ -373,8 +373,8 @@ invalidated and taken over by INTERLOCK.
 
 A contact is represented by a directory that can be regularly managed with the
 built-in file manager. The contact directory stores the chat history,
-attachments and is used as the entry point for starting a chat using the right
-click menu.
+attachments and is used as the entry point for starting a chat using the
+'Signal' right click menu action.
 
 The contact directories must respect to the following naming scheme and must be
 located under the top level 'signal' directory:
@@ -383,7 +383,7 @@ located under the top level 'signal' directory:
 signal/$name $number # e.g. signal/John Doe +3912345678
 ```
 
-New contacts can be create using the file manager while incoming messages for
+New contacts can be created using the file manager while incoming messages for
 unknown contacts trigger automatic creation of a contact directory with name
 'Unknown' and the originating number.
 

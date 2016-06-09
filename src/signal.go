@@ -85,7 +85,7 @@ func (t *Signal) Activate(activate bool) (err error) {
 	}
 
 	if activate {
-		if needsRegistration() {
+		if !needsRegistration() {
 			go func() {
 				t.start()
 			}()

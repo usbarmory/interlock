@@ -28,6 +28,7 @@ import (
 const timeFormat = "Jan 02 15:04 MST"
 const attachmentMsg = "INTERLOCK attachment: "
 const historySize = 10 * 1024
+const registrationTimeout = 60 * time.Second
 
 var numberPattern = regexp.MustCompile("^(?:\\+|00)[0-9]+$")
 var contactPattern = regexp.MustCompile("^(([^/]*) ((?:\\+|00)[0-9]+))$")
@@ -440,7 +441,13 @@ func (t *Signal) setupClient() (err error) {
 			return fmt.Errorf("Signal registration in progress, waiting verification code for %s", t.number)
 		}
 
-		t.registering = status.Notify(syslog.LOG_NOTICE, "Signal registration in progress, waiting verification code for %s", t.number)
+		n := status.Notify(syslog.LOG_NOTICE, "Signal registration in progress, waiting verification code for %s", t.number)
+		t.registering = n
+
+		go func() {
+			time.Sleep(registrationTimeout)
+			status.Remove(n)
+		}()
 
 		go func() {
 			err = textsecure.Setup(t.client)
@@ -468,7 +475,7 @@ func (t *Signal) getVerificationCode() (code string) {
 			break
 		}
 
-		if time.Since(start) > 60*time.Second {
+		if time.Since(start) > registrationTimeout {
 			status.Log(syslog.LOG_ERR, "timed out while waiting for Signal verification code for %s\n", t.number)
 			break
 		}

@@ -5,8 +5,8 @@
     <a id="add_password" href="">Add</a> -
     <a id="remove_password" href="">Remove</a> -
     <a id="change_password" href="">Change</a> |
-    <a id="poweroff" href="" onclick="event.preventDefault(); Interlock.Session.powerOff();">Poweroff</a> |
-    <a id="logout" href="" onclick="event.preventDefault(); Interlock.Session.logout();">Logout</a>
+    <a id="poweroff" href="">Poweroff</a> |
+    <a id="logout" href="">Logout</a>
   </h1>
 </div>
 
@@ -195,6 +195,16 @@
           Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
             submitButton: 'Change Password', title: 'Change LUKS password' });
           Interlock.UI.modalFormDialog('open');
+      });
+
+      $('#poweroff').on('click', function(e) {
+        e.preventDefault();
+        Interlock.Session.powerOff();
+      });
+
+      $('#logout').on('click', function(e) {
+        e.preventDefault();
+        Interlock.Session.logout();
       });
     });
   });

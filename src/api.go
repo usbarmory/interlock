@@ -17,9 +17,10 @@ import (
 
 var URIPattern = regexp.MustCompile("/api/([A-Za-z0-9]+)/([a-z0-9_]+)")
 
-func nonCachingHandler(h http.Handler) http.HandlerFunc {
+func applyHeaders(h http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Add("Cache-Control", "no-cache, no-store, max-age=0, must-revalidate")
+		w.Header().Set("Content-Security-Policy-Report-Only", "script-src 'self' 'unsafe-eval'; object-src 'none';")
+		w.Header().Set("Cache-Control", "no-cache, no-store, max-age=0, must-revalidate")
 		w.Header().Set("Pragma", "no-cache")
 		w.Header().Set("Expires", "Fri, 07 Jan 1981 00:00:00 GMT")
 
@@ -35,7 +36,7 @@ func registerHandlers(staticPath string) (err error) {
 	}
 
 	staticDir := http.Dir(staticPath)
-	staticHandler := nonCachingHandler(http.FileServer(staticDir))
+	staticHandler := applyHeaders(http.FileServer(staticDir))
 
 	http.Handle("/", http.StripPrefix("/", staticHandler))
 	http.HandleFunc("/api/", apiHandler)

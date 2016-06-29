@@ -802,46 +802,45 @@ Interlock.FileManager = new function() {
             $selectSignKeys.append($availableSignKeys);
 
             $selectCiphers.change(function() {
-              var selectedCipher = $('#cipher > option:selected').val();
+              var selectedOption = $('#cipher > option:selected').val();
 
-              switch (selectedCipher) {
-                case 'AES-256-OFB':
-                  $('#password').attr('placeholder', 'encryption password').show();
-                  $('#wipe_src').show();
-                  $('#wipe_src_label').show();
+              if (selectedOption !== '') {
+                var selectedCipher = Interlock.Crypto.getCiphers(selectedOption)[0];
+              }
 
-                  $('#key').hide();
+              if (selectedCipher !== undefined && selectedCipher.sig === true) {
+                $('#key').show();
+                $('#sign').show();
+                $('#sign_label').show();
+                $('#wipe_src').show();
+                $('#wipe_src_label').show();
+
+                if ($('#sign').is(':checked') === true) {
+                  $('#sig_key').show();
+                  $('#password').val('')
+                                .attr('placeholder', 'key password')
+                                .show();
+                } else {
                   $('#sig_key').hide();
-                  $('#sign').prop('checked', false).hide();
-                  $('#sign_label').hide();
-
-                  break;
-                case 'OpenPGP':
-                  $('#key').show();
-                  $('#sign').show();
-                  $('#sign_label').show();
-                  $('#wipe_src').show();
-                  $('#wipe_src_label').show();
-
-                  if ($('#sign').is(':checked') === true) {
-                    $('#sig_key').show();
-                    $('#password').val('')
-                                  .attr('placeholder', 'key password')
-                                  .show();
-                  } else {
-                    $('#sig_key').hide();
-                    $('#password').val('').hide();
-                  }
-
-                  break;
-                default:
                   $('#password').val('').hide();
-                  $('#key').val('').hide();
-                  $('#sig_key').val('').hide();
-                  $('#sign').prop('checked', false).hide();
-                  $('#sign_label').hide();
-                  $('#wipe_src').prop('checked', false).hide();
-                  $('#wipe_src_label').hide();
+                }
+              } else if (selectedCipher !== undefined && selectedCipher.enc === true) {
+                $('#password').attr('placeholder', 'encryption password').show();
+                $('#wipe_src').show();
+                $('#wipe_src_label').show();
+
+                $('#key').hide();
+                $('#sig_key').hide();
+                $('#sign').prop('checked', false).hide();
+                $('#sign_label').hide();
+              } else {
+                $('#password').val('').hide();
+                $('#key').val('').hide();
+                $('#sig_key').val('').hide();
+                $('#sign').prop('checked', false).hide();
+                $('#sign_label').hide();
+                $('#wipe_src').prop('checked', false).hide();
+                $('#wipe_src_label').hide();
               }
             });
 
@@ -943,29 +942,28 @@ Interlock.FileManager = new function() {
             $selectKeys.append($availableKeys);
 
             $selectCiphers.change(function() {
-              var selectedCipher = $('#cipher > option:selected').val();
+              var selectedOption = $('#cipher > option:selected').val();
 
-              switch (selectedCipher) {
-                case 'AES-256-OFB':
-                  $('#password').attr('placeholder', 'decryption password');
+              if (selectedOption !== '') {
+                var selectedCipher = Interlock.Crypto.getCiphers(selectedOption)[0];
+              }
 
-                  $('#key').hide();
-                  $('#password').show();
+              if (selectedCipher !== undefined && selectedCipher.sig === true) {
+                $('#password').attr('placeholder', 'key password');
 
-                  break;
-                case 'OpenPGP':
-                  $('#password').attr('placeholder', 'key password');
+                $('#key').show();
+                $('#password').show();
+              } else if (selectedCipher !== undefined && selectedCipher.enc === true) {
+                $('#password').attr('placeholder', 'decryption password');
 
-                  $('#key').show();
-                  $('#password').show();
+                $('#key').hide();
+                $('#password').show();
+              } else {
+                $('#password').value = '';
+                $('#key').value = '';
 
-                  break;
-                default:
-                  $('#password').value = '';
-                  $('#key').value = '';
-
-                  $('#password').hide();
-                  $('#key').hide();
+                $('#password').hide();
+                $('#key').hide();
               }
             });
 

@@ -34,6 +34,7 @@ Interlock.Crypto = new function() {
                        dec: cipher.dec,
                        sig: cipher.sig,
                        otp: cipher.otp,
+                       msg: cipher.msg,
                        ext: cipher.ext });
       }
     });
@@ -562,6 +563,7 @@ Interlock.Crypto.isValidCipher = function(cipher) {
      cipher.dec !== undefined &&
      cipher.sig !== undefined &&
      cipher.otp !== undefined &&
+     cipher.msg !== undefined &&
      cipher.ext !== undefined);
 
   return valid;

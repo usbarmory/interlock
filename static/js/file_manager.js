@@ -17,11 +17,11 @@ Interlock.FileManager = new function() {
      and the browsing view */
   sessionStorage.mainViewPwd = sessionStorage.mainViewPwd || '/';
   sessionStorage.mainViewSortAttribute = sessionStorage.mainViewSortAttribute || 'name';
-  sessionStorage.mainViewSortAsc = sessionStorage.mainViewSortAsc || true;
+  sessionStorage.mainViewSortAsc = sessionStorage.mainViewSortAsc || 'true';
 
   sessionStorage.browsingViewPwd = '/';
   sessionStorage.browsingViewSortAttribute = 'name';
-  sessionStorage.browsingViewSortAsc = true;
+  sessionStorage.browsingViewSortAsc = 'true';
 
   sessionStorage.clipBoard = sessionStorage.clipBoard || JSON.stringify({ 'action': 'none', 'paths': undefined, 'isSingleFile': false });
 
@@ -127,7 +127,7 @@ Interlock.FileManager = new function() {
         }
       };
 
-      $.each(Interlock.Crypto.getCiphers(), function(index, cipher) {
+      $.each(Interlock.Crypto.getCiphers().sort(Interlock.UI.sortBy('name', false, false)), function(index, cipher) {
         /* adds only ciphers with key formats supported by import key */
         if (cipher.key_format === 'armor' || cipher.key_format === 'base32') {
           $availableCiphers.push($(document.createElement('option')).attr('value', cipher.name)
@@ -194,7 +194,7 @@ Interlock.FileManager = new function() {
         }
       };
 
-      $.each(Interlock.Crypto.getCiphers(), function(index, cipher) {
+      $.each(Interlock.Crypto.getCiphers().sort(Interlock.UI.sortBy('name', false, false)), function(index, cipher) {
         /* adds only ciphers with key formats supported by generate key */
         if (cipher.key_format === 'armor') {
           $availableCiphers.push($(document.createElement('option')).attr('value', cipher.name)
@@ -782,17 +782,17 @@ Interlock.FileManager = new function() {
 
           /* ensure Interlock.Crypto.keyList() is completed */
           $.when(Interlock.Crypto.keyListCompleted).done(function () {
-            $.each(Interlock.Crypto.getEncryptCiphers(), function(index, cipher) {
+            $.each(Interlock.Crypto.getEncryptCiphers().sort(Interlock.UI.sortBy('name', false, false)), function(index, cipher) {
               $availableCiphers.push($(document.createElement('option')).attr('value', cipher.name)
                                                                         .text(cipher.name));
             });
 
-            $.each(Interlock.Crypto.getEncryptKeys(), function(index, key) {
+            $.each(Interlock.Crypto.getEncryptKeys().sort(Interlock.UI.sortBy('identifier', false, false)), function(index, key) {
               $availableKeys.push($(document.createElement('option')).attr('value', key.path)
                                                                      .text(key.identifier));
             });
 
-            $.each(Interlock.Crypto.getSignKeys(), function(index, key) {
+            $.each(Interlock.Crypto.getSignKeys().sort(Interlock.UI.sortBy('identifier', false, false)), function(index, key) {
               $availableSignKeys.push($(document.createElement('option')).attr('value', key.path)
                                                                          .text(key.identifier));
             });
@@ -928,14 +928,14 @@ Interlock.FileManager = new function() {
 
           /* ensure the Interlock.Crypto.keyList() is completed */
           $.when(Interlock.Crypto.keyListCompleted).done(function () {
-            $.each(Interlock.Crypto.getDecryptCiphers(), function(index, cipher) {
+            $.each(Interlock.Crypto.getDecryptCiphers().sort(Interlock.UI.sortBy('name', false, false)), function(index, cipher) {
               $availableCiphers.push($(document.createElement('option')).attr('value', cipher.name)
                                                                         .text(cipher.name));
             });
 
-            $.each(Interlock.Crypto.getDecryptKeys(), function(index, key) {
+            $.each(Interlock.Crypto.getDecryptKeys().sort(Interlock.UI.sortBy('identifier', false, false)), function(index, key) {
               $availableKeys.push($(document.createElement('option')).attr('value', key.path)
-                                                                   .text(key.identifier));
+                                                                     .text(key.identifier));
             });
 
             $selectCiphers.append($availableCiphers);
@@ -2105,13 +2105,9 @@ Interlock.FileManager.sortInodes = function(inodes) {
   try {
     var directories = [];
     var files = [];
-    var directoriesKeys = [];
-    var filesKeys = [];
-
     var sortedDirectories = [];
     var sortedFiles = [];
-
-    var sortAttr = 'name';
+    var reverse = sessionStorage.mainViewSortAsc === 'true' ? false : true
 
     if (sessionStorage.mainViewSortAttribute !== 'name' ||
         sessionStorage.mainViewSortAttribute !== 'size' ||
@@ -2119,36 +2115,16 @@ Interlock.FileManager.sortInodes = function(inodes) {
       sessionStorage.mainViewSortAttribute = 'name';
     }
 
-    sortAttr = sessionStorage.mainViewSortAttribute;
-
     $.each(inodes, function(index, inode) {
       if (inode.dir) {
         directories.push(inode);
-        directoriesKeys.push(inode[sortAttr]);
       } else {
         files.push(inode);
-        filesKeys.push(inode[sortAttr]);
       }
     });
 
-    directoriesKeys = directoriesKeys.sort();
-    filesKeys = filesKeys.sort();
-
-    $.each(directoriesKeys, function(dirKeyIndex, dirKey) {
-      $.grep(directories, function(e) {
-        if (e[sortAttr] === dirKey) {
-          sortedDirectories.push(e);
-        }
-      });
-    });
-
-    $.each(filesKeys, function(fileKeyIndex, fileKey) {
-      $.grep(files, function(e) {
-        if (e[sortAttr] === fileKey) {
-          sortedFiles.push(e);
-        }
-      });
-    });
+    sortedDirectories = directories.sort(Interlock.UI.sortBy(sessionStorage.mainViewSortAttribute, reverse, false));
+    sortedFiles = files.sort(Interlock.UI.sortBy(sessionStorage.mainViewSortAttribute, reverse, false));
 
     return $.merge(sortedDirectories, sortedFiles);
   } catch (e) {

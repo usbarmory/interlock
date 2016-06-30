@@ -341,3 +341,35 @@ Interlock.UI.formatSize = function(size) {
 
   return formattedSize;
 };
+
+/**
+  * @function
+  * @public
+  *
+  * @description
+  * @returns the sorting function to the .sort() function
+  *
+  * var arrayOfHashes = [{'id':'2','name':'bar'}, {'id':'1','name':'foo'}];
+  *
+  * sort by id:
+  * arrayOfHashes.sort(Interlock.UI.sortBy('id', false, parseInt));
+  *
+  * sort by name case-insentive:
+  * arrayOfHashes.sort(Interlock.UI.sortBy('name', false, function(a){return a.toUpperCase()}));
+ */
+Interlock.UI.sortBy = function(field, reverse = false, primer = false) {
+  var key = function(x) {return x[field]};
+  var rev = 1;
+
+  if (primer !== false) {
+    key = function(x) {return primer(x[field])};
+  }
+
+  if (reverse === true) {
+    rev = -1;
+  }
+
+  return function (a, b) {
+    return a = key(a), b = key(b), rev * ((a > b) - (b > a));
+  }
+};

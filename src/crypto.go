@@ -7,6 +7,8 @@
 package main
 
 import (
+	"crypto/rand"
+	"crypto/sha256"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -17,6 +19,8 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+
+	"golang.org/x/crypto/pbkdf2"
 )
 
 type key struct {
@@ -40,21 +44,21 @@ type cipherInfo struct {
 }
 
 type cipherInterface interface {
-	// initializes cipher instance
-	Init() cipherInterface
-	// returns a fresh cipher instance
+	// return a fresh cipher instance
 	New() cipherInterface
+	// initialize cipher
+	Init() cipherInterface
 	// post-auth cipher activation
 	Activate(active bool) error
-	// provides cipher information
+	// provide cipher information
 	GetInfo() cipherInfo
 	// generate key
 	GenKey(identifier string, email string) (pub string, sec string, err error)
-	// provides key information
+	// provide key information
 	GetKeyInfo(key) (string, error)
-	// sets symmetric or asymmetric key password
+	// set symmetric or asymmetric key password
 	SetPassword(string) error
-	// sets encryption, decryption or signing key
+	// set encryption, decryption or signing key
 	SetKey(key) error
 	// encryption
 	Encrypt(src *os.File, dst *os.File, sign bool) error
@@ -68,6 +72,15 @@ type cipherInterface interface {
 	GenOTP(timestamp int64) (otp string, exp int64, err error)
 	// cipher specific API request handler
 	HandleRequest(http.ResponseWriter, *http.Request) jsonObject
+}
+
+type HSMInterface interface {
+	// return a fresh HSM instance
+	New() HSMInterface
+	// return a fresh cipher instance
+	Cipher() cipherInterface
+	// derive key
+	DeriveKey(baseKey []byte, iv []byte) (derivedKey []byte, err error)
 }
 
 func ciphers(w http.ResponseWriter) (res jsonObject) {
@@ -455,6 +468,23 @@ func uploadKey(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		"status":   "OK",
 		"response": nil,
 	}
+
+	return
+}
+
+func DeriveKeyPBKDF2(salt []byte, password string) (randSalt []byte, key []byte, err error) {
+	if len(salt) == 0 {
+		randSalt = make([]byte, 8)
+		_, err = io.ReadFull(rand.Reader, randSalt)
+
+		if err != nil {
+			return
+		}
+
+		salt = randSalt
+	}
+
+	key = pbkdf2.Key([]byte(password), salt, 4096, 32, sha256.New)
 
 	return
 }

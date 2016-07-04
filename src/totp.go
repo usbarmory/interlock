@@ -33,7 +33,7 @@ func init() {
 	conf.SetAvailableCipher(new(tOTP).Init())
 }
 
-func (t *tOTP) Init() (c cipherInterface) {
+func (t *tOTP) Init() cipherInterface {
 	t.info = cipherInfo{
 		Name:        "TOTP",
 		Description: "Time-Based One-Time Password Algorithm (RFC6238, a.k.a. Google Authenticator)",

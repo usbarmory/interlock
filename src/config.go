@@ -17,6 +17,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -31,12 +32,16 @@ type config struct {
 	TLSCert     string   `json:"tls_cert"`
 	TLSKey      string   `json:"tls_key"`
 	TLSClientCA string   `json:"tls_client_ca"`
+	HSM         string   `json:"hsm"`
 	KeyPath     string   `json:"key_path"`
 	VolumeGroup string   `json:"volume_group"`
 	Ciphers     []string `json:"ciphers"`
 
 	availableCiphers map[string]cipherInterface
 	enabledCiphers   map[string]cipherInterface
+	availableHSMs    map[string]HSMInterface
+	authHSM          HSMInterface
+	tlsHSM           HSMInterface
 	mountPoint       string
 	testMode         bool
 	logFile          *os.File
@@ -50,6 +55,14 @@ func (c *config) SetAvailableCipher(cipher cipherInterface) {
 	}
 
 	c.availableCiphers[cipher.GetInfo().Name] = cipher
+}
+
+func (c *config) SetAvailableHSM(model string, HSM HSMInterface) {
+	if c.availableHSMs == nil {
+		c.availableHSMs = make(map[string]HSMInterface)
+	}
+
+	c.availableHSMs[model] = HSM
 }
 
 func (c *config) GetAvailableCipher(cipherName string) (cipher cipherInterface, err error) {
@@ -115,6 +128,47 @@ func (c *config) EnableCiphers() (err error) {
 	return
 }
 
+func (c *config) EnableHSM() (err error) {
+	if c.HSM == "off" {
+		return
+	}
+
+	HSMConf := strings.Split(c.HSM, ":")
+
+	if len(HSMConf) < 2 {
+		log.Fatal("invalid hsm configuration directive")
+	}
+
+	model := HSMConf[0]
+
+	if val, ok := c.availableHSMs[model]; ok {
+		options := strings.Split(HSMConf[1], ",")
+
+		status.Log(syslog.LOG_NOTICE, "enabling %s HSM %s", model, options)
+
+		HSM := val.New()
+
+		for i := 0; i < len(options); i++ {
+			switch options[i] {
+			case "luks":
+				c.authHSM = HSM
+			case "tls":
+				c.tlsHSM = HSM
+			case "cipher":
+				cipher := HSM.Cipher()
+				c.SetAvailableCipher(cipher)
+				c.enabledCiphers[cipher.GetInfo().Name] = cipher
+			default:
+				log.Fatal("invalid hsm option")
+			}
+		}
+	} else {
+		log.Fatal("invalid hsm model")
+	}
+
+	return
+}
+
 func (c *config) ActivateCiphers(activate bool) {
 	for _, val := range c.enabledCiphers {
 		err := val.Activate(activate)
@@ -140,6 +194,7 @@ func (c *config) SetDefaults() {
 	c.TLS = "on"
 	c.TLSCert = "certs/cert.pem"
 	c.TLSKey = "certs/key.pem"
+	c.HSM = "off"
 	c.KeyPath = "keys"
 	c.Ciphers = []string{"OpenPGP", "AES-256-OFB", "TOTP"}
 	c.testMode = false

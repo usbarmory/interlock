@@ -101,6 +101,12 @@ func main() {
 		log.Fatal(err)
 	}
 
+	err = conf.EnableHSM()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	conf.Print()
 
 	if conf.Debug {

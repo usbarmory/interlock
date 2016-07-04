@@ -7,6 +7,7 @@
   "tls_cert": "certs/cert.pem",
   "tls_key": "certs/key.pem",
   "tls_client_ca": "",
+  "hsm": "off",
   "key_path": "keys",
   "volume_group": "lvmvolume",
   "ciphers": [

@@ -7,7 +7,10 @@
 package main
 
 import (
+	"crypto/md5"
+	"encoding/base64"
 	"errors"
+	"io"
 	"log/syslog"
 	"net/http"
 	"os/user"
@@ -23,7 +26,7 @@ const (
 )
 
 func passwordRequest(w http.ResponseWriter, r *http.Request, mode int) (res jsonObject) {
-	var newpassword string
+	var newPassword string
 
 	req, err := parseRequest(r)
 
@@ -34,7 +37,7 @@ func passwordRequest(w http.ResponseWriter, r *http.Request, mode int) (res json
 	switch mode {
 	case _change, _add:
 		err = validateRequest(req, []string{"volume:s", "password:s", "newpassword:s"})
-		newpassword = req["newpassword"].(string)
+		newPassword = req["newpassword"].(string)
 	case _remove:
 		err = validateRequest(req, []string{"volume:s", "password:s"})
 	default:
@@ -45,7 +48,7 @@ func passwordRequest(w http.ResponseWriter, r *http.Request, mode int) (res json
 		return errorResponse(err, "")
 	}
 
-	err = luksKeyOp(req["volume"].(string), req["password"].(string), newpassword, mode)
+	err = luksKeyOp(req["volume"].(string), req["password"].(string), newPassword, mode)
 
 	if err != nil {
 		return errorResponse(err, "")
@@ -60,14 +63,33 @@ func passwordRequest(w http.ResponseWriter, r *http.Request, mode int) (res json
 }
 
 func luksOpen(volume string, password string) (err error) {
+	var key string
+
 	if traversalPattern.MatchString(volume) {
 		return errors.New("path traversal detected")
+	}
+
+	if conf.authHSM != nil {
+		key, err = deriveKey(password)
+
+		if err != nil {
+			return
+		}
 	}
 
 	args := []string{"luksOpen", "/dev/" + conf.VolumeGroup + "/" + volume, mapping}
 	cmd := "/sbin/cryptsetup"
 
 	status.Log(syslog.LOG_NOTICE, "unlocking encrypted volume %s", volume)
+
+	if conf.authHSM != nil {
+		_, err = execCommand(cmd, args, true, key+"\n")
+
+		if err == nil {
+			return
+		}
+		// fallback to original password to allow pre-HSM migration
+	}
 
 	_, err = execCommand(cmd, args, true, password+"\n")
 
@@ -125,26 +147,61 @@ func luksClose() (err error) {
 	return
 }
 
-func luksKeyOp(volume string, password string, newpassword string, mode int) (err error) {
+func luksKeyOp(volume string, password string, newPassword string, mode int) (err error) {
 	var action string
 	var input string
+	var key string
+	var newKey string
+	var keyInputs []string
 
 	if traversalPattern.MatchString(volume) {
 		return errors.New("path traversal detected")
 	}
 
+	if conf.authHSM != nil {
+		key, err = deriveKey(password)
+
+		if err != nil {
+			return
+		}
+
+		if mode == _change || mode == _add {
+			newKey, err = deriveKey(newPassword)
+
+			if err != nil {
+				return
+			}
+		}
+	}
+
 	switch mode {
 	case _change:
 		action = "luksChangeKey"
-		input = password + "\n" + newpassword + "\n"
+		input = password + "\n" + newPassword + "\n"
+
+		if conf.authHSM != nil {
+			keyInputs = append(keyInputs, key+"\n"+newKey+"\n")
+			keyInputs = append(keyInputs, password+"\n"+newKey+"\n")
+		}
 	case _add:
 		action = "luksAddKey"
-		input = password + "\n" + newpassword + "\n" + newpassword + "\n"
+		input = password + "\n" + newPassword + "\n" + newPassword + "\n"
+
+		if conf.authHSM != nil {
+			keyInputs = append(keyInputs, key+"\n"+newKey+"\n"+newKey+"\n")
+			keyInputs = append(keyInputs, password+"\n"+newKey+"\n"+newKey+"\n")
+		}
 	case _remove:
 		action = "luksRemoveKey"
 		input = password + "\n"
+
+		if conf.authHSM != nil {
+			keyInputs = append(keyInputs, key+"\n")
+			keyInputs = append(keyInputs, password+"\n")
+		}
 	default:
 		err = errors.New("unsupported operation")
+		return
 	}
 
 	args := []string{action, "/dev/" + conf.VolumeGroup + "/" + volume}
@@ -152,7 +209,32 @@ func luksKeyOp(volume string, password string, newpassword string, mode int) (er
 
 	status.Log(syslog.LOG_NOTICE, "performing LUKS key action %s", action)
 
-	_, err = execCommand(cmd, args, true, input)
+	if conf.authHSM != nil {
+		for i := 0; i < len(keyInputs); i++ {
+			_, err = execCommand(cmd, args, true, keyInputs[i])
+
+			if err == nil {
+				return
+			}
+			// fallback to original password to allow pre-HSM migration
+		}
+	} else {
+		_, err = execCommand(cmd, args, true, input)
+	}
+
+	return
+}
+
+func deriveKey(password string) (derivedKey string, err error) {
+	h := md5.New()
+	io.WriteString(h, password)
+	key, err := conf.authHSM.DeriveKey([]byte(password), h.Sum(nil))
+
+	if err != nil {
+		return
+	}
+
+	derivedKey = base64.StdEncoding.EncodeToString(key)
 
 	return
 }

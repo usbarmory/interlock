@@ -55,7 +55,7 @@ func init() {
 	conf.SetAvailableCipher(new(Signal).Init())
 }
 
-func (t *Signal) Init() (c cipherInterface) {
+func (t *Signal) Init() cipherInterface {
 	t.info = cipherInfo{
 		Name:        "Signal",
 		Description: "Signal (TextSecure) protocol V2",

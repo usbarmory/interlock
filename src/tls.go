@@ -21,53 +21,110 @@ import (
 	"math/big"
 	"net/http"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 )
 
-func startServer() error {
-	var err error
+func startServer() (err error) {
+	var server *http.Server
+	var TLSCert []byte
+	var TLSKey []byte
 
 	if conf.TLS == "gen" {
 		err = generateTLSCerts()
 	}
 
 	if err != nil {
-		return err
+		return
 	}
 
-	log.Printf("starting server on %s", conf.BindAddress)
+	if conf.TLS == "off" {
+		log.Printf("starting HTTP server on %s", conf.BindAddress)
+		return http.ListenAndServe(conf.BindAddress, nil)
+	}
 
-	if conf.TLS != "off" && conf.TLSClientCA != "" {
-		certPool := x509.NewCertPool()
-		{
-			clientCert, err := ioutil.ReadFile(conf.TLSClientCA)
+	if conf.tlsHSM != nil {
+		HSM := conf.tlsHSM.Cipher()
+
+		extHSM := "." + HSM.GetInfo().Extension
+		_, err = os.Stat(conf.TLSKey + extHSM)
+
+		// use a previously converted key if found, as tls_key
+		// configuration directive might not have been changed
+		// by the user
+		if err == nil {
+			conf.TLSKey += extHSM
+		}
+
+		// convert existing plaintext TLSKey file if it is the only one
+		// available
+		if err != nil && filepath.Ext(conf.TLSKey) != extHSM {
+			err = encryptKeyFile(HSM, conf.TLSKey, conf.TLSKey+extHSM)
 
 			if err != nil {
-				return err
+				return
 			}
 
-			if ok := certPool.AppendCertsFromPEM(clientCert); !ok {
-				log.Fatal("could not parse client certificate authority")
-			}
+			conf.TLSKey += extHSM
 		}
 
-		server := &http.Server{
-			Addr: conf.BindAddress,
-			TLSConfig: &tls.Config{
-				ClientAuth: tls.RequireAndVerifyClientCert,
-				ClientCAs:  certPool,
-			},
-		}
-
-		err = server.ListenAndServeTLS(conf.TLSCert, conf.TLSKey)
-	} else if conf.TLS != "off" {
-		err = http.ListenAndServeTLS(conf.BindAddress, conf.TLSCert, conf.TLSKey, nil)
+		TLSKey, err = decryptKey(HSM, conf.TLSKey)
 	} else {
-		err = http.ListenAndServe(conf.BindAddress, nil)
+		TLSKey, err = ioutil.ReadFile(conf.TLSKey)
 	}
 
-	return err
+	if err != nil {
+		return
+	}
+
+	TLSCert, err = ioutil.ReadFile(conf.TLSCert)
+
+	if err != nil {
+		return
+	}
+
+	certificate, err := tls.X509KeyPair(TLSCert, TLSKey)
+
+	if err != nil {
+		return
+	}
+
+	if conf.TLSClientCA != "" {
+		var clientCert []byte
+		certPool := x509.NewCertPool()
+
+		clientCert, err = ioutil.ReadFile(conf.TLSClientCA)
+
+		if err != nil {
+			return
+		}
+
+		if ok := certPool.AppendCertsFromPEM(clientCert); !ok {
+			log.Fatal("could not parse client certificate authority")
+		}
+
+		server = &http.Server{
+			Addr: conf.BindAddress,
+			TLSConfig: &tls.Config{
+				Certificates: []tls.Certificate{certificate},
+				ClientAuth:   tls.RequireAndVerifyClientCert,
+				ClientCAs:    certPool,
+			},
+		}
+	} else {
+		server = &http.Server{
+			Addr: conf.BindAddress,
+			TLSConfig: &tls.Config{
+				Certificates: []tls.Certificate{certificate},
+			},
+		}
+	}
+
+	log.Printf("starting HTTPS server on %s", conf.BindAddress)
+	err = server.ListenAndServeTLS("", "")
+
+	return
 }
 
 func generateTLSCerts() (err error) {
@@ -130,6 +187,75 @@ func generateTLSCerts() (err error) {
 	h.Write(cert)
 
 	status.Log(syslog.LOG_NOTICE, "SHA-256 fingerprint: % X", h.Sum(nil))
+
+	return
+}
+
+func encryptKeyFile(cipher cipherInterface, src string, dst string) (err error) {
+	status.Log(syslog.LOG_NOTICE, "encrypting existing TLS key file")
+
+	input, err := os.Open(src)
+
+	if err != nil {
+		return
+	}
+
+	output, err := ioutil.TempFile("", "tls_key-hsm")
+
+	if err != nil {
+		input.Close()
+		return
+	}
+
+	err = cipher.Encrypt(input, output, false)
+
+	if err != nil {
+		input.Close()
+		output.Close()
+		return
+	}
+
+	input.Close()
+	output.Close()
+
+	_ = fileOp(src, "", _delete)
+	err = fileOp(output.Name(), dst, _move)
+
+	status.Log(syslog.LOG_NOTICE, "TLS key file %s moved and encrypted to %s\n", src, dst)
+
+	return
+}
+
+func decryptKey(cipher cipherInterface, keyPath string) (key []byte, err error) {
+	status.Log(syslog.LOG_NOTICE, "decrypting TLS key file")
+
+	input, err := os.Open(keyPath)
+
+	if err != nil {
+		return
+	}
+
+	stat, err := input.Stat()
+
+	if err != nil {
+		return
+	}
+
+	r, output, err := os.Pipe()
+
+	if err != nil {
+		return
+	}
+
+	err = cipher.Decrypt(input, output, false)
+
+	if err != nil {
+		return
+	}
+
+	// salt (8 bytes) + iv (16 bytes) + hmac (32 bytes) == 56 bytes
+	key = make([]byte, stat.Size()-56)
+	_, err = r.Read(key)
 
 	return
 }

@@ -33,7 +33,7 @@ func init() {
 	conf.SetAvailableCipher(new(openPGP).Init())
 }
 
-func (o *openPGP) Init() (c cipherInterface) {
+func (o *openPGP) Init() cipherInterface {
 	o.info = cipherInfo{
 		Name:        "OpenPGP",
 		Description: "OpenPGP (golang.org/x/crypto/openpgp)",

@@ -103,6 +103,24 @@ Messaging and file sharing:
 
 * Signal protocol V2 via external library (https://github.com/janimo/textsecure)
 
+Hardware Security Modules:
+
+* NXP Security Controller (SCCv2)
+
+  The SCCv2 support allows symmetric AES-256-CBC ciphering using its device
+  specific secret key. This can be used to uniquely tie derived keys to the
+  individual hardware unit being used.
+
+  With the SCCv2, the AES-256-SCC symmetric cipher is available. This cipher is
+  identical to AES-256-OFB, however the password key derivation includes a stage
+  through SCCv2 encryption to make it device specific.
+
+  The LUKS passwords for accessing encrypted volumes can also be filtered
+  through the SCCv2 to make them device specific.
+
+  Finally INTERLOCK TLS certificates can be stored encrypted with SCCv2
+  support.
+
 Key Storage
 ===========
 
@@ -248,11 +266,14 @@ Configuration
 * bind_address: IP address, port pair.
 
 * tls:
+
   - "on"   use tls_cert and tls_key paths as HTTPS TLS keypair;
-  - "off"  disable HTTPS;
+
   - "gen"  generate a new TLS keypair and save it to tls_cert and tls_key
            paths when pointing to non existent files (otherwise behaves like
-           "on"), useful for testing and TOFU (Trust On First Use) schemes.
+           "on"), useful for testing and TOFU (Trust On First Use) schemes;
+
+  - "off"  disable HTTPS.
 
 * tls_cert: HTTPS server TLS certificate.
 
@@ -262,11 +283,41 @@ Configuration
   certificate requires TLS Web Client Authentication X509v3 Extended Key Usage
   extension to be correctly validated.
 
+* hsm:
+
+  - "<model>:<options>"  enable <model> HSM support with <options>, multiple
+                         options can be combined in a comma separated list
+                         (e.g. "mxc-scc2":"luks,tls,cipher");
+
+  - "off"                disable HSM support.
+
+  Available models:
+
+  - "mxc-scc2"           NXP Security Controller (SCCv2), requires kernel driver
+                         [mxc-scc2](https://github.com/inversepath/mxc-scc2).
+
+  Available options:
+
+  - "luks"               use HSM secret key to AES encrypt LUKS passwords and
+                         make them device specific before use; LUKS login and
+                         password operations (add, change, remove) fallback, in
+                         case of failure, to plain ones in order to allow change
+                         of credentials on pre-HSM deployments;
+
+  - "tls"                use HSM secret key to AES-256-OFB encrypt the HTTPS
+                         server TLS key (tls_key), automatically convert
+                         existing plaintext keys;
+
+  - "cipher"             expose AES-256-OFB derived symmetric cipher with
+                         password key derivation through HSM encryption to make
+                         it device specific.
+
 * key_path: path for public/private key storage on the encrypted filesystem.
 
 * volume_group: volume group name.
 
-* ciphers: array of cipher names to enable.
+* ciphers: array of cipher names to enable, supported values are
+  ["OpenPGP", "AES-256-OFB", "TOTP", "Signal"].
 
 The following example illustrates the configuration file format (plain JSON)
 and its default values.
@@ -281,6 +332,7 @@ and its default values.
         "tls_cert": "certs/cert.pem",
         "tls_key": "certs/key.pem",
         "tls_client_ca": "",
+        "hsm": "off",
         "key_path": "keys",
         "volume_group": "lvmvolume"
         "ciphers": [

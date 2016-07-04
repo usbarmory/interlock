@@ -16,11 +16,9 @@ import (
 	"io"
 	"net/http"
 	"os"
-
-	"golang.org/x/crypto/pbkdf2"
 )
 
-// Symmetric file encryption using AES256OFB, key is derived from password
+// Symmetric file encryption using AES-256-OFB, key is derived from password
 // using PBKDF2 with SHA256 and 4096 rounds. The salt, initialization vector
 // are prepended to the encrypted file, the HMAC for authentication is
 // appended:
@@ -38,10 +36,10 @@ func init() {
 	conf.SetAvailableCipher(new(aes256OFB).Init())
 }
 
-func (a *aes256OFB) Init() (c cipherInterface) {
+func (a *aes256OFB) Init() cipherInterface {
 	a.info = cipherInfo{
 		Name:        "AES-256-OFB",
-		Description: "Go AES OFB with 32 bytes derived key using PBKDF2",
+		Description: "AES OFB w/ 256 bit key derived using PBKDF2",
 		KeyFormat:   "password",
 		Enc:         true,
 		Dec:         true,
@@ -82,23 +80,88 @@ func (a *aes256OFB) Encrypt(input *os.File, output *os.File, sign bool) (err err
 		return errors.New("symmetric cipher does not support signing")
 	}
 
-	salt := make([]byte, 8)
-	_, err = io.ReadFull(rand.Reader, salt)
+	iv := make([]byte, aes.BlockSize)
+	_, err = io.ReadFull(rand.Reader, iv)
 
 	if err != nil {
 		return
 	}
 
-	key := pbkdf2.Key([]byte(a.password), salt, 4096, 32, sha256.New)
-	block, err := aes.NewCipher(key)
+	salt, key, err := DeriveKeyPBKDF2(nil, a.password)
+
+	if err != nil {
+		return
+	}
+
+	err = EncryptOFB(key, salt, iv, input, output)
+
+	return
+}
+
+func (a *aes256OFB) Decrypt(input *os.File, output *os.File, verify bool) (err error) {
+	if verify {
+		return errors.New("symmetric cipher does not support signature verification")
+	}
+
+	salt := make([]byte, 8)
+	_, err = io.ReadFull(input, salt)
 
 	if err != nil {
 		return
 	}
 
 	iv := make([]byte, aes.BlockSize)
+	_, err = io.ReadFull(input, iv)
 
-	_, err = io.ReadFull(rand.Reader, iv)
+	if err != nil {
+		return
+	}
+
+	_, key, err := DeriveKeyPBKDF2(salt, a.password)
+
+	if err != nil {
+		return
+	}
+
+	err = DecryptOFB(key, salt, iv, input, output)
+
+	return
+}
+
+func (a *aes256OFB) GenKey(i string, e string) (p string, s string, err error) {
+	err = errors.New("symmetric cipher does not support key generation")
+	return
+}
+
+func (a *aes256OFB) GetKeyInfo(k key) (i string, err error) {
+	err = errors.New("symmetric cipher does not support key")
+	return
+}
+
+func (a *aes256OFB) SetKey(k key) error {
+	return errors.New("symmetric cipher does not support key")
+}
+
+func (a *aes256OFB) Sign(i *os.File, o *os.File) error {
+	return errors.New("symmetric cipher does not support signing")
+}
+
+func (a *aes256OFB) Verify(i *os.File, s *os.File) error {
+	return errors.New("symmetric cipher does not support signature verification")
+}
+
+func (a *aes256OFB) GenOTP(timestamp int64) (otp string, exp int64, err error) {
+	err = errors.New("cipher does not support OTP generation")
+	return
+}
+
+func (a *aes256OFB) HandleRequest(w http.ResponseWriter, r *http.Request) (res jsonObject) {
+	res = notFound(w)
+	return
+}
+
+func EncryptOFB(key []byte, salt []byte, iv []byte, input *os.File, output *os.File) (err error) {
+	block, err := aes.NewCipher(key)
 
 	if err != nil {
 		return
@@ -153,27 +216,8 @@ func (a *aes256OFB) Encrypt(input *os.File, output *os.File, sign bool) (err err
 	return
 }
 
-func (a *aes256OFB) Decrypt(input *os.File, output *os.File, verify bool) (err error) {
-	if verify {
-		return errors.New("symmetric cipher does not support signature verification")
-	}
-
-	salt := make([]byte, 8)
-	_, err = io.ReadFull(input, salt)
-
-	if err != nil {
-		return
-	}
-
-	key := pbkdf2.Key([]byte(a.password), salt, 4096, 32, sha256.New)
+func DecryptOFB(key []byte, salt []byte, iv []byte, input *os.File, output *os.File) (err error) {
 	block, err := aes.NewCipher(key)
-
-	if err != nil {
-		return
-	}
-
-	iv := make([]byte, aes.BlockSize)
-	_, err = io.ReadFull(input, iv)
 
 	if err != nil {
 		return
@@ -223,41 +267,5 @@ func (a *aes256OFB) Decrypt(input *os.File, output *os.File, verify bool) (err e
 
 	_, err = io.Copy(writer, ciphertextReader)
 
-	if err != nil {
-		return
-	}
-
-	return
-}
-
-func (a *aes256OFB) GenKey(i string, e string) (p string, s string, err error) {
-	err = errors.New("symmetric cipher does not support key generation")
-	return
-}
-
-func (a *aes256OFB) GetKeyInfo(k key) (i string, err error) {
-	err = errors.New("symmetric cipher does not support key")
-	return
-}
-
-func (a *aes256OFB) SetKey(k key) error {
-	return errors.New("symmetric cipher does not support key")
-}
-
-func (a *aes256OFB) Sign(i *os.File, o *os.File) error {
-	return errors.New("symmetric cipher does not support signing")
-}
-
-func (a *aes256OFB) Verify(i *os.File, s *os.File) error {
-	return errors.New("symmetric cipher does not support signature verification")
-}
-
-func (a *aes256OFB) GenOTP(timestamp int64) (otp string, exp int64, err error) {
-	err = errors.New("cipher does not support OTP generation")
-	return
-}
-
-func (a *aes256OFB) HandleRequest(w http.ResponseWriter, r *http.Request) (res jsonObject) {
-	res = notFound(w)
 	return
 }

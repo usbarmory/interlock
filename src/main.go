@@ -18,9 +18,10 @@ import (
 var configPath = flag.String("c", "interlock.conf", "configuration file path")
 
 func init() {
-	if os.Geteuid() == 0 {
-		log.Fatal("Please do not run this application with administrative privileges")
-	}
+
+	// if os.Geteuid() == 0 {
+	// 	log.Fatal("Please do not run this application with administrative privileges")
+	// }
 
 	conf.SetDefaults()
 

@@ -103,8 +103,8 @@ func (s *statusBuffer) Test(format string, a ...interface{}) {
 func versionStatus(w http.ResponseWriter) (res jsonObject) {
 	build := INTERLOCKBuild
 
-	if conf.HSM != "" {
-		build += " | " + conf.HSM
+	if conf.HSM != "off" {
+		build += " " + conf.HSM
 	}
 
 	res = jsonObject{

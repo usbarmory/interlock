@@ -423,7 +423,8 @@ response:
     "status":      string,   # OK | KO | INVALID_SESSION | INVALID
     "response": {
       "revision" : string,   # revision
-      "build":     string    # build information
+      "build":     string,   # build information
+      "key_path":  string    # path for public/private key storage
     }
   }
 

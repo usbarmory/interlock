@@ -112,6 +112,7 @@ func versionStatus(w http.ResponseWriter) (res jsonObject) {
 		"response": map[string]interface{}{
 			"revision": INTERLOCKRevision,
 			"build":    build,
+			"key_path": conf.KeyPath,
 		},
 	}
 

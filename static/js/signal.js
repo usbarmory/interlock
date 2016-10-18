@@ -176,8 +176,6 @@ Interlock.Signal.sendCallback = function(backendData, args) {
       Interlock.Signal.getHistory(args.contact);
 
       if (args.attachment === true) {
-        sessionStorage.clipBoard = JSON.stringify({ 'action': 'none', 'paths': undefined, 'isSingleFile': false });
-
         /* re-set the dialog if an attachment has been sent */
         Interlock.UI.modalFormDialog('close');
         Interlock.Signal.chat(args.contact);

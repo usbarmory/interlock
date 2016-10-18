@@ -1662,7 +1662,6 @@ Interlock.FileManager.fileCopyCallback = function(backendData, args) {
   try {
     if (backendData.status === 'OK') {
       Interlock.FileManager.fileList('mainView');
-      sessionStorage.clipBoard = JSON.stringify({ 'action': 'none', 'paths': undefined, 'isSingleFile': false });
     } else {
       Interlock.Session.createEvent({'kind': backendData.status,
         'msg': '[Interlock.FileManager.fileCopy] ' + backendData.response});

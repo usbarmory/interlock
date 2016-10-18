@@ -50,16 +50,16 @@ Interlock.Signal.chat = function(contact) {
                                                        .attr('placeholder', 'Send Signal message')
                                                        .addClass('text ui-widget-content ui-corner-all key')];
 
-  var buttons = {  'Close': function() {
-                     Interlock.Signal.historyPollerInterval[contact] = 0;
-                     Interlock.UI.modalFormDialog('close');
-                   },
-                   'Send': function() {
-                     if ($('#msg').val().length > 0) {
-                       Interlock.Signal.send(contact, $('#msg').val())
-                     }
-                   }
-                 };
+  var buttons = { 'Close': function() {
+                    Interlock.Signal.historyPollerInterval[contact] = 0;
+                    Interlock.UI.modalFormDialog('close');
+                  },
+                  'Send': function() {
+                    if ($('#msg').val().length > 0) {
+                      Interlock.Signal.send(contact, $('#msg').val());
+                    }
+                  }
+                };
 
   var contactName = contact.split('/').pop().split('.Signal')[0] || 'Unknown Contact';
 
@@ -72,6 +72,12 @@ Interlock.Signal.chat = function(contact) {
     /* open the help dialog for the Signal send attachment feature */
     buttons['Send Attachment'] = function() { Interlock.Signal.attachmentHelpDialog(); };
   }
+
+  buttons['Verify Identity'] = function() {
+    var remote = 'remote_' + contact.split(/\s\+/).pop();
+    var key_path = '/' + sessionStorage.InterlockKeyPath + '/signal/private/identity/';
+    Interlock.Crypto.keyInfo(key_path + remote);
+  };
 
   Interlock.UI.modalFormConfigure({elements: elements, buttons: buttons,
                                    noCancelButton: true, noCloseButton:true,

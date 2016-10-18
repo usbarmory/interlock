@@ -52,7 +52,7 @@ if (sessionStorageSupported() && fileAPISupported()) {
         console.log('[Interlock.UI] failed to load module: ' + e + '\n');
   });
 
-  /* backend module and Signal depends on UI */
+  /* backend module depends on UI */
   $.when(Interlock.Modules.UI).done(function() {
     $.getScript('/js/backend.js')
       .done(function(script, textStatus) {
@@ -60,14 +60,6 @@ if (sessionStorageSupported() && fileAPISupported()) {
       })
       .fail(function(jqxhr, settings, e) {
           console.log('[Interlock.Backend] failed to load module: ' + e + '\n');
-    })
-
-    $.getScript('/js/signal.js')
-      .done(function(script, Signal) {
-        Interlock.Modules.Signal.resolve();
-      })
-      .fail(function(jqxhr, settings, e) {
-          console.log('[Interlock.Signal] failed to load module: ' + e + '\n');
     })
   });
 
@@ -82,8 +74,9 @@ if (sessionStorageSupported() && fileAPISupported()) {
     })
   });
 
-  /* the remaining Interlock modules depends on UI, backend and session,
-     apart from file manager that also depends on Signal and crypto */
+  /* all the remaining Interlock modules depends on UI, backend and session,
+     apart from Signal that depends also on crypto and file manager that
+     depends on Signal and crypto */
   $.when(Interlock.Modules.UI, Interlock.Modules.backend, Interlock.Modules.session).done(function() {
     $.getScript('/js/config.js')
       .done(function(script, textStatus) {
@@ -107,6 +100,18 @@ if (sessionStorageSupported() && fileAPISupported()) {
       })
       .fail(function(jqxhr, settings, e) {
         console.log('[Interlock.Crypto] failed to load module: ' + e + '\n');
+    })
+  });
+
+  /* module Signal depends also on crypto and session */
+  $.when(Interlock.Modules.UI, Interlock.Modules.backend, Interlock.Modules.crypto,
+         Interlock.Modules.session).done(function() {
+    $.getScript('/js/signal.js')
+      .done(function(script, Signal) {
+        Interlock.Modules.Signal.resolve();
+      })
+      .fail(function(jqxhr, settings, e) {
+          console.log('[Interlock.Signal] failed to load module: ' + e + '\n');
     })
   });
 

@@ -365,33 +365,52 @@ Interlock.Crypto.keyInfoCallback = function(backendData, args) {
   try {
     if (backendData.status === 'OK') {
       var elements = [];
-      var buttons = {'OK': function() { Interlock.UI.modalFormDialog('close'); } };
+      var buttons = {};
+      var ciphers;
 
-      /* add the Refresh button to the key info dialog if the key.cipher is otp */
       if (args.cipher) {
-        var ciphers = Interlock.Crypto.getCiphers(args.cipher);
-
-        if (ciphers && ciphers[0] && ciphers[0].otp) {
-          $.extend(buttons, {'Refresh': function() {
-            Interlock.UI.modalFormDialog('close');
-            Interlock.Crypto.keyInfo(args.path, args.cipher);
-          }});
-        }
+        ciphers = Interlock.Crypto.getCiphers(args.cipher);
       }
 
-      $.each(backendData.response.split(/\n/), function(index, line) {
-        var pEl = $(document.createElement('p'));
+      /* if key.cipher is otp use UI.modalForm instead of
+         UI.notificationForm, and add the Refresh button */
+      if (ciphers && ciphers[0] && ciphers[0].otp) {
+        buttons = {'OK': function() { Interlock.UI.modalFormDialog('close'); } };
 
-        if (line.match(/\s\s/)) {
-          pEl.addClass('indent');
-        }
+        $.extend(buttons, {'Refresh': function() {
+          Interlock.UI.modalFormDialog('close');
+          Interlock.Crypto.keyInfo(args.path, args.cipher);
+        }});
 
-        elements.push(pEl.text(line));
-      });
+        $.each(backendData.response.split(/\n/), function(index, line) {
+          var pElement = $(document.createElement('p'));
 
-      Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
-        title: 'Key Info', noCancelButton: true, height: 500, width: 500 });
-      Interlock.UI.modalFormDialog('open');
+          if (line.match(/\s\s/)) {
+            pElement.addClass('indent');
+          }
+
+          elements.push(pElement.text(line));
+        });
+
+        Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
+          title: 'Key Info', noCancelButton: true, height: 500, width: 500 });
+        Interlock.UI.modalFormDialog('open');
+      } else {
+        buttons = {'OK': function() { Interlock.UI.notificationFormDialog('close'); } };
+
+        $.each(backendData.response.split(/\n/), function(index, line) {
+          var pElement = $(document.createElement('p'));
+
+          if (line.match(/\s\s/)) {
+            pElement.addClass('indent');
+          }
+
+          elements.push(pElement.text(line));
+        });
+
+        Interlock.UI.notificationFormDialog({ elements: elements,
+          height: 500, width: 500, title: 'Key Info' });
+      }
     } else {
       Interlock.Session.createEvent({'kind': backendData.status,
         'msg': '[Interlock.Crypto.keyInfoCallback] ' + backendData.response});

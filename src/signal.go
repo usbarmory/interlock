@@ -32,6 +32,7 @@ const registrationTimeout = 60 * time.Second
 
 var numberPattern = regexp.MustCompile("^(?:\\+|00)[0-9]+$")
 var contactPattern = regexp.MustCompile("^(([^/]*) ((?:\\+|00)[0-9]+))$")
+var remoteIdentityPattern = regexp.MustCompile("^remote_[0-9]+")
 
 type Signal struct {
 	info             cipherInfo
@@ -108,7 +109,32 @@ func (t *Signal) GenKey(i string, e string) (p string, s string, err error) {
 }
 
 func (t *Signal) GetKeyInfo(k key) (i string, err error) {
-	i = "Signal library private data"
+	if remoteIdentityPattern.MatchString(k.Identifier) {
+		var remoteIdentity []byte
+		var identity []byte
+
+		remoteIdentityPath := filepath.Join(conf.mountPoint, k.Path)
+		identityPath := filepath.Join(storagePath(), "identity", "identity_key")
+
+		remoteIdentity, err = ioutil.ReadFile(remoteIdentityPath)
+
+		if err != nil {
+			return
+		}
+
+		identity, err = ioutil.ReadFile(identityPath)
+
+		if err != nil {
+			return
+		}
+
+		identity = identity[0:32]
+
+		i = fmt.Sprintf("Their identity (they read):\n\n05 % X\n\nYour identity (you read):\n\n05 % X", remoteIdentity, identity)
+	} else {
+		i = "Signal library private data"
+	}
+
 	return
 }
 

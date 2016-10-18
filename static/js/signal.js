@@ -187,6 +187,9 @@ Interlock.Signal.sendCallback = function(backendData, args) {
   } catch (e) {
     Interlock.Session.createEvent({'kind': 'critical',
       'msg': '[Interlock.Signal.sendCallback] ' + e});
+  } finally {
+    Interlock.Signal.historyPollerInterval[args.contact] = 5000;
+    $('.ui-dialog > .ajax_overlay').remove();
   }
 };
 
@@ -205,6 +208,9 @@ Interlock.Signal.sendCallback = function(backendData, args) {
  */
 Interlock.Signal.send = function(contact, msg, attachment) {
   try {
+    Interlock.Signal.historyPollerInterval[contact] = 0;
+    Interlock.UI.ajaxLoader('.ui-dialog');
+
     if (attachment !== undefined) {
       Interlock.Backend.APIRequest(Interlock.Backend.API.Signal.send, 'POST',
         JSON.stringify({contact: contact, msg: msg, attachment: attachment}), 'Signal.sendCallback',

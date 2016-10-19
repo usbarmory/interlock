@@ -73,7 +73,7 @@ Interlock.Signal.chat = function(contact) {
     buttons['Send Attachment'] = function() { Interlock.Signal.attachmentHelpDialog(); };
   }
 
-  buttons['Verify Identity'] = function() {
+  buttons['Verify'] = function() {
     var remote = 'remote_' + contact.split(/\s\+/).pop();
     var key_path = '/' + sessionStorage.InterlockKeyPath + '/signal/private/identity/';
     Interlock.Crypto.keyInfo(key_path + remote);

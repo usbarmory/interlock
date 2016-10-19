@@ -210,14 +210,7 @@ func (c *config) SetMountPoint() error {
 func (c *config) Set(configPath string) (err error) {
 	debugFlag := c.Debug
 
-	f, err := os.Open(configPath)
-
-	if err != nil {
-		return
-	}
-	defer f.Close()
-
-	b, err := ioutil.ReadAll(f)
+	b, err := ioutil.ReadFile(configPath)
 
 	if err != nil {
 		return

@@ -734,14 +734,7 @@ func needsRegistration() (reg bool) {
 }
 
 func registeredNumber() (number string, err error) {
-	input, err := os.Open(numberPath())
-
-	if err != nil {
-		return
-	}
-	defer input.Close()
-
-	n, err := ioutil.ReadAll(input)
+	n, err := ioutil.ReadFile(numberPath())
 
 	if err != nil {
 		return

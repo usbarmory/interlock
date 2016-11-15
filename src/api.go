@@ -1,5 +1,6 @@
 // INTERLOCK | https://github.com/inversepath/interlock
 // Copyright (c) 2015-2016 Inverse Path S.r.l.
+// Copyright (c) 2016-2017 Marco Bonetti <sid77@slackware.it>
 //
 // Use of this source code is governed by the license
 // that can be found in the LICENSE file.
@@ -7,25 +8,62 @@
 package main
 
 import (
+	"bytes"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"net/url"
 	"os"
 	"regexp"
+	"strings"
 )
+
+type ResponseNoncer struct {
+	w     http.ResponseWriter
+	nonce string
+}
+
+const nonceSize = 32
+
+const nonceToken = "{{ nonce }}"
 
 var URIPattern = regexp.MustCompile("/api/([A-Za-z0-9]+)/([a-z0-9_]+)")
 
 func applyHeaders(h http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Security-Policy", "script-src 'self' 'unsafe-eval'; object-src 'none';")
+		nonce, err := encodedRandomString(nonceSize, false)
+		if err != nil {
+			errors.New("can't generate a new nonce")
+		}
+		w.Header().Set("Content-Security-Policy", "default-src 'none'; script-src 'strict-dynamic' 'nonce-"+nonce+"' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self'; connect-src 'self';")
 		w.Header().Set("Cache-Control", "no-cache, no-store, max-age=0, must-revalidate")
 		w.Header().Set("Pragma", "no-cache")
 		w.Header().Set("Expires", "Fri, 07 Jan 1981 00:00:00 GMT")
 
-		h.ServeHTTP(w, r)
+		noncer := NewResponseNoncer(w, nonce)
+
+		h.ServeHTTP(noncer, r)
 	}
+}
+
+func NewResponseNoncer(w http.ResponseWriter, nonce string) http.ResponseWriter {
+	return &ResponseNoncer{w, nonce}
+}
+
+func (r *ResponseNoncer) Header() http.Header {
+	return r.w.Header()
+}
+
+func (r *ResponseNoncer) Write(b []byte) (int, error) {
+	buffer := bytes.NewBuffer(b)
+	noncedString := strings.Replace(buffer.String(), nonceToken, r.nonce, -1)
+	buffer = bytes.NewBufferString(noncedString)
+	return r.w.Write(buffer.Bytes())
+}
+
+func (r *ResponseNoncer) WriteHeader(i int) {
+	r.w.WriteHeader(i)
 }
 
 func registerHandlers(staticPath string) (err error) {

@@ -1,5 +1,6 @@
 // INTERLOCK | https://github.com/inversepath/interlock
 // Copyright (c) 2015-2016 Inverse Path S.r.l.
+// Copyright (c) 2016-2017 Marco Bonetti <sid77@slackware.it>
 //
 // Use of this source code is governed by the license
 // that can be found in the LICENSE file.
@@ -19,11 +20,19 @@ const cookieSize = 64
 const cookieAge = 8 * 60 * 60
 
 func randomString(size int) (c string, err error) {
+	return encodedRandomString(size, true)
+}
+
+func encodedRandomString(size int, URLEncoded bool) (c string, err error) {
 	rb := make([]byte, size)
 
 	_, err = rand.Read(rb)
 
-	c = base64.URLEncoding.EncodeToString(rb)
+	if URLEncoded {
+		c = base64.URLEncoding.EncodeToString(rb)
+	} else {
+		c = base64.StdEncoding.EncodeToString(rb)
+	}
 
 	return
 }

@@ -419,7 +419,7 @@ func downloadHistory(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 	}
 
 	if stat.Size() > historySize {
-		trimOffset = bytes.IndexByte(history, 0xa) // \n
+		trimOffset = bytes.IndexByte(history, 0x0a) // \n
 
 		if trimOffset < 0 {
 			trimOffset = 0
@@ -762,8 +762,7 @@ func getStoragePassword() string {
 }
 
 func genSafetyNumbers(number string, identity []byte) (safetyNumbers string) {
-	identityHash := []byte{0x00, 0x00, keyType}
-
+	identityHash := []byte{0, 0, keyType}
 	identityHash = append(identityHash, identity...)
 
 	if !strings.HasPrefix(number, "+") {

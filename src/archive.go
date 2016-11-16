@@ -30,6 +30,8 @@ func zipWriter(src []string, dst io.Writer) (written int64, err error) {
 		}
 
 		if info.IsDir() {
+			// the downside of this optimization is that
+			// directories mtime is not preserved
 			return
 		}
 

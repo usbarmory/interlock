@@ -16,16 +16,21 @@ Interlock.UI = new function() {
   /** @private */
   var $errorForm = $(document.createElement('div')).attr('id', 'error-form');
   var $modalForm = $(document.createElement('div')).attr('id', 'modal-form');
+  var $notificationForm = $(document.createElement('div')).attr('id', 'notification-form');
 
   $.extend($modalForm, {form: $(document.createElement('form')).appendTo($modalForm)});
   $.extend($modalForm, {fieldset: $(document.createElement('fieldset')).appendTo($modalForm.form)});
 
-  /* appends the dialog elements to the page body */
-  $('body').append($errorForm, $modalForm);
+  $.extend($notificationForm, {form: $(document.createElement('form')).appendTo($notificationForm)});
+  $.extend($notificationForm, {fieldset: $(document.createElement('fieldset')).appendTo($notificationForm.form)});
 
-  /* initialize error form and modal form */
+  /* appends the dialog elements to the page body */
+  $('body').append($errorForm, $modalForm, $notificationForm);
+
+  /* initialize error, modal and notification form */
   errorFormInit();
   modalFormInit();
+  notificationFormInit();
 
   function errorFormInit() {
     $errorForm.dialog({
@@ -52,6 +57,16 @@ Interlock.UI = new function() {
     });
   }
 
+  function notificationFormInit() {
+    $notificationForm.dialog({
+      autoOpen: false,
+      height: 350,
+      width: 350,
+      modal: true,
+      buttons: { OK: function() { $notificationForm.dialog('close'); } }
+    });
+  }
+
   /** @protected */
   this.doubleClick = false;
   /* double click delay in milli-seconds */
@@ -73,12 +88,49 @@ Interlock.UI = new function() {
         });
       },
       close: function() {
-        /* cleanup form */
+        /* clean up */
         $errorForm.html('');
       }
     });
 
     $errorForm.dialog('open');
+  };
+
+  this.notificationFormDialog = function(options) {
+    $notificationForm.dialog({
+      autoOpen: false,
+      dialogClass: options.noCloseButton ? 'no-close' : '',
+      height: options.height ? options.height : 350,
+      width: options.width ? options.width : 350,
+      modal: true,
+      title: options.title ? options.title : '',
+      buttons: { OK: function() { $notificationForm.dialog('close'); } },
+      open: function() {
+        /* save and inhibit the keypress event (necessary when a modal
+           form is opened in the background) */
+        if ($._data($('body').get(0), "events") !== undefined) {
+          $._data($('body').get(0), "events")._keypress = $._data($('body').get(0), "events").keypress;
+          $._data($('body').get(0), "events").keypress = null;
+        }
+        /* clean up from any previous content */
+        $notificationForm.fieldset.html('');
+        /* append to the form fieldset the custom elements specified in options */
+        $.each(options.elements, function(index, element) {
+          element.appendTo($notificationForm.fieldset);
+        });
+      },
+      close: function() {
+        /* clean up */
+        $notificationForm.fieldset.html('');
+        /* restore the keypress event */
+        if ($._data($('body').get(0), "events") !== undefined) {
+          $._data($('body').get(0), "events").keypress = $._data($('body').get(0), "events")._keypress;
+          $._data($('body').get(0), "events")._keypress = null;
+        }
+      }
+    });
+
+    $notificationForm.dialog('open');
   };
 
   this.modalFormDialog = function(action) {

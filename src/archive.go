@@ -30,14 +30,24 @@ func zipWriter(src []string, dst io.Writer) (written int64, err error) {
 		}
 
 		if info.IsDir() {
+			// the downside of this optimization is that
+			// directories mtime is not preserved
 			return
 		}
 
 		n := status.Notify(syslog.LOG_NOTICE, "adding %s to archive", path.Base(osPath))
 		defer status.Remove(n)
 
+		fileHeader, err := zip.FileInfoHeader(info)
+
+		if err != nil {
+			return
+		}
+
 		relPath := strings.TrimPrefix(relativePath(osPath), "/")
-		f, err = writer.Create(relPath)
+		fileHeader.Name = relPath
+
+		f, err = writer.CreateHeader(fileHeader)
 
 		if err != nil {
 			return
@@ -165,6 +175,9 @@ func unzipFile(src string, dst string) (err error) {
 					status.Error(err)
 					return
 				}
+
+				output.Close()
+				os.Chtimes(dstPath, f.ModTime(), f.ModTime())
 			}
 		}
 

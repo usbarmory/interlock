@@ -82,14 +82,7 @@ func (t *tOTP) GetKeyInfo(k key) (info string, err error) {
 
 func (t *tOTP) SetKey(k key) (err error) {
 	keyPath := filepath.Join(conf.mountPoint, k.Path)
-	keyFile, err := os.Open(keyPath)
-
-	if err != nil {
-		return
-	}
-	defer keyFile.Close()
-
-	s, err := ioutil.ReadAll(keyFile)
+	s, err := ioutil.ReadFile(keyPath)
 
 	if err != nil {
 		return

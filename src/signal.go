@@ -10,6 +10,8 @@ package main
 
 import (
 	"bytes"
+	"crypto/sha512"
+	"encoding/binary"
 	"errors"
 	"fmt"
 	"io"
@@ -20,6 +22,7 @@ import (
 	"path"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/janimo/textsecure"
@@ -29,9 +32,12 @@ const timeFormat = "Jan 02 15:04 MST"
 const attachmentMsg = "INTERLOCK attachment: "
 const historySize = 10 * 1024
 const registrationTimeout = 60 * time.Second
+const keyType = 0x05
+const hashIterations = 5200
 
-var numberPattern = regexp.MustCompile("^(?:\\+|00)[0-9]+$")
-var contactPattern = regexp.MustCompile("^(([^/]*) ((?:\\+|00)[0-9]+))$")
+var numberPattern = regexp.MustCompile("^(?:\\+)[0-9]+$")
+var contactPattern = regexp.MustCompile("^(([^/]*) ((?:\\+)[0-9]+))$")
+var remoteIdentityPattern = regexp.MustCompile("^remote_([0-9]+)")
 
 type Signal struct {
 	info             cipherInfo
@@ -108,7 +114,47 @@ func (t *Signal) GenKey(i string, e string) (p string, s string, err error) {
 }
 
 func (t *Signal) GetKeyInfo(k key) (i string, err error) {
-	i = "Signal library private data"
+	var remoteIdentity []byte
+	var identity []byte
+	var sn string
+
+	m := remoteIdentityPattern.FindStringSubmatch(k.Identifier)
+
+	if len(m) == 0 {
+		i = "Signal library private data"
+		return
+	}
+
+	remoteIdentityPath := filepath.Join(conf.mountPoint, k.Path)
+	identityPath := filepath.Join(storagePath(), "identity", "identity_key")
+
+	remoteIdentity, err = ioutil.ReadFile(remoteIdentityPath)
+
+	if err != nil {
+		return
+	}
+
+	identity, err = ioutil.ReadFile(identityPath)
+
+	if err != nil {
+		return
+	}
+
+	remoteSafetyNumbers := genSafetyNumbers(m[1], remoteIdentity)
+	safetyNumbers := genSafetyNumbers(t.number, identity[0:32])
+
+	if strings.Compare(safetyNumbers, remoteSafetyNumbers) <= 0 {
+		sn = safetyNumbers + remoteSafetyNumbers
+	} else {
+		sn = remoteSafetyNumbers + safetyNumbers
+	}
+
+	i = fmt.Sprintf("Verify safety numbers:\n\n")
+
+	for n := 0; n < 60; n += 20 {
+		i += fmt.Sprintf("%s %s %s %s\n", sn[n:n+5], sn[n+5:n+10], sn[n+10:n+15], sn[n+15:n+20])
+	}
+
 	return
 }
 
@@ -373,7 +419,7 @@ func downloadHistory(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 	}
 
 	if stat.Size() > historySize {
-		trimOffset = bytes.IndexByte(history, 0xa) // \n
+		trimOffset = bytes.IndexByte(history, 0x0a) // \n
 
 		if trimOffset < 0 {
 			trimOffset = 0
@@ -688,14 +734,7 @@ func needsRegistration() (reg bool) {
 }
 
 func registeredNumber() (number string, err error) {
-	input, err := os.Open(numberPath())
-
-	if err != nil {
-		return
-	}
-	defer input.Close()
-
-	n, err := ioutil.ReadAll(input)
+	n, err := ioutil.ReadFile(numberPath())
 
 	if err != nil {
 		return
@@ -720,4 +759,32 @@ func numberPath() string {
 
 func getStoragePassword() string {
 	return ""
+}
+
+func genSafetyNumbers(number string, identity []byte) (safetyNumbers string) {
+	identityHash := []byte{0, 0, keyType}
+	identityHash = append(identityHash, identity...)
+
+	if !strings.HasPrefix(number, "+") {
+		identityHash = append(identityHash, "+"...)
+	}
+
+	identityHash = append(identityHash, number...)
+
+	h := sha512.New()
+
+	for i := 0; i < hashIterations; i++ {
+		h.Write(identityHash)
+		h.Write([]byte{keyType})
+		h.Write(identity)
+		identityHash = h.Sum(nil)
+		h.Reset()
+	}
+
+	for i := 0; i <= 25; i += 5 {
+		n := binary.BigEndian.Uint64(append([]byte{0, 0, 0}, identityHash[i:i+5]...)) % 100000
+		safetyNumbers += fmt.Sprintf("%05d", n)
+	}
+
+	return
 }

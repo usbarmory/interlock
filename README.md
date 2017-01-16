@@ -185,8 +185,8 @@ container permanently inaccessible. This is a feature, not a bug.
 
 The following sudo configuration (meant to be included in /etc/sudoers)
 illustrates the permission requirements for the user running the INTERLOCK
-server. The example assumes username 'interlock' with home directory
-'/home/interlock' and volume_group set to its default ('lvmvolume').
+server. The example assumes username `interlock` with home directory
+`/home/interlock` and `volume_group` set to its default (`lvmvolume`).
 
 ```
 interlock ALL=(root) NOPASSWD:							\
@@ -222,7 +222,7 @@ git submodule update
 make
 ```
 
-This compiles the 'interlock' binary that can be executed with options
+This compiles the `interlock` binary that can be executed with options
 illustrated in the next section.
 
 Alternatively you can automatically download, compile and install the package,
@@ -267,9 +267,9 @@ Configuration
 
 * tls:
 
-  - "on"   use tls_cert and tls_key paths as HTTPS TLS keypair;
+  - "on"   use `tls_cert` and `tls_key` paths as HTTPS TLS keypair;
 
-  - "gen"  generate a new TLS keypair and save it to tls_cert and tls_key
+  - "gen"  generate a new TLS keypair and save it to `tls_cert` and `tls_key`
            paths when pointing to non existent files (otherwise behaves like
            "on"), useful for testing and TOFU (Trust On First Use) schemes;
 
@@ -358,7 +358,7 @@ on standard output and never saved.
 
 Audit and error logs are shown live in a dedicated area on the web client
 ('Application logs') and saved on the root directory of the encrypted partition
-in the '.interlock.log' file.
+in the `.interlock.log` file.
 
 Notifications are shown live in a dedicated area on the web client ('Current
 activity'), they are only kept in memory in a circular buffer and never stored
@@ -390,15 +390,15 @@ go get -u github.com/janimo/textsecure/cmd/textsecure
 ```
 
 The functionality can be enabled by compiling INTERLOCK as shown in the
-'Compiling' section, with the exception that the 'with_signal' target
-should be used when issuing the make command:
+'Compiling' section, with the exception that the `with_signal` target should be
+used when issuing the make command:
 
 ```
 make with_signal
 ```
 
 Alternatively you can automatically download, compile and install the package,
-under your GOPATH, as follows:
+under your `GOPATH`, as follows:
 
 ```
 go get -u -tags signal github.com/inversepath/interlock/cmd/interlock
@@ -435,7 +435,7 @@ attachments and is used as the entry point for starting a chat using the
 'Signal' right click menu action.
 
 The contact directories must respect to the following naming scheme and must be
-located under the top level 'signal' directory:
+located under the top level `signal` directory:
 
 ```
 signal/$name $number # e.g. signal/John Doe +3912345678

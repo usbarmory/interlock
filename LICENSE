@@ -14,12 +14,13 @@ with or without fee is hereby granted, provided that the above copyright notice
 and this permission notice appear in all copies.
 
 Additional copyright notices:
-        TextSecure client package for Go - Jani Monoses
-        https://github.com/janimo/textsecure/cmd/textsecure
+
+  TextSecure library and command line test client for Go
+  https://github.com/janimo/textsecure/cmd/textsecure
 
 The license does not apply to the following 3rd party bundled code (see
 individual file headers for their copyright and license notices):
 
-        static/js/jquery-1.11.2.min.js
-        static/js/jquery-ui-1.11.3.min.js
-        static/styles/jquery-ui.css
+  static/js/jquery-1.11.2.min.js
+  static/js/jquery-ui-1.11.3.min.js
+  static/styles/jquery-ui.css

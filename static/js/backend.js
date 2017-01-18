@@ -38,7 +38,8 @@ Interlock.Backend = new function() {
                                'verify':   'file/verify',
                                'sign':     'file/sign',
                                'extract':  'file/extract',
-                               'compress': 'file/compress' },
+                               'compress': 'file/compress',
+                               'newfile':  'file/new' },
 
                'crypto':     { 'ciphers':     'crypto/ciphers',
                                'keys':        'crypto/keys',

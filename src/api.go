@@ -127,6 +127,8 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 		res = fileMove(w, r)
 	case "/api/file/copy":
 		res = fileCopy(w, r)
+	case "/api/file/new":
+		res = fileNewfile(w, r)
 	case "/api/file/mkdir":
 		res = fileMkdir(w, r)
 	case "/api/file/extract":

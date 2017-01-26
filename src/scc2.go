@@ -1,5 +1,5 @@
 // INTERLOCK | https://github.com/inversepath/interlock
-// Copyright (c) 2015-2016 Inverse Path S.r.l.
+// Copyright (c) 2015-2017 Inverse Path S.r.l.
 //
 // Use of this source code is governed by the license
 // that can be found in the LICENSE file.
@@ -250,6 +250,8 @@ func SCCDeriveKey(baseKey []byte, iv []byte) (derivedKey []byte, err error) {
 	}
 
 	if len(baseKey) > aes.BlockSize*256 {
+		err = errors.New("input key exceeds maximum length for SCC key derivation")
+		return
 	}
 
 	_, err = scc.Write(baseKey)

@@ -125,7 +125,7 @@ func fileCopy(w http.ResponseWriter, r *http.Request) jsonObject {
 
 func fileNewfile(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 
-   req, err := parseRequest(r)
+	req, err := parseRequest(r)
 
 	if err != nil {
 		return errorResponse(err, "")
@@ -143,12 +143,23 @@ func fileNewfile(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		return errorResponse(err, "")
 	}
 
-	contents := req["contents"].(string)
+	inKeyPath, _ := detectKeyPath(path)
 
-   err = ioutil.WriteFile(path, []byte(contents), 0644)
+	if inKeyPath {
+		return errorResponse(errors.New("creating files within key storage is not allowed"), "")
+	}
+
+	_, err = os.Stat(path)
+
+	if err == nil {
+		return errorResponse(fmt.Errorf("path %s exists, not overwriting", relativePath(path)), "")
+	}
+
+	contents := req["contents"].(string)
+	err = ioutil.WriteFile(path, []byte(contents), 0644)
 
 	if err != nil {
-		return errorResponse(err, "")
+		return errorResponse(errors.New("cannot create file"), "")
 	}
 
 	res = jsonObject{
@@ -292,7 +303,7 @@ func fileOp(src string, dst string, mode int) (err error) {
 			stat, err = os.Stat(dst)
 
 			if err == nil && !stat.IsDir() {
-				err = fmt.Errorf("path %s exists", dst)
+				err = fmt.Errorf("path %s exists", relativePath(dst))
 				break
 			}
 
@@ -301,7 +312,7 @@ func fileOp(src string, dst string, mode int) (err error) {
 				stat, err = os.Stat(d)
 
 				if err == nil {
-					err = fmt.Errorf("path %s exists", d)
+					err = fmt.Errorf("path %s exists", relativePath(d))
 					break
 				}
 			}

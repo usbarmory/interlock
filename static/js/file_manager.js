@@ -114,7 +114,7 @@ Interlock.FileManager = new function() {
                                                            .addClass('text ui-widget-content ui-corner-all')];
 
       Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
-        submitButton: 'Create file', title: 'Create new file', height: 600, width: 550 });
+        title: 'Create new file', height: 600, width: 550 });
       Interlock.UI.modalFormDialog('open');
     });
 

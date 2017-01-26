@@ -123,6 +123,42 @@ func fileCopy(w http.ResponseWriter, r *http.Request) jsonObject {
 	return fileMultiOp(w, r, _copy)
 }
 
+func fileNewfile(w http.ResponseWriter, r *http.Request) (res jsonObject) {
+
+   req, err := parseRequest(r)
+
+	if err != nil {
+		return errorResponse(err, "")
+	}
+
+	err = validateRequest(req, []string{"path:s", "contents:s"})
+
+	if err != nil {
+		return errorResponse(err, "")
+	}
+
+	path, err := absolutePath(req["path"].(string))
+
+	if err != nil {
+		return errorResponse(err, "")
+	}
+
+	contents := req["contents"].(string)
+
+   err = ioutil.WriteFile(path, []byte(contents), 0644)
+
+	if err != nil {
+		return errorResponse(err, "")
+	}
+
+	res = jsonObject{
+		"status":   "OK",
+		"response": nil,
+	}
+
+	return
+}
+
 func fileMkdir(w http.ResponseWriter, r *http.Request) jsonObject {
 	return fileMultiOp(w, r, _mkdir)
 }

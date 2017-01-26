@@ -90,6 +90,34 @@ Interlock.FileManager = new function() {
     /* register the on 'click' event to the refresh button */
     $('#refresh').on('click', function() { Interlock.FileManager.fileList('mainView'); });
 
+    /* register the on 'click' event to the new file button */
+    $('#add_new_file').on('click', function() {
+      var buttons = { 'Create file': function() {
+          Interlock.FileManager.newfile(
+            sessionStorage['mainViewPwd'] + (sessionStorage['mainViewPwd'].slice(-1) === '/' ? '' : '/') + $('#file').val(), 
+            $('#data').val()
+          );
+        }
+      };
+
+      var elements = [$(document.createElement('input')).attr('id', 'file')
+                                                        .attr('name', 'file')
+                                                        .attr('placeholder', 'file name')
+                                                        .attr('type', 'text')
+                                                        .addClass('text ui-widget-content ui-corner-all'),
+                      $(document.createElement('textarea')).attr('id', 'data')
+                                                           .attr('name', 'data')
+                                                           .attr('cols', 70)
+                                                           .attr('rows', 20)
+                                                           .attr('spellcheck', false)
+                                                           .attr('placeholder', 'contents')
+                                                           .addClass('text ui-widget-content ui-corner-all')];
+
+      Interlock.UI.modalFormConfigure({ elements: elements, buttons: buttons,
+        submitButton: 'Create file', title: 'Create new file', height: 600, width: 550 });
+      Interlock.UI.modalFormDialog('open');
+    });
+
     /* register the on 'click' event to the new directory button */
     $('#add_new_directory').on('click', function() {
       var buttons = { 'Create directory': function() {
@@ -1598,6 +1626,52 @@ Interlock.FileManager.fileDelete = function(path) {
   } catch (e) {
     Interlock.Session.createEvent({'kind': 'critical',
       'msg': '[Interlock.FileManager.fileDelete] ' + e});
+  }
+};
+
+/**
+ * @function
+ * @public
+ *
+ * @description
+ * Callback function, refresh the file listed in the mainView according with
+ * the current pwd after file creation
+ *
+ * @param {Object} commandArguments
+ * @returns {}
+ */
+Interlock.FileManager.newfileCallback = function(backendData) {
+  try {
+    if (backendData.status === 'OK') {
+      Interlock.UI.modalFormDialog('close');
+      Interlock.FileManager.fileList('mainView');
+    } else {
+      Interlock.Session.createEvent({'kind': backendData.status,
+        'msg': '[Interlock.FileManager.newfileCallback] ' + backendData.response});
+    }
+  } catch (e) {
+    Interlock.Session.createEvent({'kind': 'critical', 'msg':
+      '[Interlock.FileManager.newfileCallback] ' + e});
+  }
+};
+
+/**
+ * @function
+ * @public
+ *
+ * @description
+ * Creates a new file under the current mainView pwd
+ *
+ * @param [{string}, {string}] path fullpath of the directory to create
+ * @returns {}
+ */
+Interlock.FileManager.newfile = function(path, contents) {
+  try {
+    Interlock.Backend.APIRequest(Interlock.Backend.API.file.newfile, 'POST',
+      JSON.stringify({path: path, contents: contents}), 'FileManager.newfileCallback');
+  } catch (e) {
+    Interlock.Session.createEvent({'kind': 'critical',
+      'msg': '[Interlock.FileManager.newfile] ' + e});
   }
 };
 

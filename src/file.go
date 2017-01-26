@@ -162,6 +162,8 @@ func fileNewfile(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		return errorResponse(errors.New("cannot create file"), "")
 	}
 
+	status.Log(syslog.LOG_NOTICE, "created file %s (%d bytes)", relativePath(path), len(contents))
+
 	res = jsonObject{
 		"status":   "OK",
 		"response": nil,

@@ -108,8 +108,14 @@ Interlock.Signal.getHistoryCallback = function(backendData, args) {
       /* ensure that the history poller for the selected contact is
          still active before to actually refresh the chat history */
       if (Interlock.Signal.historyPollerInterval[args.contact] > 0) {
-          $('#history').text(backendData.response);
-          $('#history').scrollTop(10000);
+        if ($('#history').text() !== backendData.response) {
+          if ($('#history').scrollTop() + $('#history').height() === $('#history').prop('scrollHeight')) {
+            $('#history').text(backendData.response);
+            $('#history').scrollTop($('#history').prop('scrollHeight'));
+          } else {
+            $('#history').text(backendData.response);
+          }
+        }
       }
     } else {
       Interlock.Session.createEvent({'kind': backendData.status,

@@ -546,7 +546,7 @@ h1 {
 }
 
 .history_contents {
-  height: 337px;
+  height: 333px;
   overflow-y: auto;
   white-space: pre-wrap;
   word-wrap: break-word;

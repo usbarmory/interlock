@@ -546,8 +546,11 @@ h1 {
 }
 
 .history_contents {
-  height: 337px;
+  height: 333px;
   overflow-y: auto;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  word-break: break-all;
 }
 
 .ui-widget-content textarea.key::-webkit-input-placeholder { font-family: 'Arial', sans-serif }

@@ -19,6 +19,7 @@ import (
 	"log"
 	"log/syslog"
 	"math/big"
+	"net"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -142,18 +143,19 @@ func generateTLSCerts() (err error) {
 		return nil
 	}
 
-	cn := strings.Split(conf.BindAddress, ":")[0]
+	address := net.ParseIP(strings.Split(conf.BindAddress, ":")[0])
 	serial, _ := rand.Int(rand.Reader, big.NewInt(1<<63-1))
 
-	status.Log(syslog.LOG_NOTICE, "generating TLS keypair CN: %s, Serial: % X", cn, serial)
+	status.Log(syslog.LOG_NOTICE, "generating TLS keypair IP: %s, Serial: % X", address.String(), serial)
 
 	certTemplate := x509.Certificate{
 		SerialNumber: serial,
 		Subject: pkix.Name{
 			Organization:       []string{"INTERLOCK"},
 			OrganizationalUnit: []string{"generateTLSCerts()"},
-			CommonName:         cn,
+			CommonName:         address.String(),
 		},
+		IPAddresses:        []net.IP{address},
 		SignatureAlgorithm: x509.ECDSAWithSHA256,
 		PublicKeyAlgorithm: x509.ECDSA,
 		NotBefore:          time.Now(),

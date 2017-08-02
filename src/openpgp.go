@@ -197,13 +197,13 @@ func (o *openPGP) SetKey(k key) (err error) {
 
 	switch keyBlock.Type {
 	case openpgp.PrivateKeyType:
-		if k.Private != true {
+		if !k.Private {
 			return fmt.Errorf("public key detected in private key slot")
 		}
 
 		o.secKey = entity
 	case openpgp.PublicKeyType:
-		if k.Private == true {
+		if k.Private {
 			return fmt.Errorf("private key detected in public key slot")
 		}
 

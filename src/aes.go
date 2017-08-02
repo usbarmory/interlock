@@ -250,7 +250,7 @@ func DecryptOFB(key []byte, salt []byte, iv []byte, input *os.File, output *os.F
 		return
 	}
 
-	if hmac.Equal(inputMac, mac.Sum(nil)) == false {
+	if !hmac.Equal(inputMac, mac.Sum(nil)) {
 		return errors.New("invalid HMAC")
 	}
 

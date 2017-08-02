@@ -189,7 +189,7 @@ func notFound(w http.ResponseWriter) (res jsonObject) {
 
 func sendResponse(w http.ResponseWriter, res jsonObject) {
 	if conf.Debug {
-		log.Printf(res.String())
+		log.Print(res.String())
 	}
 
 	fmt.Fprint(w, res.String())

@@ -29,7 +29,6 @@ const (
 	_copy
 	_mkdir
 	_extract
-	_compress
 	_delete
 )
 
@@ -52,7 +51,7 @@ var download = downloadCache{
 	cache: make(map[string]string),
 }
 
-var traversalPattern = regexp.MustCompile("\\.\\./")
+var traversalPattern = regexp.MustCompile(`../`)
 
 func (d *downloadCache) Add(id string, path string) {
 	d.Lock()
@@ -248,6 +247,10 @@ func fileMultiOp(w http.ResponseWriter, r *http.Request, mode int) (res jsonObje
 		err = validateRequest(req, []string{"src:a", "dst:s"})
 		srcAttr = "src"
 
+		if err != nil {
+			return errorResponse(err, "")
+		}
+
 		dst, err = absolutePath(req["dst"].(string))
 
 		if err != nil {
@@ -311,7 +314,7 @@ func fileOp(src string, dst string, mode int) (err error) {
 
 			if err == nil && stat.IsDir() {
 				d := filepath.Join(dst, path.Base(src))
-				stat, err = os.Stat(d)
+				_, err = os.Stat(d)
 
 				if err == nil {
 					err = fmt.Errorf("path %s exists", relativePath(d))
@@ -581,7 +584,8 @@ func fileDownloadByID(w http.ResponseWriter, id string) {
 	if stat.IsDir() {
 		written, err = zipWriter([]string{osPath}, w)
 	} else {
-		input, err := os.Open(osPath)
+		var input *os.File
+		input, err = os.Open(osPath)
 
 		if err != nil {
 			return

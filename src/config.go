@@ -254,6 +254,10 @@ func setTime(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 		return errorResponse(errors.New("invalid epoch format"), "")
 	}
 
+	if err != nil {
+		return errorResponse(err, "")
+	}
+
 	args := []string{"-s", "@" + strconv.FormatInt(epoch, 10)}
 	cmd := "/bin/date"
 

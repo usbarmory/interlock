@@ -32,6 +32,7 @@ func execCommand(cmd string, args []string, root bool, input string) (output str
 
 		if err != nil {
 			err = errors.New("error writing to stdin")
+			return
 		}
 	}
 

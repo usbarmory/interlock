@@ -30,7 +30,6 @@ const (
 // scc2_mode
 const (
 	encryptCBC = 0
-	decryptCBC = 1
 )
 
 // Identical to AES-256-OFB (see aes.go) but the derived key is encrypted,

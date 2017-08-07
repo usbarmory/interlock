@@ -51,7 +51,7 @@ var download = downloadCache{
 	cache: make(map[string]string),
 }
 
-var traversalPattern = regexp.MustCompile(`../`)
+var traversalPattern = regexp.MustCompile(`\.\./`)
 
 func (d *downloadCache) Add(id string, path string) {
 	d.Lock()

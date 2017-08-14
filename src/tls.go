@@ -34,10 +34,10 @@ func startServer() (err error) {
 
 	if conf.TLS == "gen" {
 		err = generateTLSCerts()
-	}
 
-	if err != nil {
-		return
+		if err != nil {
+			return
+		}
 	}
 
 	if conf.TLS == "off" {

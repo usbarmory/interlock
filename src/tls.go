@@ -171,7 +171,7 @@ func generateTLSCerts() (err error) {
 	caTemplate.BasicConstraintsValid = true
 	caTemplate.IsCA = true
 	caTemplate.KeyUsage = x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign
-	caTemplate.ExtKeyUsage = []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth}
+	caTemplate.ExtKeyUsage = []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth}
 
 	priv, _ := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	pub := &priv.PublicKey

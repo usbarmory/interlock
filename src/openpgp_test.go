@@ -102,7 +102,7 @@ func TestOpenPGP(t *testing.T) {
 	compare, _ := ioutil.ReadAll(decrypted)
 
 	if !bytes.Equal([]byte(cleartext), compare) {
-		t.Error("cleartext and decrypted text differ")
+		t.Error("cleartext and ciphertext differ")
 	}
 
 	input.Seek(0, 0)

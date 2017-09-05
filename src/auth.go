@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 const cookieSize = 64
@@ -150,6 +151,11 @@ func login(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 	}
 
 	session.Set(req["volume"].(string), sessionID, XSRFToken)
+
+	go func() {
+		time.Sleep(cookieAge * time.Second)
+		session.Clear()
+	}()
 
 	res = jsonObject{
 		"status": "OK",

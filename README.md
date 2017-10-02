@@ -255,68 +255,68 @@ Options
 Configuration
 =============
 
-* debug: enable debugging logs.
+* `debug`: enable debugging logs.
 
-* static_path: directory path for INTERLOCK static HTML/JavaScript files
+* `static_path`: directory path for INTERLOCK static HTML/JavaScript files
   ("static" directory included in project repository).
 
-* set_time: use the client browser time to set server time at login, useful on
-  non-routed USB armory devices (unable to set the clock on their own).
+* `set_time`: use the client browser time to set server time at login, useful
+   on non-routed USB armory devices (unable to set the clock on their own).
 
-* bind_address: IP address, port pair.
+* `bind_address`: IP address, port pair.
 
-* tls:
+* `tls`:
 
-  - "on"   use `tls_cert` and `tls_key` paths as HTTPS TLS keypair;
+  - `on`:  use `tls_cert` and `tls_key` paths as HTTPS TLS keypair;
 
-  - "gen"  generate a new TLS keypair and save it to `tls_cert` and `tls_key`
+  - `gen`: generate a new TLS keypair and save it to `tls_cert` and `tls_key`
            paths when pointing to non existent files (otherwise behaves like
            "on"), useful for testing and TOFU (Trust On First Use) schemes;
 
-  - "off"  disable HTTPS.
+  - `off`: disable HTTPS.
 
-* tls_cert: HTTPS server TLS certificate.
+* `tls_cert`: HTTPS server TLS certificate.
 
-* tls_key: HTTPS server TLS key.
+* `tls_key`: HTTPS server TLS key.
 
-* tls_client_ca: optional CA for HTTPS client authentication, client
+* `tls_client_ca`: optional CA for HTTPS client authentication, client
   certificate requires TLS Web Client Authentication X509v3 Extended Key Usage
   extension to be correctly validated.
 
-* hsm:
+* `hsm`:
 
-  - "<model>:<options>"  enable <model> HSM support with <options>, multiple
+  - `<model>:<options>`: enable <model> HSM support with <options>, multiple
                          options can be combined in a comma separated list
-                         (e.g. "mxc-scc2":"luks,tls,cipher");
+                         (e.g. `"mxc-scc2":"luks,tls,cipher"`);
 
-  - "off"                disable HSM support.
+  - `off`:               disable HSM support.
 
   Available models:
 
-  - "mxc-scc2"           NXP Security Controller (SCCv2), requires kernel driver
+  - `mxc-scc2`:          NXP Security Controller (SCCv2), requires kernel driver
                          [mxc-scc2](https://github.com/inversepath/mxc-scc2).
 
   Available options:
 
-  - "luks"               use HSM secret key to AES encrypt LUKS passwords and
+  - `luks`:              use HSM secret key to AES encrypt LUKS passwords and
                          make them device specific before use; LUKS login and
                          password operations (add, change, remove) fallback, in
                          case of failure, to plain ones in order to allow change
                          of credentials on pre-HSM deployments;
 
-  - "tls"                use HSM secret key to AES-256-OFB encrypt the HTTPS
+  - `tls`:               use HSM secret key to AES-256-OFB encrypt the HTTPS
                          server TLS key (tls_key), automatically convert
                          existing plaintext keys;
 
-  - "cipher"             expose AES-256-OFB derived symmetric cipher with
+  - `cipher`:            expose AES-256-OFB derived symmetric cipher with
                          password key derivation through HSM encryption to make
                          it device specific.
 
-* key_path: path for public/private key storage on the encrypted filesystem.
+* `key_path`: path for public/private key storage on the encrypted filesystem.
 
-* volume_group: volume group name.
+* `volume_group`: volume group name.
 
-* ciphers: array of cipher names to enable, supported values are
+* `ciphers`: array of cipher names to enable, supported values are
   ["OpenPGP", "AES-256-OFB", "TOTP", "Signal"].
 
 The following example illustrates the configuration file format (plain JSON)

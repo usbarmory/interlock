@@ -114,16 +114,15 @@ func detectKeyPath(path string) (inKeyPath bool, private bool) {
 	return
 }
 
-func fileMove(w http.ResponseWriter, r *http.Request) jsonObject {
-	return fileMultiOp(w, r, _move)
+func fileMove(r *http.Request) jsonObject {
+	return fileMultiOp(r, _move)
 }
 
-func fileCopy(w http.ResponseWriter, r *http.Request) jsonObject {
-	return fileMultiOp(w, r, _copy)
+func fileCopy(r *http.Request) jsonObject {
+	return fileMultiOp(r, _copy)
 }
 
-func fileNewfile(w http.ResponseWriter, r *http.Request) (res jsonObject) {
-
+func fileNewfile(r *http.Request) (res jsonObject) {
 	req, err := parseRequest(r)
 
 	if err != nil {
@@ -171,16 +170,16 @@ func fileNewfile(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 	return
 }
 
-func fileMkdir(w http.ResponseWriter, r *http.Request) jsonObject {
-	return fileMultiOp(w, r, _mkdir)
+func fileMkdir(r *http.Request) jsonObject {
+	return fileMultiOp(r, _mkdir)
 }
 
-func fileExtract(w http.ResponseWriter, r *http.Request) jsonObject {
-	return fileMultiOp(w, r, _extract)
+func fileExtract(r *http.Request) jsonObject {
+	return fileMultiOp(r, _extract)
 }
 
-func fileDelete(w http.ResponseWriter, r *http.Request) jsonObject {
-	return fileMultiOp(w, r, _delete)
+func fileDelete(r *http.Request) jsonObject {
+	return fileMultiOp(r, _delete)
 }
 
 func fileCompress(w http.ResponseWriter, r *http.Request) (res jsonObject) {
@@ -232,7 +231,7 @@ func fileCompress(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 	return
 }
 
-func fileMultiOp(w http.ResponseWriter, r *http.Request, mode int) (res jsonObject) {
+func fileMultiOp(r *http.Request, mode int) (res jsonObject) {
 	var srcAttr string
 	var dst string
 
@@ -358,7 +357,7 @@ func fileOp(src string, dst string, mode int) (err error) {
 	return
 }
 
-func fileList(w http.ResponseWriter, r *http.Request) (res jsonObject) {
+func fileList(r *http.Request) (res jsonObject) {
 	req, err := parseRequest(r)
 
 	if err != nil {
@@ -498,7 +497,7 @@ func fileUpload(w http.ResponseWriter, r *http.Request) {
 	status.Log(syslog.LOG_INFO, "uploaded %s (%v bytes)", relativePath(osPath), written)
 }
 
-func fileDownload(w http.ResponseWriter, r *http.Request) (res jsonObject) {
+func fileDownload(r *http.Request) (res jsonObject) {
 	req, err := parseRequest(r)
 
 	if err != nil {
@@ -602,7 +601,7 @@ func fileDownloadByID(w http.ResponseWriter, id string) {
 	status.Log(syslog.LOG_INFO, "downloaded %s (%v bytes)", fileName, written)
 }
 
-func fileEncrypt(w http.ResponseWriter, r *http.Request) (res jsonObject) {
+func fileEncrypt(r *http.Request) (res jsonObject) {
 	req, err := parseRequest(r)
 
 	if err != nil {
@@ -732,7 +731,7 @@ func fileEncrypt(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 	return
 }
 
-func fileDecrypt(w http.ResponseWriter, r *http.Request) (res jsonObject) {
+func fileDecrypt(r *http.Request) (res jsonObject) {
 	var outputPath string
 
 	req, err := parseRequest(r)
@@ -859,7 +858,7 @@ func fileDecrypt(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 	return
 }
 
-func fileSign(w http.ResponseWriter, r *http.Request) (res jsonObject) {
+func fileSign(r *http.Request) (res jsonObject) {
 	req, err := parseRequest(r)
 
 	if err != nil {
@@ -954,7 +953,7 @@ func fileSign(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 	return
 }
 
-func fileVerify(w http.ResponseWriter, r *http.Request) (res jsonObject) {
+func fileVerify(r *http.Request) (res jsonObject) {
 	req, err := parseRequest(r)
 
 	if err != nil {

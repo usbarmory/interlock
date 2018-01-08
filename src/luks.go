@@ -25,7 +25,7 @@ const (
 	_remove
 )
 
-func passwordRequest(w http.ResponseWriter, r *http.Request, mode int) (res jsonObject) {
+func passwordRequest(r *http.Request, mode int) (res jsonObject) {
 	var newPassword string
 
 	req, err := parseRequest(r)

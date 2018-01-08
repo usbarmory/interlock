@@ -11,7 +11,6 @@ import (
 	"fmt"
 	"log"
 	"log/syslog"
-	"net/http"
 	"sort"
 	"sync"
 	"syscall"
@@ -100,7 +99,7 @@ func (s *statusBuffer) Test(format string, a ...interface{}) {
 	fmt.Printf(format, a)
 }
 
-func versionStatus(w http.ResponseWriter) (res jsonObject) {
+func versionStatus() (res jsonObject) {
 	build := INTERLOCKBuild
 
 	if conf.HSM != "off" {
@@ -119,7 +118,7 @@ func versionStatus(w http.ResponseWriter) (res jsonObject) {
 	return
 }
 
-func runningStatus(w http.ResponseWriter) (res jsonObject) {
+func runningStatus() (res jsonObject) {
 	sys := &syscall.Sysinfo_t{}
 	_ = syscall.Sysinfo(sys)
 

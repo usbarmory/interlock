@@ -108,55 +108,55 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 	case "/api/auth/poweroff":
 		res = poweroff(w)
 	case "/api/luks/change":
-		res = passwordRequest(w, r, _change)
+		res = passwordRequest(r, _change)
 	case "/api/luks/add":
-		res = passwordRequest(w, r, _add)
+		res = passwordRequest(r, _add)
 	case "/api/luks/remove":
-		res = passwordRequest(w, r, _remove)
+		res = passwordRequest(r, _remove)
 	case "/api/config/time":
-		res = setTime(w, r)
+		res = setTime(r)
 	case "/api/file/list":
-		res = fileList(w, r)
+		res = fileList(r)
 	case "/api/file/upload":
 		fileUpload(w, r)
 	case "/api/file/download":
-		res = fileDownload(w, r)
+		res = fileDownload(r)
 	case "/api/file/delete":
-		res = fileDelete(w, r)
+		res = fileDelete(r)
 	case "/api/file/move":
-		res = fileMove(w, r)
+		res = fileMove(r)
 	case "/api/file/copy":
-		res = fileCopy(w, r)
+		res = fileCopy(r)
 	case "/api/file/new":
-		res = fileNewfile(w, r)
+		res = fileNewfile(r)
 	case "/api/file/mkdir":
-		res = fileMkdir(w, r)
+		res = fileMkdir(r)
 	case "/api/file/extract":
-		res = fileExtract(w, r)
+		res = fileExtract(r)
 	case "/api/file/compress":
 		res = fileCompress(w, r)
 	case "/api/file/encrypt":
-		res = fileEncrypt(w, r)
+		res = fileEncrypt(r)
 	case "/api/file/decrypt":
-		res = fileDecrypt(w, r)
+		res = fileDecrypt(r)
 	case "/api/file/sign":
-		res = fileSign(w, r)
+		res = fileSign(r)
 	case "/api/file/verify":
-		res = fileVerify(w, r)
+		res = fileVerify(r)
 	case "/api/crypto/ciphers":
-		res = ciphers(w)
+		res = ciphers()
 	case "/api/crypto/keys":
-		res = keys(w, r)
+		res = keys(r)
 	case "/api/crypto/gen_key":
-		res = genKey(w, r)
+		res = genKey(r)
 	case "/api/crypto/upload_key":
-		res = uploadKey(w, r)
+		res = uploadKey(r)
 	case "/api/crypto/key_info":
-		res = keyInfo(w, r)
+		res = keyInfo(r)
 	case "/api/status/version":
-		res = versionStatus(w)
+		res = versionStatus()
 	case "/api/status/running":
-		res = runningStatus(w)
+		res = runningStatus()
 	default:
 		m := URIPattern.FindStringSubmatch(r.RequestURI)
 
@@ -164,12 +164,12 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 			cipher, err := conf.GetAvailableCipher(m[1])
 
 			if err != nil {
-				res = notFound(w)
+				res = notFound()
 			} else {
-				res = cipher.HandleRequest(w, r)
+				res = cipher.HandleRequest(r)
 			}
 		} else {
-			res = notFound(w)
+			res = notFound()
 		}
 	}
 
@@ -178,7 +178,7 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func notFound(w http.ResponseWriter) (res jsonObject) {
+func notFound() (res jsonObject) {
 	res = jsonObject{
 		"status":   "INVALID",
 		"response": []string{"invalid method"},

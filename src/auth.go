@@ -19,6 +19,9 @@ import (
 const cookieSize = 64
 const cookieAge = 8 * 60 * 60
 
+const sessionCookie = "INTERLOCK-Token"
+const XSRFHeader = "X-XSRFToken"
+
 func randomString(size int) (c string, err error) {
 	rb := make([]byte, size)
 
@@ -127,7 +130,7 @@ func login(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 	}
 
 	sessionCookie := &http.Cookie{
-		Name:     "INTERLOCK-Token",
+		Name:     sessionCookie,
 		Value:    sessionID,
 		Path:     "/api",
 		MaxAge:   cookieAge,
@@ -176,7 +179,7 @@ func logout(w http.ResponseWriter) (res jsonObject) {
 	}
 
 	sessionCookie := &http.Cookie{
-		Name:     "INTERLOCK-Token",
+		Name:     sessionCookie,
 		Value:    "delete",
 		Path:     "/api",
 		MaxAge:   -1,

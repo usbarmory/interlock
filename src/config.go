@@ -232,7 +232,7 @@ func (c *config) Print() {
 	log.Printf("\n%s", string(j))
 }
 
-func setTime(w http.ResponseWriter, r *http.Request) (res jsonObject) {
+func setTime(r *http.Request) (res jsonObject) {
 	req, err := parseRequest(r)
 
 	if err != nil {

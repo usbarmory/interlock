@@ -202,8 +202,8 @@ func (a *aes256SCC) GenOTP(timestamp int64) (otp string, exp int64, err error) {
 	return
 }
 
-func (a *aes256SCC) HandleRequest(w http.ResponseWriter, r *http.Request) (res jsonObject) {
-	res = notFound(w)
+func (a *aes256SCC) HandleRequest(r *http.Request) (res jsonObject) {
+	res = notFound()
 	return
 }
 

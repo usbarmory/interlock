@@ -160,7 +160,7 @@ func (t *tOTP) Verify(input *os.File, signature *os.File) error {
 	return errors.New("cipher does not support signature verification")
 }
 
-func (t *tOTP) HandleRequest(w http.ResponseWriter, r *http.Request) (res jsonObject) {
-	res = notFound(w)
+func (t *tOTP) HandleRequest(r *http.Request) (res jsonObject) {
+	res = notFound()
 	return
 }

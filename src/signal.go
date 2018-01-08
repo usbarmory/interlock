@@ -35,8 +35,8 @@ const registrationTimeout = 60 * time.Second
 const keyType = 0x05
 const hashIterations = 5200
 
-var numberPattern = regexp.MustCompile("^(?:\\+)[0-9]+$")
-var contactPattern = regexp.MustCompile("^(([^/]*) ((?:\\+)[0-9]+))$")
+var numberPattern = regexp.MustCompile(`^(?:\+)[0-9]+$`)
+var contactPattern = regexp.MustCompile(`^(([^/]*) ((?:\+)[0-9]+))$`)
 var remoteIdentityPattern = regexp.MustCompile("^remote_([0-9]+)")
 
 type Signal struct {
@@ -187,22 +187,22 @@ func (t *Signal) Verify(input *os.File, signature *os.File) error {
 	return errors.New("cipher does not support signature verification")
 }
 
-func (t *Signal) HandleRequest(w http.ResponseWriter, r *http.Request) (res jsonObject) {
+func (t *Signal) HandleRequest(r *http.Request) (res jsonObject) {
 	switch r.RequestURI {
 	case "/api/Signal/register":
-		res = t.registerNumber(w, r)
+		res = t.registerNumber(r)
 	case "/api/Signal/send":
-		res = sendMessage(w, r)
+		res = sendMessage(r)
 	case "/api/Signal/history":
-		res = downloadHistory(w, r)
+		res = downloadHistory(r)
 	default:
-		res = notFound(w)
+		res = notFound()
 	}
 
 	return
 }
 
-func (t *Signal) registerNumber(w http.ResponseWriter, r *http.Request) (res jsonObject) {
+func (t *Signal) registerNumber(r *http.Request) (res jsonObject) {
 	var verificationType string
 	var verificationCode string
 
@@ -286,7 +286,7 @@ func (t *Signal) registerNumber(w http.ResponseWriter, r *http.Request) (res jso
 	return
 }
 
-func sendMessage(w http.ResponseWriter, r *http.Request) (res jsonObject) {
+func sendMessage(r *http.Request) (res jsonObject) {
 	var attachmentPath string
 	var attachment *os.File
 
@@ -364,7 +364,7 @@ func sendMessage(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 	return
 }
 
-func downloadHistory(w http.ResponseWriter, r *http.Request) (res jsonObject) {
+func downloadHistory(r *http.Request) (res jsonObject) {
 	req, err := parseRequest(r)
 
 	if err != nil {

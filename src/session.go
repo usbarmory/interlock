@@ -29,13 +29,13 @@ func (s *sessionData) Validate(r *http.Request) (validSessionID bool, validXSRFT
 	validSessionID = false
 	validXSRFToken = false
 
-	sessionID, err := r.Cookie("INTERLOCK-Token")
+	sessionID, err := r.Cookie(sessionCookie)
 
 	if err != nil {
 		return
 	}
 
-	XSRFToken := r.Header.Get("X-XSRFToken")
+	XSRFToken := r.Header.Get(XSRFHeader)
 
 	session.Lock()
 	defer session.Unlock()

@@ -71,7 +71,7 @@ type cipherInterface interface {
 	// One Time Password
 	GenOTP(timestamp int64) (otp string, exp int64, err error)
 	// cipher specific API request handler
-	HandleRequest(http.ResponseWriter, *http.Request) jsonObject
+	HandleRequest(*http.Request) jsonObject
 }
 
 type HSMInterface interface {
@@ -83,7 +83,7 @@ type HSMInterface interface {
 	DeriveKey(baseKey []byte, iv []byte) (derivedKey []byte, err error)
 }
 
-func ciphers(w http.ResponseWriter) (res jsonObject) {
+func ciphers() (res jsonObject) {
 	ciphers := []cipherInfo{}
 
 	for _, v := range conf.enabledCiphers {
@@ -136,7 +136,7 @@ func (k *key) Store(cipher cipherInterface, data string) (err error) {
 	return
 }
 
-func keyInfo(w http.ResponseWriter, r *http.Request) (res jsonObject) {
+func keyInfo(r *http.Request) (res jsonObject) {
 	req, err := parseRequest(r)
 
 	if err != nil {
@@ -294,7 +294,7 @@ func getKeys(cipher cipherInterface, private bool, filter string) (keys []key, e
 	return
 }
 
-func keys(w http.ResponseWriter, r *http.Request) (res jsonObject) {
+func keys(r *http.Request) (res jsonObject) {
 	var filter string
 	var cipherName string
 
@@ -348,7 +348,7 @@ func keys(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 	return
 }
 
-func genKey(w http.ResponseWriter, r *http.Request) (res jsonObject) {
+func genKey(r *http.Request) (res jsonObject) {
 	req, err := parseRequest(r)
 
 	if err != nil {
@@ -421,7 +421,7 @@ func genKey(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 	return
 }
 
-func uploadKey(w http.ResponseWriter, r *http.Request) (res jsonObject) {
+func uploadKey(r *http.Request) (res jsonObject) {
 	req, err := parseRequest(r)
 
 	if err != nil {

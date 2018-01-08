@@ -391,7 +391,7 @@ func (o *openPGP) GenOTP(timestamp int64) (otp string, exp int64, err error) {
 	return
 }
 
-func (o *openPGP) HandleRequest(w http.ResponseWriter, r *http.Request) (res jsonObject) {
-	res = notFound(w)
+func (o *openPGP) HandleRequest(r *http.Request) (res jsonObject) {
+	res = notFound()
 	return
 }

@@ -20,7 +20,8 @@ inode:
     "key_path":    boolean,  # true if path is within key storage
     "private":     boolean,  # true if path contains private keys
      ############  optional: ############
-    "key":         key       # key object
+    "key":         key,      # key object
+    "sha256":      string    # SHA256 message digest
   }
 
 cipher:
@@ -177,7 +178,8 @@ Get the list of all files and directories under the specified path.
 
 request:
   {
-    "path":        string    # supports wildcards (e.g. *, ?)
+    "path":        string,   # supports wildcards (e.g. *, ?)
+    "sha256":      bool      # return SHA256 message digest
   }
 
 response:

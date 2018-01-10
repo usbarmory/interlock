@@ -7,6 +7,7 @@
 package main
 
 import (
+	"crypto/sha256"
 	"errors"
 	"fmt"
 	"io"
@@ -40,6 +41,7 @@ type inode struct {
 	KeyPath bool   `json:"key_path"`
 	Private bool   `json:"private"`
 	Key     *key   `json:"key"`
+	SHA256  string `json:"sha256"`
 }
 
 type downloadCache struct {
@@ -364,7 +366,7 @@ func fileList(r *http.Request) (res jsonObject) {
 		return errorResponse(err, "")
 	}
 
-	err = validateRequest(req, []string{"path:s"})
+	err = validateRequest(req, []string{"path:s", "sha256:b"})
 
 	if err != nil {
 		return errorResponse(err, "")
@@ -422,6 +424,20 @@ func fileList(r *http.Request) (res jsonObject) {
 			}
 		}
 
+		if !file.IsDir() && req["sha256"].(bool) {
+			f, err := os.Open(filePath)
+
+			if err == nil {
+				defer f.Close()
+
+				h := sha256.New()
+
+				if _, err := io.Copy(h, f); err == nil {
+					inode.SHA256 = fmt.Sprintf("%x", h.Sum(nil))
+				}
+			}
+		}
+
 		inodes = append(inodes, inode)
 	}
 
@@ -430,7 +446,8 @@ func fileList(r *http.Request) (res jsonObject) {
 		"response": map[string]interface{}{
 			"total_space": totalSpace,
 			"free_space":  freeSpace,
-			"inodes":      inodes},
+			"inodes":      inodes,
+		},
 	}
 
 	return

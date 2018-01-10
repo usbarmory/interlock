@@ -1434,7 +1434,7 @@ Interlock.FileManager.fileList = function(view, pwd, sort) {
     Interlock.UI.ajaxLoader('#upload_form > fieldset');
 
     Interlock.Backend.APIRequest(Interlock.Backend.API.file.list, 'POST',
-      JSON.stringify({path: pwd}), 'FileManager.fileListCallback',
+      JSON.stringify({path: pwd, sha256: false}), 'FileManager.fileListCallback',
       null, {view: view, pwd: pwd, sort: sort});
   } catch (e) {
     $('#upload_form > fieldset > .ajax_overlay').remove();

@@ -182,8 +182,8 @@ func generateTLSCerts() (err error) {
 	}
 
 	pem.Encode(TLSCert, &pem.Block{Type: "CERTIFICATE", Bytes: cert})
-	ec_b, _ := x509.MarshalECPrivateKey(priv)
-	pem.Encode(TLSKey, &pem.Block{Type: "EC PRIVATE KEY", Bytes: ec_b})
+	ecb, _ := x509.MarshalECPrivateKey(priv)
+	pem.Encode(TLSKey, &pem.Block{Type: "EC PRIVATE KEY", Bytes: ecb})
 
 	h := sha256.New()
 	h.Write(cert)

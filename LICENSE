@@ -1,5 +1,5 @@
 INTERLOCK | https://github.com/inversepath/interlock
-Copyright (c) 2015-2017 Inverse Path S.r.l.
+Copyright (c) Inverse Path S.r.l.
 
 This program is free software: you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free Software
@@ -16,7 +16,7 @@ and this permission notice appear in all copies.
 Additional copyright notices:
 
   TextSecure library and command line test client for Go
-  https://github.com/janimo/textsecure/cmd/textsecure
+  https://github.com/aebruno/textsecure/cmd/textsecure
 
 The license does not apply to the following 3rd party bundled code (see
 individual file headers for their copyright and license notices):

@@ -2,7 +2,7 @@ Introduction
 ============
 
 INTERLOCK | https://github.com/inversepath/interlock  
-Copyright (c) 2015-2017 Inverse Path S.r.l.
+Copyright (c) Inverse Path S.r.l.
 
 The INTERLOCK application is a file encryption front-end developed, but not
 limited to, usage with the [USB armory](https://inversepath.com/usbarmory).
@@ -101,7 +101,7 @@ Security tokens:
 
 Messaging and file sharing:
 
-* Signal protocol V2 via external library (https://github.com/janimo/textsecure)
+* Signal protocol V2 via external library (https://github.com/aebruno/textsecure)
 
 Hardware Security Modules:
 
@@ -382,11 +382,11 @@ The integration allows messaging with other Signal users as well as file
 sharing through attachments on chat sessions.
 
 The feature is disabled by default and it depends on an external Go
-[library](https://github.com/janimo/textsecure). The library can be installed
+[library](https://github.com/aebruno/textsecure). The library can be installed
 as follows:
 
 ```
-go get -u github.com/janimo/textsecure/cmd/textsecure
+go get -u github.com/aebruno/textsecure/cmd/textsecure
 ```
 
 The functionality can be enabled by compiling INTERLOCK as shown in the
@@ -452,7 +452,7 @@ License
 =======
 
 INTERLOCK | https://github.com/inversepath/interlock  
-Copyright (c) 2015-2017 Inverse Path S.r.l.
+Copyright (c) Inverse Path S.r.l.
 
 This program is free software: you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free Software

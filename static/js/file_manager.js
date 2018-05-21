@@ -1563,6 +1563,8 @@ Interlock.FileManager.fileChecksumCallback = function(backendData, args) {
   } catch (e) {
     Interlock.Session.createEvent({'kind': 'critical',
       'msg': '[Interlock.FileManager.fileChecksumCallback] ' + e});
+  } finally {
+    $('#upload_form > fieldset > .ajax_overlay').remove();
   }
 };
 
@@ -1578,6 +1580,8 @@ Interlock.FileManager.fileChecksumCallback = function(backendData, args) {
  */
 Interlock.FileManager.fileChecksum = function(name) {
   try {
+    Interlock.UI.ajaxLoader('#upload_form > fieldset');
+
     Interlock.Backend.APIRequest(Interlock.Backend.API.file.list, 'POST',
       JSON.stringify({path: sessionStorage.mainViewPwd, sha256: true}), 'FileManager.fileChecksumCallback', null, {name: name});
   } catch (e) {

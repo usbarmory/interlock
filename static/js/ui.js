@@ -1,5 +1,5 @@
 /** INTERLOCK | https://github.com/inversepath/interlock
- * Copyright (c) 2015-2016 Inverse Path S.r.l.
+ * Copyright (c) F-Secure Corporation
  *
  * Use of this source code is governed by the license
  * that can be found in the LICENSE file.

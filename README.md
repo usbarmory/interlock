@@ -2,7 +2,7 @@ Introduction
 ============
 
 INTERLOCK | https://github.com/inversepath/interlock  
-Copyright (c) Inverse Path S.r.l.
+Copyright (c) F-Secure Corporation
 
 The INTERLOCK application is a file encryption front-end developed, but not
 limited to, usage with the [USB armory](https://inversepath.com/usbarmory).
@@ -452,7 +452,7 @@ License
 =======
 
 INTERLOCK | https://github.com/inversepath/interlock  
-Copyright (c) Inverse Path S.r.l.
+Copyright (c) F-Secure Corporation
 
 This program is free software: you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free Software

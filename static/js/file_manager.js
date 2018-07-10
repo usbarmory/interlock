@@ -1115,6 +1115,12 @@ Interlock.FileManager = new function() {
           });
         }));
 
+        /* file checksum */
+        menuEntries.push($(document.createElement('li')).text('Checksum')
+                                                        .click(function() {
+                                                          Interlock.FileManager.fileChecksum(inode.name);
+                                                        }));
+
         /* add 'Key Info' menu - except for password.
            Reduntant, password keys cannot be uploaded in first place. */
         if (inode.key) {
@@ -1517,6 +1523,70 @@ Interlock.FileManager.fileDownload = function(path) {
   } catch (e) {
     Interlock.Session.createEvent({'kind': 'critical',
       'msg': '[Interlock.FileManager.fileDownload] ' + e});
+  }
+};
+
+/**
+ * @function
+ * @public
+ *
+ * @description
+ * Callback function, display file checksum
+ *
+ * @param {Object} backendData
+ * @returns {}
+ */
+Interlock.FileManager.fileChecksumCallback = function(backendData, args) {
+  try {
+    if (backendData.status === 'OK') {
+      var inodes = backendData.response.inodes;
+
+      $.each(inodes, function(index, inode) {
+        if (inode.dir !== true && inode.name === args.name && inode.sha256 !== '') {
+
+          var buttons = {'Close': function() { Interlock.UI.modalFormDialog('close'); } };
+          var elements = [$(document.createElement('p')).text(inode.name),
+                          $(document.createElement('p')).text(inode.sha256 + ' (SHA256)')];
+
+          Interlock.UI.modalFormConfigure({elements: elements, buttons: buttons,
+                                           noCancelButton: true, submitButton: 'Close',
+                                           title: 'File Checksum', height: 200, width: 800});
+
+          Interlock.UI.modalFormDialog('open');
+          return;
+        }
+      });
+    } else {
+      Interlock.Session.createEvent({'kind': backendData.status,
+        'msg': '[Interlock.FileManager.fileChecksumCallback] ' + backendData.response});
+    }
+  } catch (e) {
+    Interlock.Session.createEvent({'kind': 'critical',
+      'msg': '[Interlock.FileManager.fileChecksumCallback] ' + e});
+  } finally {
+    $('#upload_form > fieldset > .ajax_overlay').remove();
+  }
+};
+
+/**
+ * @function
+ * @public
+ *
+ * @description
+ * Get the checksum of a file
+ *
+ * @param {string} path fullpath of the file
+ * @returns {}
+ */
+Interlock.FileManager.fileChecksum = function(name) {
+  try {
+    Interlock.UI.ajaxLoader('#upload_form > fieldset');
+
+    Interlock.Backend.APIRequest(Interlock.Backend.API.file.list, 'POST',
+      JSON.stringify({path: sessionStorage.mainViewPwd, sha256: true}), 'FileManager.fileChecksumCallback', null, {name: name});
+  } catch (e) {
+    Interlock.Session.createEvent({'kind': 'critical',
+      'msg': '[Interlock.FileManager.fileChecksum] ' + e});
   }
 };
 

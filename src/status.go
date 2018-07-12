@@ -95,10 +95,6 @@ func (s *statusBuffer) Notifications() (notifications []statusEntry) {
 	return
 }
 
-func (s *statusBuffer) Test(format string, a ...interface{}) {
-	fmt.Printf(format, a)
-}
-
 func versionStatus() (res jsonObject) {
 	build := INTERLOCKBuild
 

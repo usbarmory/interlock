@@ -129,7 +129,7 @@ after session invalidation.
 
 ## POST api/config/time
 
-Set the device data and time. This function is specifically designed to ensure
+Set the device date and time. This function is specifically designed to ensure
 a correct date and time on non-routed USB armory devices (unable to set the
 clock on their own). The call is a non-op by default and can be enabled with
 the "set_time" configuration option.

@@ -222,9 +222,8 @@ func SCCDeriveKey(baseKey []byte, iv []byte) (derivedKey []byte, err error) {
 		return
 	}
 
-	// LOCK_EX and defer LOCK_UN
-	syscall.Flock(int(scc.Fd()), 2)
-	defer syscall.Flock(int(scc.Fd()), 8)
+	syscall.Flock(int(scc.Fd()), syscall.LOCK_EX)
+	defer syscall.Flock(int(scc.Fd()), syscall.LOCK_UN)
 	defer scc.Close()
 
 	err = ioctl(scc.Fd(), setMode, encryptCBC)

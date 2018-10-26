@@ -23,6 +23,8 @@ import (
 	"golang.org/x/crypto/pbkdf2"
 )
 
+const derivedKeySize = 32
+
 type key struct {
 	Identifier string `json:"identifier"`
 	KeyFormat  string `json:"key_format"`
@@ -484,7 +486,7 @@ func DeriveKeyPBKDF2(salt []byte, password string) (randSalt []byte, key []byte,
 		salt = randSalt
 	}
 
-	key = pbkdf2.Key([]byte(password), salt, 4096, 32, sha256.New)
+	key = pbkdf2.Key([]byte(password), salt, 4096, derivedKeySize, sha256.New)
 
 	return
 }

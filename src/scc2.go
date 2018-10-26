@@ -36,6 +36,9 @@ const (
 // before use, with AES-256-CBC using the NXP Security Controller (SCCv2) with
 // its device specific secret key. This uniquely ties the derived key to the
 // specific hardware unit being used.
+//
+// See https://github.com/inversepath/mxc-scc2 for detailed information on the
+// SCCv2 encryption process.
 
 type aes256SCC struct {
 	info     cipherInfo
@@ -267,16 +270,6 @@ func SCCDeriveKey(baseKey []byte, iv []byte) (derivedKey []byte, err error) {
 	}
 
 	derivedKey = buf
-
-	return
-}
-
-func ioctl(fd, cmd, arg uintptr) (err error) {
-	_, _, e := syscall.Syscall(syscall.SYS_IOCTL, fd, cmd, arg)
-
-	if e != 0 {
-		return syscall.Errno(e)
-	}
 
 	return
 }

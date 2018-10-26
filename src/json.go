@@ -13,13 +13,12 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"regexp"
 	"strings"
 )
 
 type jsonObject map[string]interface{}
 
-var censorPattern = regexp.MustCompile("password")
+var censorPattern = "password"
 
 func parseRequest(r *http.Request) (j jsonObject, err error) {
 	body, err := ioutil.ReadAll(r.Body)
@@ -29,7 +28,7 @@ func parseRequest(r *http.Request) (j jsonObject, err error) {
 	}
 
 	if conf.Debug {
-		if conf.testMode || !censorPattern.Match(body) {
+		if conf.testMode || strings.Contains(string(body), censorPattern) {
 			log.Printf("%s", body)
 		}
 	}

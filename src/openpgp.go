@@ -164,7 +164,7 @@ func readEntityWithoutExpiredSubkeys(packets *packet.Reader) (entity *openpgp.En
 		q = append(q, p)
 	}
 
-	for i, _ := range q {
+	for i := range q {
 		packets.Unread(q[len(q)-1-i])
 	}
 

@@ -14,6 +14,7 @@ import (
 	"log/syslog"
 	"net/http"
 	"os/user"
+	"strings"
 	"syscall"
 )
 
@@ -65,7 +66,7 @@ func passwordRequest(r *http.Request, mode int) (res jsonObject) {
 func luksOpen(volume string, password string) (err error) {
 	var key string
 
-	if traversalPattern.MatchString(volume) {
+	if strings.Contains(volume, traversalPattern) {
 		return errors.New("path traversal detected")
 	}
 
@@ -154,7 +155,7 @@ func luksKeyOp(volume string, password string, newPassword string, mode int) (er
 	var newKey string
 	var keyInputs []string
 
-	if traversalPattern.MatchString(volume) {
+	if strings.Contains(volume, traversalPattern) {
 		return errors.New("path traversal detected")
 	}
 

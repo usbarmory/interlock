@@ -128,7 +128,7 @@ func unzipFile(src string, dst string) (err error) {
 		defer status.Remove(n)
 
 		for _, f := range reader.Reader.File {
-			if traversalPattern.MatchString(f.Name) {
+			if strings.Contains(f.Name, traversalPattern) {
 				status.Error(errors.New("path traversal detected"))
 				return
 			}

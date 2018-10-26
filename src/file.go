@@ -19,7 +19,6 @@ import (
 	"os"
 	"path"
 	"path/filepath"
-	"regexp"
 	"strings"
 	"sync"
 	"syscall"
@@ -53,7 +52,7 @@ var download = downloadCache{
 	cache: make(map[string]string),
 }
 
-var traversalPattern = regexp.MustCompile(`\.\./`)
+const traversalPattern = "../"
 
 func (d *downloadCache) Add(id string, path string) {
 	d.Lock()
@@ -81,7 +80,7 @@ func (d *downloadCache) Remove(id string) (path string, err error) {
 }
 
 func absolutePath(subPath string) (path string, err error) {
-	if traversalPattern.MatchString(subPath) {
+	if strings.Contains(subPath, traversalPattern) {
 		err = errors.New("path traversal detected")
 	}
 

@@ -11,6 +11,7 @@ import (
 	"errors"
 	"log"
 	"os/exec"
+	"syscall"
 )
 
 func execCommand(cmd string, args []string, root bool, input string) (output string, err error) {
@@ -50,4 +51,14 @@ func execCommand(cmd string, args []string, root bool, input string) (output str
 	}
 
 	return stdout.String(), err
+}
+
+func ioctl(fd, cmd, arg uintptr) (err error) {
+	_, _, e := syscall.Syscall(syscall.SYS_IOCTL, fd, cmd, arg)
+
+	if e != 0 {
+		return syscall.Errno(e)
+	}
+
+	return
 }

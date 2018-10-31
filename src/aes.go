@@ -87,13 +87,13 @@ func (a *aes256OFB) Encrypt(input *os.File, output *os.File, sign bool) (err err
 		return
 	}
 
-	salt, key, err := DeriveKeyPBKDF2(nil, a.password)
+	salt, key, err := deriveKeyPBKDF2(nil, a.password, derivedKeySize)
 
 	if err != nil {
 		return
 	}
 
-	err = EncryptOFB(key, salt, iv, input, output)
+	err = encryptOFB(key, salt, iv, input, output)
 
 	return
 }
@@ -117,13 +117,13 @@ func (a *aes256OFB) Decrypt(input *os.File, output *os.File, verify bool) (err e
 		return
 	}
 
-	_, key, err := DeriveKeyPBKDF2(salt, a.password)
+	_, key, err := deriveKeyPBKDF2(salt, a.password, derivedKeySize)
 
 	if err != nil {
 		return
 	}
 
-	err = DecryptOFB(key, salt, iv, input, output)
+	err = decryptOFB(key, salt, iv, input, output)
 
 	return
 }
@@ -160,7 +160,7 @@ func (a *aes256OFB) HandleRequest(r *http.Request) (res jsonObject) {
 	return
 }
 
-func EncryptOFB(key []byte, salt []byte, iv []byte, input *os.File, output *os.File) (err error) {
+func encryptOFB(key []byte, salt []byte, iv []byte, input *os.File, output *os.File) (err error) {
 	block, err := aes.NewCipher(key)
 
 	if err != nil {
@@ -216,7 +216,7 @@ func EncryptOFB(key []byte, salt []byte, iv []byte, input *os.File, output *os.F
 	return
 }
 
-func DecryptOFB(key []byte, salt []byte, iv []byte, input *os.File, output *os.File) (err error) {
+func decryptOFB(key []byte, salt []byte, iv []byte, input *os.File, output *os.File) (err error) {
 	block, err := aes.NewCipher(key)
 
 	if err != nil {
@@ -229,12 +229,18 @@ func DecryptOFB(key []byte, salt []byte, iv []byte, input *os.File, output *os.F
 		return
 	}
 
-	headerSize := (int64)(len(salt) + len(iv))
-	limit := stat.Size() - headerSize - 32
+	headerSize, err := input.Seek(0, 1)
+
+	if err != nil {
+		return
+	}
 
 	mac := hmac.New(sha256.New, key)
 	mac.Write(salt)
 	mac.Write(iv)
+
+	macSize := int64(mac.Size())
+	limit := stat.Size() - headerSize - macSize
 
 	ciphertextReader := io.LimitReader(input, limit)
 	_, err = io.Copy(mac, ciphertextReader)
@@ -243,8 +249,8 @@ func DecryptOFB(key []byte, salt []byte, iv []byte, input *os.File, output *os.F
 		return
 	}
 
-	inputMac := make([]byte, 32)
-	_, err = input.ReadAt(inputMac, stat.Size()-32)
+	inputMac := make([]byte, mac.Size())
+	_, err = input.ReadAt(inputMac, stat.Size()-macSize)
 
 	if err != nil {
 		return

@@ -474,7 +474,7 @@ func uploadKey(r *http.Request) (res jsonObject) {
 	return
 }
 
-func DeriveKeyPBKDF2(salt []byte, password string) (randSalt []byte, key []byte, err error) {
+func deriveKeyPBKDF2(salt []byte, password string, size int) (randSalt []byte, key []byte, err error) {
 	if len(salt) == 0 {
 		randSalt = make([]byte, 8)
 		_, err = io.ReadFull(rand.Reader, randSalt)
@@ -486,7 +486,7 @@ func DeriveKeyPBKDF2(salt []byte, password string) (randSalt []byte, key []byte,
 		salt = randSalt
 	}
 
-	key = pbkdf2.Key([]byte(password), salt, 4096, derivedKeySize, sha256.New)
+	key = pbkdf2.Key([]byte(password), salt, 4096, size, sha256.New)
 
 	return
 }

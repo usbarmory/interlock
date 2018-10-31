@@ -80,8 +80,8 @@ Design goals:
 * Minimal footprint (single statically linked binary + supporting static files)
   to ease integration/execution on the USB armory platform.
 
-Supported Ciphers
-=================
+Ciphers
+=======
 
 Encrypted volumes:
 
@@ -103,23 +103,25 @@ Messaging and file sharing:
 
 * Signal protocol V2 via external library (https://github.com/aebruno/textsecure)
 
-Hardware Security Modules:
+Hardware Security Modules
+=========================
+
+The HSM support allows symmetric ciphering using device specific secret keys,
+allowing to uniquely tie derived keys to the specific hardware unit being used.
+An HSM specific AES-256-OFB based symmetric cipher is exposed, with keys
+derived from the user password as well as device specific secret.
+
+Additionally the LUKS passwords, for accessing encrypted volumes, can filtered
+through the HSM to make it device specific.
+
+Finally the TLS certificates can also be stored encrypted for a specific
+device.
+
+Supported drivers:
 
 * NXP Security Controller (SCCv2)
 
-  The SCCv2 support allows symmetric AES-256-CBC ciphering using its device
-  specific secret key. This can be used to uniquely tie derived keys to the
-  individual hardware unit being used.
-
-  With the SCCv2, the AES-256-SCC symmetric cipher is available. This cipher is
-  identical to AES-256-OFB, however the password key derivation includes a stage
-  through SCCv2 encryption to make it device specific.
-
-  The LUKS passwords for accessing encrypted volumes can also be filtered
-  through the SCCv2 to make them device specific.
-
-  Finally INTERLOCK TLS certificates can be stored encrypted with SCCv2
-  support.
+* NXP Cryptographic Acceleration and Assurance Module (CAAM)
 
 Key Storage
 ===========
@@ -287,7 +289,7 @@ Configuration
 
   - `<model>:<options>`: enable <model> HSM support with <options>, multiple
                          options can be combined in a comma separated list
-                         (e.g. `"mxc-scc2":"luks,tls,cipher"`);
+                         (e.g. `"mxc-scc2:luks,tls,cipher"`);
 
   - `off`:               disable HSM support.
 
@@ -295,6 +297,10 @@ Configuration
 
   - `mxc-scc2`:          NXP Security Controller (SCCv2), requires kernel driver
                          [mxc-scc2](https://github.com/inversepath/mxc-scc2).
+
+  - `caam-keyblob`:      NXP Cryptographic Acceleration and Assurance Module (CAAM),
+                         requires kernel driver [caam-keyblob](https://github.com/inversepath/caam-keyblob).
+                         *NOTE*: stores encrypted luks key metadata in `~/.luks_kb/`.
 
   Available options:
 

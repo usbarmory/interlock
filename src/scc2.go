@@ -125,7 +125,7 @@ func (a *aes256SCC) Encrypt(input *os.File, output *os.File, sign bool) (err err
 		return
 	}
 
-	salt, key, err := DeriveKeyPBKDF2(nil, a.password)
+	salt, key, err := deriveKeyPBKDF2(nil, a.password, derivedKeySize)
 
 	if err != nil {
 		return
@@ -137,7 +137,7 @@ func (a *aes256SCC) Encrypt(input *os.File, output *os.File, sign bool) (err err
 		return
 	}
 
-	err = EncryptOFB(deviceKey, salt, iv, input, output)
+	err = encryptOFB(deviceKey, salt, iv, input, output)
 
 	return
 }
@@ -161,7 +161,7 @@ func (a *aes256SCC) Decrypt(input *os.File, output *os.File, verify bool) (err e
 		return
 	}
 
-	_, key, err := DeriveKeyPBKDF2(salt, a.password)
+	_, key, err := deriveKeyPBKDF2(salt, a.password, derivedKeySize)
 
 	if err != nil {
 		return
@@ -173,7 +173,7 @@ func (a *aes256SCC) Decrypt(input *os.File, output *os.File, verify bool) (err e
 		return
 	}
 
-	err = DecryptOFB(deviceKey, salt, iv, input, output)
+	err = decryptOFB(deviceKey, salt, iv, input, output)
 
 	return
 }

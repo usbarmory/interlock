@@ -111,7 +111,7 @@ allowing to uniquely tie derived keys to the specific hardware unit being used.
 An HSM specific AES-256-OFB based symmetric cipher is exposed, with keys
 derived from the user password as well as device specific secret.
 
-Additionally the LUKS passwords, for accessing encrypted volumes, can filtered
+Additionally the LUKS password, for accessing encrypted volumes, can filtered
 through the HSM to make it device specific.
 
 Finally the TLS certificates can also be stored encrypted for a specific
@@ -295,20 +295,22 @@ Configuration
 
   Available models:
 
-  - `mxc-scc2`:          NXP Security Controller (SCCv2), requires kernel driver
+  - `mxc-scc2`:          NXP Security Controller (SCCv2). Requires kernel driver
                          [mxc-scc2](https://github.com/inversepath/mxc-scc2).
 
-  - `caam-keyblob`:      NXP Cryptographic Acceleration and Assurance Module (CAAM),
-                         requires kernel driver [caam-keyblob](https://github.com/inversepath/caam-keyblob).
-                         *NOTE*: stores encrypted luks key metadata in `~/.luks_kb/`.
+  - `caam-keyblob`:      NXP Cryptographic Acceleration and Assurance Module (CAAM).
+                         *NOTE*: stores encrypted derived keys in `~/.luks_kb/`,
+                         which must be accompanied to the LUKS partition itself
+                         when creating data backups. Requires kernel driver
+                         [caam-keyblob](https://github.com/inversepath/caam-keyblob).
 
   Available options:
 
   - `luks`:              use HSM secret key to AES encrypt LUKS passwords and
                          make them device specific before use; LUKS login and
                          password operations (add, change, remove) fallback, in
-                         case of failure, to plain ones in order to allow change
-                         of credentials on pre-HSM deployments;
+                         case of failure, to plain ones in order to allow
+                         change of credentials on pre-HSM deployments;
 
   - `tls`:               use HSM secret key to AES-256-OFB encrypt the HTTPS
                          server TLS key (tls_key), automatically convert

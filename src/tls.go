@@ -161,7 +161,7 @@ func generateTLSCerts() (err error) {
 		NotBefore:          time.Now(),
 		NotAfter:           time.Now().AddDate(5, 0, 0),
 		SubjectKeyId:       []byte{1, 2, 3, 4, 5},
-		KeyUsage:           x509.KeyUsageDigitalSignature | x509.KeyUsageCertSign | x509.KeyUsageKeyEncipherment,
+		KeyUsage:           x509.KeyUsageDigitalSignature | x509.KeyUsageKeyEncipherment,
 		ExtKeyUsage:        []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 	}
 

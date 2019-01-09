@@ -77,7 +77,7 @@ func apiHandler(w http.ResponseWriter, r *http.Request) {
 
 			switch u.Path {
 			case "/api/file/upload":
-				http.Error(w, err.Error(), 401)
+				http.Error(w, err.Error(), http.StatusUnauthorized)
 			case "/api/file/download":
 				// download is an exception as it is already
 				// protected from XSRF with its own unique

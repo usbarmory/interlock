@@ -4,7 +4,7 @@
 // Use of this source code is governed by the license
 // that can be found in the LICENSE file.
 
-package main
+package interlock
 
 import (
 	"bytes"
@@ -81,7 +81,7 @@ func (t *tOTP) GetKeyInfo(k key) (info string, err error) {
 }
 
 func (t *tOTP) SetKey(k key) (err error) {
-	keyPath := filepath.Join(conf.mountPoint, k.Path)
+	keyPath := filepath.Join(conf.MountPoint, k.Path)
 	s, err := ioutil.ReadFile(keyPath)
 
 	if err != nil {

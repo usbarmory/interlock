@@ -6,7 +6,7 @@
 
 // +build signal
 
-package main
+package interlock
 
 import (
 	"bytes"
@@ -125,7 +125,7 @@ func (t *Signal) GetKeyInfo(k key) (i string, err error) {
 		return
 	}
 
-	remoteIdentityPath := filepath.Join(conf.mountPoint, k.Path)
+	remoteIdentityPath := filepath.Join(conf.MountPoint, k.Path)
 	identityPath := filepath.Join(storagePath(), "identity", "identity_key")
 
 	remoteIdentity, err = ioutil.ReadFile(remoteIdentityPath)
@@ -746,11 +746,11 @@ func registeredNumber() (number string, err error) {
 }
 
 func storagePath() string {
-	return filepath.Join(conf.mountPoint, conf.KeyPath, "signal", "private")
+	return filepath.Join(conf.MountPoint, conf.KeyPath, "signal", "private")
 }
 
 func contactsPath() string {
-	return filepath.Join(conf.mountPoint, "signal")
+	return filepath.Join(conf.MountPoint, "signal")
 }
 
 func numberPath() string {

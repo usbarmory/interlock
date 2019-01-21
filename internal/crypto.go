@@ -4,7 +4,7 @@
 // Use of this source code is governed by the license
 // that can be found in the LICENSE file.
 
-package main
+package interlock
 
 import (
 	"crypto/rand"
@@ -112,7 +112,7 @@ func (k *key) Store(cipher cipherInterface, data string) (err error) {
 	}
 
 	k.Path = filepath.Join(conf.KeyPath, cipher.GetInfo().Extension, subdir, fileName)
-	keyPath := filepath.Join(conf.mountPoint, k.Path)
+	keyPath := filepath.Join(conf.MountPoint, k.Path)
 
 	err = os.MkdirAll(path.Dir(keyPath), 0700)
 
@@ -247,7 +247,7 @@ func getKey(path string) (k key, cipher cipherInterface, err error) {
 func getKeys(cipher cipherInterface, private bool, filter string) (keys []key, err error) {
 	var subdir string
 
-	basePath := filepath.Join(conf.mountPoint, conf.KeyPath, cipher.GetInfo().Extension)
+	basePath := filepath.Join(conf.MountPoint, conf.KeyPath, cipher.GetInfo().Extension)
 
 	if private {
 		subdir = "private"

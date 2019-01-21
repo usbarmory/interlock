@@ -4,7 +4,7 @@
 // Use of this source code is governed by the license
 // that can be found in the LICENSE file.
 
-package main
+package interlock
 
 import (
 	"crypto/sha256"
@@ -84,16 +84,16 @@ func absolutePath(subPath string) (path string, err error) {
 		err = errors.New("path traversal detected")
 	}
 
-	path = filepath.Join(conf.mountPoint, subPath)
+	path = filepath.Join(conf.MountPoint, subPath)
 
 	return
 }
 
 func relativePath(p string) (subPath string) {
-	if !strings.HasPrefix(p, conf.mountPoint) {
+	if !strings.HasPrefix(p, conf.MountPoint) {
 		subPath = path.Base(p)
 	} else {
-		subPath = p[len(conf.mountPoint):]
+		subPath = p[len(conf.MountPoint):]
 	}
 
 	return
@@ -101,7 +101,7 @@ func relativePath(p string) (subPath string) {
 
 func detectKeyPath(path string) (inKeyPath bool, private bool) {
 	inKeyPath = false
-	absoluteKeyPath := filepath.Join(conf.mountPoint, conf.KeyPath)
+	absoluteKeyPath := filepath.Join(conf.MountPoint, conf.KeyPath)
 
 	if strings.HasPrefix(path, absoluteKeyPath) {
 		inKeyPath = true
@@ -658,7 +658,7 @@ func fileEncrypt(r *http.Request) (res jsonObject) {
 	}
 
 	if cipher.GetInfo().KeyFormat != "password" {
-		keyPath = filepath.Join(conf.mountPoint, keyPath)
+		keyPath = filepath.Join(conf.MountPoint, keyPath)
 		key, _, err := getKey(keyPath)
 
 		if err != nil {
@@ -673,7 +673,7 @@ func fileEncrypt(r *http.Request) (res jsonObject) {
 	}
 
 	if sign && cipher.GetInfo().Sig {
-		sigKeyPath = filepath.Join(conf.mountPoint, sigKeyPath)
+		sigKeyPath = filepath.Join(conf.MountPoint, sigKeyPath)
 		key, _, err := getKey(sigKeyPath)
 
 		if err != nil {
@@ -797,7 +797,7 @@ func fileDecrypt(r *http.Request) (res jsonObject) {
 	}
 
 	if cipher.GetInfo().KeyFormat != "password" {
-		keyPath = filepath.Join(conf.mountPoint, keyPath)
+		keyPath = filepath.Join(conf.MountPoint, keyPath)
 		key, _, err := getKey(keyPath)
 
 		if err != nil {
@@ -818,7 +818,7 @@ func fileDecrypt(r *http.Request) (res jsonObject) {
 	}
 
 	if verify && cipher.GetInfo().Sig {
-		sigKeyPath = filepath.Join(conf.mountPoint, sigKeyPath)
+		sigKeyPath = filepath.Join(conf.MountPoint, sigKeyPath)
 		key, _, err := getKey(sigKeyPath)
 
 		if err != nil {
@@ -907,7 +907,7 @@ func fileSign(r *http.Request) (res jsonObject) {
 		return errorResponse(errors.New("signing requested but not supported by cipher"), "")
 	}
 
-	keyPath = filepath.Join(conf.mountPoint, keyPath)
+	keyPath = filepath.Join(conf.MountPoint, keyPath)
 	key, _, err := getKey(keyPath)
 
 	if err != nil {
@@ -1008,7 +1008,7 @@ func fileVerify(r *http.Request) (res jsonObject) {
 	}
 
 	if cipher.GetInfo().KeyFormat != "password" {
-		sigKeyPath = filepath.Join(conf.mountPoint, sigKeyPath)
+		sigKeyPath = filepath.Join(conf.MountPoint, sigKeyPath)
 		key, _, err := getKey(sigKeyPath)
 
 		if err != nil {

@@ -4,7 +4,7 @@
 // Use of this source code is governed by the license
 // that can be found in the LICENSE file.
 
-package main
+package interlock
 
 import (
 	"crypto/md5"
@@ -98,10 +98,10 @@ func luksOpen(volume string, password string) (err error) {
 }
 
 func luksMount() (err error) {
-	args := []string{"/dev/mapper/" + mapping, conf.mountPoint}
+	args := []string{"/dev/mapper/" + mapping, conf.MountPoint}
 	cmd := "/bin/mount"
 
-	status.Log(syslog.LOG_NOTICE, "mounting encrypted volume to %s", conf.mountPoint)
+	status.Log(syslog.LOG_NOTICE, "mounting encrypted volume to %s", conf.MountPoint)
 
 	_, err = execCommand(cmd, args, true, "")
 
@@ -115,7 +115,7 @@ func luksMount() (err error) {
 		return
 	}
 
-	args = []string{u.Username, conf.mountPoint}
+	args = []string{u.Username, conf.MountPoint}
 	cmd = "/bin/chown"
 
 	status.Log(syslog.LOG_NOTICE, "setting mount point permissions for user %s", u.Username)
@@ -126,10 +126,10 @@ func luksMount() (err error) {
 }
 
 func luksUnmount() (err error) {
-	args := []string{conf.mountPoint}
+	args := []string{conf.MountPoint}
 	cmd := "/bin/umount"
 
-	status.Log(syslog.LOG_NOTICE, "unmounting encrypted volume on %s", conf.mountPoint)
+	status.Log(syslog.LOG_NOTICE, "unmounting encrypted volume on %s", conf.MountPoint)
 
 	syscall.Sync()
 	_, err = execCommand(cmd, args, true, "")

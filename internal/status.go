@@ -4,7 +4,7 @@
 // Use of this source code is governed by the license
 // that can be found in the LICENSE file.
 
-package main
+package interlock
 
 import (
 	"container/ring"
@@ -20,8 +20,8 @@ import (
 const bufferSize = 20
 
 // build information, initialized at compile time (see Makefile)
-var INTERLOCKBuild string
-var INTERLOCKRevision string
+var Build string
+var Revision string
 
 type statusBuffer struct {
 	sync.Mutex
@@ -96,7 +96,7 @@ func (s *statusBuffer) Notifications() (notifications []statusEntry) {
 }
 
 func versionStatus() (res jsonObject) {
-	build := INTERLOCKBuild
+	build := Build
 
 	if conf.HSM != "off" {
 		build += " " + conf.HSM
@@ -105,7 +105,7 @@ func versionStatus() (res jsonObject) {
 	res = jsonObject{
 		"status": "OK",
 		"response": map[string]interface{}{
-			"revision": INTERLOCKRevision,
+			"revision": Revision,
 			"build":    build,
 			"key_path": conf.KeyPath,
 		},

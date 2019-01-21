@@ -4,7 +4,7 @@
 // Use of this source code is governed by the license
 // that can be found in the LICENSE file.
 
-package main
+package interlock
 
 import (
 	"bytes"
@@ -16,7 +16,7 @@ import (
 )
 
 func TestOpenPGP(t *testing.T) {
-	conf.mountPoint = "/tmp"
+	conf.MountPoint = "/tmp"
 	password := "interlocktest"
 	cleartext := "01234567890ABCDEFGHILMNOPQRSTUVZ!@#"
 	o := &openPGP{}

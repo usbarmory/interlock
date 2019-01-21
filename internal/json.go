@@ -4,7 +4,7 @@
 // Use of this source code is governed by the license
 // that can be found in the LICENSE file.
 
-package main
+package interlock
 
 import (
 	"encoding/json"
@@ -28,7 +28,7 @@ func parseRequest(r *http.Request) (j jsonObject, err error) {
 	}
 
 	if conf.Debug {
-		if conf.testMode || strings.Contains(string(body), censorPattern) {
+		if conf.TestMode || strings.Contains(string(body), censorPattern) {
 			log.Printf("%s", body)
 		}
 	}

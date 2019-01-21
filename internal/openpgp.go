@@ -4,7 +4,7 @@
 // Use of this source code is governed by the license
 // that can be found in the LICENSE file.
 
-package main
+package interlock
 
 import (
 	"bytes"
@@ -65,7 +65,7 @@ func (o *openPGP) GetInfo() cipherInfo {
 func (o *openPGP) GenKey(identifier string, email string) (pubKey string, secKey string, err error) {
 	buf := bytes.NewBuffer(nil)
 	header := map[string]string{
-		"Version": fmt.Sprintf("INTERLOCK %s OpenPGP generated key", INTERLOCKRevision),
+		"Version": fmt.Sprintf("INTERLOCK %s OpenPGP generated key", Revision),
 	}
 
 	entity, err := openpgp.NewEntity(identifier, "", email, nil)
@@ -174,7 +174,7 @@ func readEntityWithoutExpiredSubkeys(packets *packet.Reader) (entity *openpgp.En
 }
 
 func (o *openPGP) SetKey(k key) (err error) {
-	keyPath := filepath.Join(conf.mountPoint, k.Path)
+	keyPath := filepath.Join(conf.MountPoint, k.Path)
 	keyFile, err := os.Open(keyPath)
 
 	if err != nil {

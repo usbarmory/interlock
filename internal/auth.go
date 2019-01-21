@@ -4,7 +4,7 @@
 // Use of this source code is governed by the license
 // that can be found in the LICENSE file.
 
-package main
+package interlock
 
 import (
 	"crypto/rand"
@@ -33,7 +33,7 @@ func randomString(size int) (c string, err error) {
 }
 
 func authenticate(volume string, password string, dispose bool) (err error) {
-	if conf.testMode {
+	if conf.TestMode {
 		conf.ActivateCiphers(true)
 		return
 	}
@@ -62,7 +62,7 @@ func authenticate(volume string, password string, dispose bool) (err error) {
 		return
 	}
 
-	err = os.MkdirAll(filepath.Join(conf.mountPoint, conf.KeyPath), 0700)
+	err = os.MkdirAll(filepath.Join(conf.MountPoint, conf.KeyPath), 0700)
 
 	if err != nil {
 		return
@@ -150,7 +150,7 @@ func login(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 
 	if !conf.Debug {
 		// switch logging to encrypted partition
-		enableFileLog()
+		EnableFileLog()
 	}
 
 	session.Set(req["volume"].(string), sessionID, XSRFToken)
@@ -175,7 +175,7 @@ func logout(w http.ResponseWriter) (res jsonObject) {
 
 	if !conf.Debug {
 		// restore logging to syslog before unmounting encrypted partition
-		enableSyslog()
+		EnableSyslog()
 	}
 
 	sessionCookie := &http.Cookie{

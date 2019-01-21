@@ -4,7 +4,7 @@
 // Use of this source code is governed by the license
 // that can be found in the LICENSE file.
 
-package main
+package interlock
 
 import (
 	"encoding/json"
@@ -23,7 +23,7 @@ import (
 
 const mountPoint = ".interlock-mnt"
 
-type config struct {
+type Config struct {
 	Debug       bool     `json:"debug"`
 	StaticPath  string   `json:"static_path"`
 	SetTime     bool     `json:"set_time"`
@@ -42,14 +42,18 @@ type config struct {
 	availableHSMs    map[string]HSMInterface
 	authHSM          HSMInterface
 	tlsHSM           HSMInterface
-	mountPoint       string
-	testMode         bool
+	MountPoint       string
+	TestMode         bool
 	logFile          *os.File
 }
 
-var conf config
+var conf Config
 
-func (c *config) SetAvailableCipher(cipher cipherInterface) {
+func GetConfig() *Config {
+	return &conf
+}
+
+func (c *Config) SetAvailableCipher(cipher cipherInterface) {
 	if c.availableCiphers == nil {
 		c.availableCiphers = make(map[string]cipherInterface)
 	}
@@ -57,7 +61,7 @@ func (c *config) SetAvailableCipher(cipher cipherInterface) {
 	c.availableCiphers[cipher.GetInfo().Name] = cipher
 }
 
-func (c *config) SetAvailableHSM(model string, HSM HSMInterface) {
+func (c *Config) SetAvailableHSM(model string, HSM HSMInterface) {
 	if c.availableHSMs == nil {
 		c.availableHSMs = make(map[string]HSMInterface)
 	}
@@ -65,7 +69,7 @@ func (c *config) SetAvailableHSM(model string, HSM HSMInterface) {
 	c.availableHSMs[model] = HSM
 }
 
-func (c *config) GetAvailableCipher(cipherName string) (cipher cipherInterface, err error) {
+func (c *Config) GetAvailableCipher(cipherName string) (cipher cipherInterface, err error) {
 	cipher, ok := c.availableCiphers[cipherName]
 
 	if !ok {
@@ -79,7 +83,7 @@ func (c *config) GetAvailableCipher(cipherName string) (cipher cipherInterface, 
 	return
 }
 
-func (c *config) GetCipher(cipherName string) (cipher cipherInterface, err error) {
+func (c *Config) GetCipher(cipherName string) (cipher cipherInterface, err error) {
 	cipher, ok := c.enabledCiphers[cipherName]
 
 	if !ok {
@@ -93,7 +97,7 @@ func (c *config) GetCipher(cipherName string) (cipher cipherInterface, err error
 	return
 }
 
-func (c *config) GetCipherByExt(ext string) (cipher cipherInterface, err error) {
+func (c *Config) GetCipherByExt(ext string) (cipher cipherInterface, err error) {
 	for _, val := range c.enabledCiphers {
 		if val.GetInfo().Extension == ext {
 			cipher = val
@@ -106,7 +110,7 @@ func (c *config) GetCipherByExt(ext string) (cipher cipherInterface, err error) 
 	return
 }
 
-func (c *config) EnableCiphers() (err error) {
+func (c *Config) EnableCiphers() (err error) {
 	if c.enabledCiphers == nil {
 		c.enabledCiphers = make(map[string]cipherInterface)
 	}
@@ -128,7 +132,7 @@ func (c *config) EnableCiphers() (err error) {
 	return
 }
 
-func (c *config) EnableHSM() (err error) {
+func (c *Config) EnableHSM() (err error) {
 	if c.HSM == "off" {
 		return
 	}
@@ -169,7 +173,7 @@ func (c *config) EnableHSM() (err error) {
 	return
 }
 
-func (c *config) ActivateCiphers(activate bool) {
+func (c *Config) ActivateCiphers(activate bool) {
 	for _, val := range c.enabledCiphers {
 		err := val.Activate(activate)
 
@@ -179,7 +183,7 @@ func (c *config) ActivateCiphers(activate bool) {
 	}
 }
 
-func (c *config) PrintAvailableCiphers() {
+func (c *Config) PrintAvailableCiphers() {
 	log.Println("supported ciphers:")
 
 	for k := range c.availableCiphers {
@@ -187,7 +191,7 @@ func (c *config) PrintAvailableCiphers() {
 	}
 }
 
-func (c *config) SetDefaults() {
+func (c *Config) SetDefaults() {
 	c.Debug = false
 	c.StaticPath = "static"
 	c.SetTime = false
@@ -197,17 +201,17 @@ func (c *config) SetDefaults() {
 	c.HSM = "off"
 	c.KeyPath = "keys"
 	c.Ciphers = []string{"OpenPGP", "AES-256-OFB", "TOTP"}
-	c.testMode = false
+	c.TestMode = false
 	c.VolumeGroup = "lvmvolume"
 }
 
-func (c *config) SetMountPoint() error {
-	c.mountPoint = filepath.Join(os.Getenv("HOME"), mountPoint)
+func (c *Config) SetMountPoint() error {
+	c.MountPoint = filepath.Join(os.Getenv("HOME"), mountPoint)
 
-	return os.MkdirAll(c.mountPoint, 0700)
+	return os.MkdirAll(c.MountPoint, 0700)
 }
 
-func (c *config) Set(configPath string) (err error) {
+func (c *Config) Set(configPath string) (err error) {
 	debugFlag := c.Debug
 
 	b, err := ioutil.ReadFile(configPath)
@@ -225,7 +229,7 @@ func (c *config) Set(configPath string) (err error) {
 	return
 }
 
-func (c *config) Print() {
+func (c *Config) Print() {
 	j, _ := json.MarshalIndent(c, "", "\t")
 
 	log.Println("applied configuration:")

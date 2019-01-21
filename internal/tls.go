@@ -4,7 +4,7 @@
 // Use of this source code is governed by the license
 // that can be found in the LICENSE file.
 
-package main
+package interlock
 
 import (
 	"crypto/ecdsa"
@@ -27,10 +27,16 @@ import (
 	"time"
 )
 
-func startServer() (err error) {
+func StartServer() (err error) {
 	var server *http.Server
 	var TLSCert []byte
 	var TLSKey []byte
+
+	err = registerHandlers(conf.StaticPath)
+
+	if err != nil {
+		return
+	}
 
 	if conf.TLS == "gen" {
 		err = generateTLSCerts()

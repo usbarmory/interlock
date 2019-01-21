@@ -16,7 +16,7 @@ build:
 	@echo "compiling INTERLOCK ${REV} (${BUILD} with ${GO_VERSION})"
 	$(GO) build -v -tags ${BUILD_TAGS} \
 	  -ldflags "-s -w -X '${PKGPATH}/internal.Build=${BUILD} ${BUILD_TAGS}' -X '${PKGPATH}/internal.Revision=${REV}'" \
-	  cmd/interlock.go
+	  interlock.go
 	@echo "done compiling INTERLOCK"
 
 with_signal: BUILD_GOPATH = "$(CURDIR):${GOPATH}"

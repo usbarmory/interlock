@@ -231,7 +231,7 @@ Alternatively you can automatically download, compile and install the package,
 under your GOPATH, as follows:
 
 ```
-go get -u github.com/inversepath/interlock/cmd/interlock
+go get github.com/inversepath/interlock
 ```
 
 When cross compiling from a non-arm host for an arm target ensure that the
@@ -390,12 +390,7 @@ The integration allows messaging with other Signal users as well as file
 sharing through attachments on chat sessions.
 
 The feature is disabled by default and it depends on an external Go
-[library](https://github.com/aebruno/textsecure). The library can be installed
-as follows:
-
-```
-go get -u github.com/aebruno/textsecure/cmd/textsecure
-```
+[library](https://github.com/aebruno/textsecure).
 
 The functionality can be enabled by compiling INTERLOCK as shown in the
 'Compiling' section, with the exception that the `with_signal` target should be
@@ -406,10 +401,10 @@ make with_signal
 ```
 
 Alternatively you can automatically download, compile and install the package,
-under your `GOPATH`, as follows:
+under your `GOPATH`, with Signal support as follows:
 
 ```
-go get -u -tags signal github.com/inversepath/interlock/cmd/interlock
+go get -tags signal github.com/inversepath/interlock
 ```
 
 The "Signal" entry must be added to the "ciphers" configuration parameter (see

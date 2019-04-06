@@ -304,6 +304,9 @@ Configuration
                          when creating data backups. Requires kernel driver
                          [caam-keyblob](https://github.com/inversepath/caam-keyblob).
 
+  - `mxs-dcp`:           NXP Data Co-Processor (DCP). Requires kernel driver
+                         [mxs-dcp](https://github.com/inversepath/mxs-dcp).
+
   Available options:
 
   - `luks`:              use HSM secret key to AES encrypt LUKS passwords and

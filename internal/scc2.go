@@ -7,7 +7,6 @@
 package interlock
 
 import (
-	"bytes"
 	"crypto/aes"
 	"crypto/rand"
 	"errors"
@@ -32,13 +31,22 @@ const (
 	encryptCBC = 0
 )
 
-// Identical to AES-256-OFB (see aes.go) but the derived key is encrypted,
-// before use, with AES-256-CBC using the NXP Security Controller (SCCv2) with
-// its device specific secret key. This uniquely ties the derived key to the
-// specific hardware unit being used.
+// Symmetric file encryption using AES-256-OFB.
 //
-// See https://github.com/inversepath/mxc-scc2 for detailed information on the
+// A first key is derived from password using PBKDF2 with SHA256 and 4096
+// rounds, this key is then encrypted with AES-256-CBC using the NXP Security
+// Controller (SCCv2) with its device specific secret key.
+//
+// This uniquely ties the derived key to the specific hardware unit being used,
+// as well as the authentication password.
+//
+// See https://github.com/inversepath/mxs-scc2 for detailed information on the
 // SCCv2 encryption process.
+//
+// The salt, initialization vector are prepended to the encrypted file, the
+// HMAC for authentication is appended:
+//
+// salt (8 bytes) || iv (16 bytes) || ciphertext || hmac (32 bytes)
 
 type aes256SCC struct {
 	info     cipherInfo
@@ -241,14 +249,7 @@ func SCCDeriveKey(baseKey []byte, iv []byte) (derivedKey []byte, err error) {
 		return
 	}
 
-	r := len(baseKey) % aes.BlockSize
-
-	if r != 0 {
-		padLen := aes.BlockSize - r
-		padding := []byte{(byte)(padLen)}
-		padding = bytes.Repeat(padding, padLen)
-		baseKey = append(baseKey, padding...)
-	}
+	baseKey = PKCS7Pad(baseKey)
 
 	if len(baseKey) > aes.BlockSize*256 {
 		err = errors.New("input key exceeds maximum length for SCC key derivation")

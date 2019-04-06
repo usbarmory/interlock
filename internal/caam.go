@@ -73,22 +73,24 @@ func (kb *caam_kb_data) set(key, blob, keymod *[]byte) {
 	kb.KeymodLen = uint32(len(*keymod))
 }
 
-// Identical to AES-256-OFB (see aes.go) but with a random key  encrypted with
-// AES-256-CCM using the NXP Cryptographic Acceleration and Assurance Module
-// (CAAM) with its device specific secret key (OTPMK). This uniquely ties the
-// derived key to the specific hardware unit being used.
+// Symmetric file encryption using AES-256-OFB.
+//
+// A first key is derived from password using PBKDF2 with SHA256 and 4096
+// rounds, this key is then encrypted with AES-256-CCM using the NXP
+// Cryptographic Acceleration and Assurance Module (CAAM) with its device
+// specific secret key.
 //
 // The user password is used as key modifier to the CAAM operation, to ensure
 // derived key decryption only with the specific hardware and user that
 // performed the encryption.
 //
-// The derived key encrypted key blob is prepended before the AES-256-OFB (see
-// aes.go) header, resulting in the following:
-//
-// keyblob (80 bytes) || salt (8 bytes) || iv (16 bytes) || ciphertext || hmac (32 bytes)
-//
 // See https://github.com/inversepath/caam-keyblob for detailed information on
 // the CAAM encryption process.
+//
+// The derived key encrypted blob, salt, initialization vector are prepended to
+// the encrypted file, the HMAC for authentication is appended:
+//
+// keyblob (80 bytes) || salt (8 bytes) || iv (16 bytes) || ciphertext || hmac (32 bytes)
 
 type aes256CAAM struct {
 	info     cipherInfo

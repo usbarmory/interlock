@@ -7,6 +7,7 @@
 package interlock
 
 import (
+	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/hmac"
@@ -274,4 +275,23 @@ func decryptOFB(key []byte, salt []byte, iv []byte, input *os.File, output *os.F
 	_, err = io.Copy(writer, ciphertextReader)
 
 	return
+}
+
+func PKCS7Pad(buf []byte) []byte {
+	padLen := aes.BlockSize
+	r := len(buf) % aes.BlockSize
+
+	if r != 0 {
+		padLen -= r
+	}
+
+	padding := []byte{(byte)(padLen)}
+	padding = bytes.Repeat(padding, padLen)
+	buf = append(buf, padding...)
+
+	return buf
+}
+
+func PKCS7Unpad(buf []byte) []byte {
+	return buf[:(len(buf) - int(buf[len(buf)-1]))]
 }

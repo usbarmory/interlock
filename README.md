@@ -108,8 +108,8 @@ Hardware Security Modules
 
 The HSM support allows symmetric ciphering using device specific secret keys,
 allowing to uniquely tie derived keys to the specific hardware unit being used.
-An HSM specific AES-256-OFB based symmetric cipher is exposed, with keys
-derived from the user password as well as device specific secret.
+An HSM specific AES-OFB based symmetric cipher is exposed, with keys derived
+from the user password as well as device specific secret.
 
 Additionally the LUKS password, for accessing encrypted volumes, can filtered
 through the HSM to make it device specific.
@@ -122,6 +122,8 @@ Supported drivers:
 * NXP Security Controller (SCCv2)
 
 * NXP Cryptographic Acceleration and Assurance Module (CAAM)
+
+* NXP Data Co-Processor (DCP)
 
 Key Storage
 ===========

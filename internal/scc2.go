@@ -216,7 +216,7 @@ func (h *SCC) DeriveKey(plaintext []byte, iv []byte) (ciphertext []byte, err err
 
 // equivalent to PKCS#11 C_DeriveKey with CKM_AES_CBC_ENCRYPT_DATA
 func SCCDeriveKey(baseKey []byte, iv []byte) (derivedKey []byte, err error) {
-	var ivPtr [16]byte
+	var ivPtr [aes.BlockSize]byte
 	copy(ivPtr[:], iv[:])
 
 	scc, err := os.OpenFile(sccDevice, os.O_RDWR, 0600)
@@ -241,7 +241,7 @@ func SCCDeriveKey(baseKey []byte, iv []byte) (derivedKey []byte, err error) {
 		return
 	}
 
-	r := len(baseKey) % 16
+	r := len(baseKey) % aes.BlockSize
 
 	if r != 0 {
 		padLen := aes.BlockSize - r

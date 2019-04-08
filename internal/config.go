@@ -149,9 +149,6 @@ func (c *Config) EnableHSM() (err error) {
 
 	if val, ok := c.availableHSMs[model]; ok {
 		options := strings.Split(HSMConf[1], ",")
-
-		status.Log(syslog.LOG_NOTICE, "enabling %s HSM %s", model, options)
-
 		HSM := val.New()
 
 		for i := 0; i < len(options); i++ {

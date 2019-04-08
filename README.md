@@ -7,7 +7,7 @@ Copyright (c) F-Secure Corporation
 The INTERLOCK application is a file encryption front-end developed, but not
 limited to, usage with the [USB armory](https://inversepath.com/usbarmory).
 
-The goal of the package is to expose a web-based file manager for an encrypted
+The primary interface consists of a web-based file manager for an encrypted
 partition running on the device hosting the JSON application server (e.g. USB
 armory).
 
@@ -17,6 +17,11 @@ individual files. Additionally secure messaging and file sharing is supported
 with an optional built-in Signal client.
 
 ![INTERLOCK screenshot](https://inversepath.com/images/interlock.png)
+
+A command line mode is available to execute selected operations locally,
+without the web interface. This is primarily intended to aid
+encryption/decryption operation with hardware keys, using HSM support on
+embedded firmwares.
 
 Authors
 =======
@@ -55,6 +60,11 @@ server is entirely documented in the API document.
 The authentication is directly tied to Linux Unified Key Setup (LUKS)
 disk-encryption setup on the server side. A successful login unlocks the
 specified encrypted volume, while logging out locks it back.
+
+A command line mode is available to execute selected operations locally,
+without the web interface. This is primarily intended to aid
+encryption/decryption operation with hardware keys, using HSM support on
+embedded firmwares.
 
 Design goals:
 
@@ -129,7 +139,7 @@ Key Storage
 ===========
 
 A pre-defined directory, stored on the encrypted filesystem, is assigned to
-public and private key storage (see Configuration section for related
+public and private key storage (see the _Configuration_ section for related
 settings).
 
 The keys can be uploaded using the file manager, imported as free text or
@@ -252,40 +262,57 @@ Options
   -h                   options help
   -b="0.0.0.0:4430"    binding address:port pair
   -c="interlock.conf"  configuration file path
+  -o=""                operation ((open:<volume>)|close|derive(:<data>)?)
   -d=false:            debug mode
   -t=false:            test mode (WARNING: disables authentication)
 ```
 
+The operatoin flag allows selected actions to be performed locally, without a
+web interface. The following operations are supported:
+
+* `open:<volume>`:  unlock LUKS volume to mapping "interlockfs", prompts
+                    password once. Uses HSM key derivation when configured.
+
+* `close`:          lock the LUKS volume mapped to "interlockfs".
+
+* `derive:<data>`:  HSM key derivation from data (e.g. diversifier) specified
+                    in hex format (e.g. `derive:12ef`).
+
+* `derive`:         HSM key derivation from password, prompted twice
+                    interactively.
+
 Configuration
 =============
 
-* `debug`: enable debugging logs.
+* `debug`:         enable debugging logs.
 
-* `static_path`: directory path for INTERLOCK static HTML/JavaScript files
-  ("static" directory included in project repository).
+* `static_path`:   directory path for INTERLOCK static HTML/JavaScript files
+                   ("static" directory included in project repository).
 
-* `set_time`: use the client browser time to set server time at login, useful
-   on non-routed USB armory devices (unable to set the clock on their own).
+* `set_time`:      use the client browser time to set server time at login,
+                   useful on non-routed USB armory devices (unable to set the
+                   clock on their own).
 
-* `bind_address`: IP address, port pair.
+* `bind_address`:  IP address, port pair.
 
 * `tls`:
 
-  - `on`:  use `tls_cert` and `tls_key` paths as HTTPS TLS keypair;
+  - `on`:          use `tls_cert` and `tls_key` paths as HTTPS TLS keypair;
 
-  - `gen`: generate a new TLS keypair and save it to `tls_cert` and `tls_key`
-           paths when pointing to non existent files (otherwise behaves like
-           "on"), useful for testing and TOFU (Trust On First Use) schemes;
+  - `gen`:         generate a new TLS keypair and save it to `tls_cert` and
+                   `tls_key` paths when pointing to non existent files
+                   (otherwise behaves like "on"), useful for testing and TOFU
+                   (Trust On First Use) schemes;
 
-  - `off`: disable HTTPS.
+  - `off`:         disable HTTPS.
 
-* `tls_cert`: HTTPS server TLS certificate.
+*      `tls_cert`: HTTPS server TLS certificate.
 
-* `tls_key`: HTTPS server TLS key.
+*       `tls_key`: HTTPS server TLS key.
 
 * `tls_client_ca`: optional CA for HTTPS client authentication, client
-  certificate requires TLS Web Client Authentication X509v3 Extended Key Usage
-  extension to be correctly validated.
+                   certificate requires TLS Web Client Authentication X509v3
+                   Extended Key Usage extension to be correctly validated.
 
 * `hsm`:
 
@@ -295,7 +322,7 @@ Configuration
 
   - `off`:               disable HSM support.
 
-  Available models:
+  Available modules:
 
   - `mxc-scc2`:          NXP Security Controller (SCCv2). Requires kernel driver
                          [mxc-scc2](https://github.com/inversepath/mxc-scc2).
@@ -325,12 +352,13 @@ Configuration
                          password key derivation through HSM encryption to make
                          it device specific.
 
-* `key_path`: path for public/private key storage on the encrypted filesystem.
+* `key_path`:     path for public/private key storage on the encrypted
+                  filesystem.
 
 * `volume_group`: volume group name.
 
-* `ciphers`: array of cipher names to enable, supported values are
-  ["OpenPGP", "AES-256-OFB", "TOTP", "Signal"].
+* `ciphers`:      array of cipher names to enable, supported values are
+                  ["OpenPGP", "AES-256-OFB", "TOTP", "Signal"].
 
 The following example illustrates the configuration file format (plain JSON)
 and its default values.
@@ -398,7 +426,7 @@ The feature is disabled by default and it depends on an external Go
 [library](https://github.com/aebruno/textsecure).
 
 The functionality can be enabled by compiling INTERLOCK as shown in the
-'Compiling' section, with the exception that the `with_signal` target should be
+_Compiling_ section, with the exception that the `with_signal` target should be
 used when issuing the make command:
 
 ```
@@ -413,7 +441,7 @@ go get -tags signal github.com/inversepath/interlock
 ```
 
 The "Signal" entry must be added to the "ciphers" configuration parameter (see
-Configuration section), to enable it.
+the _Configuration_ section), to enable it.
 
 ```
         "ciphers": [

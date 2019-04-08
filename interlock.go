@@ -20,15 +20,15 @@ var configPath = flag.String("c", "interlock.conf", "configuration file path")
 var debug bool
 var test bool
 var addr string
+var op string
 
 func init() {
-	if os.Geteuid() == 0 {
-		log.Fatal("Please do not run this application with administrative privileges")
-	}
-
 	flag.BoolVar(&debug, "d", false, "debug mode")
 	flag.BoolVar(&test, "t", false, "test mode (WARNING: disables authentication)")
 	flag.StringVar(&addr, "b", "0.0.0.0:4430", "binding address:port pair")
+	flag.StringVar(&op, "o", "", "operation ((open:<volume>)|close|derive:<data>)")
+
+	log.SetOutput(os.Stdout)
 }
 
 func main() {
@@ -46,14 +46,20 @@ func main() {
 	conf.TestMode = test
 	conf.BindAddress = addr
 
-	if conf.TestMode {
-		log.Println("*** WARNING *** authentication disabled (test mode switch enabled)")
+	if op == "" {
+		if os.Geteuid() == 0 {
+			log.Fatal("Please do not run this application with administrative privileges")
+		}
+
+		if conf.TestMode {
+			log.Println("*** WARNING *** authentication disabled (test mode switch enabled)")
+		}
+
+		log.SetFlags(log.Ldate | log.Ltime)
+		log.Printf("starting INTERLOCK %s - %s\n", interlock.Revision, interlock.Build)
+	} else {
+		log.SetFlags(0)
 	}
-
-	log.SetFlags(log.Ldate | log.Ltime)
-	log.SetOutput(os.Stdout)
-
-	log.Printf("starting INTERLOCK %s - %s\n", interlock.Revision, interlock.Build)
 
 	if *configPath != "" {
 		err := conf.Set(*configPath)
@@ -62,7 +68,9 @@ func main() {
 			log.Fatal(err)
 		}
 
-		log.Printf("configuration file %s successfully parsed", *configPath)
+		if op == "" {
+			log.Printf("configuration file %s successfully parsed", *configPath)
+		}
 	}
 
 	err := conf.SetMountPoint()
@@ -83,19 +91,26 @@ func main() {
 		log.Fatal(err)
 	}
 
-	conf.Print()
-
-	if conf.Debug {
-		log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
-		log.Println("debug mode enabled")
+	if op != "" {
+		err = interlock.Op(op)
 	} else {
-		interlock.EnableSyslog()
+		conf.Print()
+
+		if conf.Debug {
+			log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+			log.Println("debug mode enabled")
+		} else {
+			interlock.EnableSyslog()
+		}
+
+		err = interlock.StartServer()
+
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
 
-	err = interlock.StartServer()
-
 	if err != nil {
-		fmt.Println(err)
 		log.Fatal(err)
 	}
 }

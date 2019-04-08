@@ -267,7 +267,7 @@ Options
   -t=false:            test mode (WARNING: disables authentication)
 ```
 
-The operatoin flag allows selected actions to be performed locally, without a
+The operation flag allows selected actions to be performed locally, without a
 web interface. The following operations are supported:
 
 * `open:<volume>`:  unlock LUKS volume to mapping "interlockfs", prompts

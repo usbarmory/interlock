@@ -7,6 +7,8 @@
 package interlock
 
 import (
+	"bytes"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"regexp"
@@ -20,6 +22,7 @@ var opPattern = regexp.MustCompile("^(open|close|derive)(:.+)?$")
 func Op(op string) (err error) {
 	var cmd string
 	var arg string
+	var key []byte
 
 	m := opPattern.FindStringSubmatch(op)
 
@@ -39,23 +42,20 @@ func Op(op string) (err error) {
 
 	switch cmd {
 	case "open":
-		var password string
-
 		if arg == "" {
 			return errors.New("invalid operation")
 		}
 
-		password, err = promptPassword(false)
+		key, err = promptPassword(false)
 
 		if err != nil {
 			return
 		}
 
-		err = luksOpen(arg, password)
+		err = luksOpen(arg, string(key))
 	case "close":
 		err = luksClose()
 	case "derive":
-		var data string
 		var derivedKey string
 
 		if conf.authHSM == nil {
@@ -63,16 +63,20 @@ func Op(op string) (err error) {
 		}
 
 		if arg == "" {
-			data, err = promptPassword(true)
+			key, err = promptPassword(true)
 
 			if err != nil {
 				return
 			}
 		} else {
-			data = arg
+			key, err = hex.DecodeString(arg)
 		}
 
-		derivedKey, err = deriveKey(data)
+		if err != nil {
+			return
+		}
+
+		derivedKey, err = deriveKey(string(key))
 
 		if err != nil {
 			return
@@ -84,7 +88,7 @@ func Op(op string) (err error) {
 	return
 }
 
-func promptPassword(confirm bool) (string, error) {
+func promptPassword(confirm bool) ([]byte, error) {
 	fmt.Print("Password: ")
 	password, _ := terminal.ReadPassword(int(syscall.Stdin))
 
@@ -92,14 +96,14 @@ func promptPassword(confirm bool) (string, error) {
 		fmt.Printf("\nConfirm password: ")
 		confirmation, _ := terminal.ReadPassword(int(syscall.Stdin))
 
-		if string(password) != string(confirmation) {
+		if !bytes.Equal(password, confirmation) {
 			fmt.Println()
 			//lint:ignore ST1005 we want capitalization and punctuation in this error
-			return "", errors.New("Password mismatch!")
+			return nil, errors.New("Password mismatch!")
 		}
 	}
 
 	fmt.Println()
 
-	return string(password), nil
+	return password, nil
 }

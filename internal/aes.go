@@ -277,12 +277,14 @@ func decryptOFB(key []byte, salt []byte, iv []byte, input *os.File, output *os.F
 	return
 }
 
-func PKCS7Pad(buf []byte) []byte {
-	padLen := aes.BlockSize
+func PKCS7Pad(buf []byte, extraBlock bool) []byte {
+	padLen := 0
 	r := len(buf) % aes.BlockSize
 
 	if r != 0 {
-		padLen -= r
+		padLen = aes.BlockSize - r
+	} else if extraBlock {
+		padLen = aes.BlockSize
 	}
 
 	padding := []byte{(byte)(padLen)}

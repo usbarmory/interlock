@@ -251,7 +251,7 @@ func SCCDeriveKey(baseKey []byte, iv []byte) (derivedKey []byte, err error) {
 		return
 	}
 
-	baseKey = PKCS7Pad(baseKey)
+	baseKey = PKCS7Pad(baseKey, false)
 
 	if len(baseKey) > aes.BlockSize*256 {
 		err = errors.New("input key exceeds maximum length for SCC key derivation")

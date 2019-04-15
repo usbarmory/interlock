@@ -255,13 +255,7 @@ func DCPDeriveKey(baseKey []byte, iv []byte) (derivedKey []byte, err error) {
 		return
 	}
 
-	baseKey = PKCS7Pad(baseKey)
-
-	if len(baseKey) > aes.BlockSize*128 {
-		err = errors.New("input key exceeds maximum length for dcp key derivation")
-		return
-	}
-
+	baseKey = PKCS7Pad(baseKey, false)
 	apifd, _, _ := unix.Syscall(unix.SYS_ACCEPT, uintptr(fd), 0, 0)
 	derivedKey, err = cryptoAPI(apifd, unix.ALG_OP_ENCRYPT, iv, baseKey)
 

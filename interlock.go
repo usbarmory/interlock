@@ -56,7 +56,12 @@ func main() {
 		}
 
 		log.SetFlags(log.Ldate | log.Ltime)
-		log.Printf("starting INTERLOCK %s - %s\n", interlock.Revision, interlock.Build)
+
+		if interlock.Revision == "" && interlock.Build == "" {
+			log.Printf("starting INTERLOCK\n")
+		} else {
+			log.Printf("starting INTERLOCK %s - %s\n", interlock.Revision, interlock.Build)
+		}
 	} else {
 		log.SetFlags(0)
 	}

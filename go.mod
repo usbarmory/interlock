@@ -10,8 +10,8 @@ require (
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/sirupsen/logrus v1.4.1 // indirect
 	github.com/stretchr/testify v1.3.0 // indirect
-	golang.org/x/crypto v0.0.0-20190404164418-38d8ce5564a5
-	golang.org/x/sys v0.0.0-20190405154228-4b34438f7a67
+	golang.org/x/crypto v0.0.0-20190411191339-88737f569e3a
+	golang.org/x/sys v0.0.0-20190415145633-3fd5a3612ccd
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
 	gopkg.in/yaml.v2 v2.2.2 // indirect
 )

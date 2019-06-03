@@ -220,12 +220,12 @@ func (a *aes256SCC) HandleRequest(r *http.Request) (res jsonObject) {
 	return
 }
 
-func (h *SCC) DeriveKey(plaintext []byte, iv []byte) (ciphertext []byte, err error) {
-	return SCCDeriveKey(plaintext, iv)
+func (h *SCC) DeriveKey(diversifier []byte, iv []byte) (key []byte, err error) {
+	return SCCDeriveKey(diversifier, iv)
 }
 
 // equivalent to PKCS#11 C_DeriveKey with CKM_AES_CBC_ENCRYPT_DATA
-func SCCDeriveKey(baseKey []byte, iv []byte) (derivedKey []byte, err error) {
+func SCCDeriveKey(diversifier []byte, iv []byte) (key []byte, err error) {
 	var ivPtr [aes.BlockSize]byte
 	copy(ivPtr[:], iv[:])
 
@@ -251,28 +251,28 @@ func SCCDeriveKey(baseKey []byte, iv []byte) (derivedKey []byte, err error) {
 		return
 	}
 
-	baseKey = PKCS7Pad(baseKey, false)
+	diversifier = PKCS7Pad(diversifier, false)
 
-	if len(baseKey) > aes.BlockSize*256 {
-		err = errors.New("input key exceeds maximum length for SCC key derivation")
+	if len(diversifier) > aes.BlockSize*256 {
+		err = errors.New("input diversifier exceeds maximum length for SCC key derivation")
 		return
 	}
 
-	_, err = scc.Write(baseKey)
+	_, err = scc.Write(diversifier)
 
 	if err != nil {
 		err = errors.New("SCC key derivation input length exceeded")
 		return
 	}
 
-	buf := make([]byte, len(baseKey))
+	buf := make([]byte, len(diversifier))
 	_, err = scc.Read(buf)
 
 	if err != nil {
 		return
 	}
 
-	derivedKey = buf
+	key = buf
 
 	return
 }

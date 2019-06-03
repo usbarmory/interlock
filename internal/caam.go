@@ -215,18 +215,18 @@ func (a *aes256CAAM) HandleRequest(r *http.Request) (res jsonObject) {
 	return
 }
 
-func (h *CAAM) DeriveKey(plaintext []byte, iv []byte) (ciphertext []byte, err error) {
-	return CAAMDeriveKey(plaintext, iv)
+func (h *CAAM) DeriveKey(diversifier []byte, iv []byte) (key []byte, err error) {
+	return CAAMDeriveKey(diversifier, iv)
 }
 
-func CAAMDeriveKey(baseKey []byte, iv []byte) (key []byte, err error) {
+func CAAMDeriveKey(diversifier []byte, iv []byte) (key []byte, err error) {
 	var newKey []byte
 	var blob []byte
 
 	var output *os.File
 	var input *os.File
 
-	_, keymod, err := deriveKeyPBKDF2(iv, string(baseKey), KEYMOD_LEN)
+	_, keymod, err := deriveKeyPBKDF2(iv, string(diversifier), KEYMOD_LEN)
 
 	if err != nil {
 		return
@@ -247,7 +247,7 @@ func CAAMDeriveKey(baseKey []byte, iv []byte) (key []byte, err error) {
 	// however we do not care as, despite being a little inelegant, there
 	// is no harm.
 	h := sha256.New()
-	h.Write(baseKey)
+	h.Write(diversifier)
 	h.Write(iv)
 	outputPath = path.Join(outputPath, "."+fmt.Sprintf("%x", h.Sum(nil)))
 
@@ -264,10 +264,9 @@ func CAAMDeriveKey(baseKey []byte, iv []byte) (key []byte, err error) {
 		}
 		defer output.Close()
 
-		// With the CAAM we cannot directly derive a key C_DeriveKey
-		// style (see scc2.go), therefore we initialize a random key
-		// and wrap it in a hardware specific encrypted blob, using the
-		// password as key modifier, for later re-use.
+		// We initialize a random key and wrap it in a hardware
+		// specific encrypted blob, using the password as key
+		// diversifier, for later re-use.
 		newKey = make([]byte, derivedKeySize)
 		_, err = io.ReadFull(rand.Reader, newKey)
 

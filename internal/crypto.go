@@ -82,7 +82,7 @@ type HSMInterface interface {
 	// return a fresh cipher instance
 	Cipher() cipherInterface
 	// derive key
-	DeriveKey(baseKey []byte, iv []byte) (derivedKey []byte, err error)
+	DeriveKey(diversifier []byte, iv []byte) (derivedKey []byte, err error)
 }
 
 func ciphers() (res jsonObject) {

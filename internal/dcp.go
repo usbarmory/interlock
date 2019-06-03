@@ -223,12 +223,12 @@ func (a *aes128DCP) HandleRequest(r *http.Request) (res jsonObject) {
 	return
 }
 
-func (h *DCP) DeriveKey(plaintext []byte, iv []byte) (ciphertext []byte, err error) {
-	return DCPDeriveKey(plaintext, iv)
+func (h *DCP) DeriveKey(diversifier []byte, iv []byte) (key []byte, err error) {
+	return DCPDeriveKey(diversifier, iv)
 }
 
 // equivalent to PKCS#11 C_DeriveKey with CKM_AES_CBC_ENCRYPT_DATA
-func DCPDeriveKey(baseKey []byte, iv []byte) (derivedKey []byte, err error) {
+func DCPDeriveKey(diversifier []byte, iv []byte) (key []byte, err error) {
 	fd, err := unix.Socket(unix.AF_ALG, unix.SOCK_SEQPACKET, 0)
 
 	if err != nil {
@@ -255,9 +255,9 @@ func DCPDeriveKey(baseKey []byte, iv []byte) (derivedKey []byte, err error) {
 		return
 	}
 
-	baseKey = PKCS7Pad(baseKey, false)
+	diversifier = PKCS7Pad(diversifier, false)
 	apifd, _, _ := unix.Syscall(unix.SYS_ACCEPT, uintptr(fd), 0, 0)
-	derivedKey, err = cryptoAPI(apifd, unix.ALG_OP_ENCRYPT, iv, baseKey)
+	key, err = cryptoAPI(apifd, unix.ALG_OP_ENCRYPT, iv, diversifier)
 
 	return
 }

@@ -46,9 +46,13 @@ Pre-compiled binary releases for ARM targets are available
 Architecture
 ============
 
-The application provides a web application (client-side) and its counterpart
-JSON application server implementing the protocol specified in the API
-document.
+The package provides a web application (client-side) and its counterpart JSON
+application server implementing the protocol specified in the API document.
+
+A command line mode is available to execute selected operations locally,
+without the web interface. This is primarily intended to aid
+encryption/decryption operation with hardware keys, using HSM support on
+embedded firmwares.
 
 The JSON application server is written in golang. The client HTML/Javascript
 application is statically served by the application server, implementing the
@@ -57,14 +61,9 @@ presentation layer.
 The interaction between the static HTML/Javascript and the JSON application
 server is entirely documented in the API document.
 
-The authentication is directly tied to Linux Unified Key Setup (LUKS)
-disk-encryption setup on the server side. A successful login unlocks the
+The web application authentication is directly tied to Linux Unified Key Setup
+(LUKS) disk-encryption setup on the server side. A successful login unlocks the
 specified encrypted volume, while logging out locks it back.
-
-A command line mode is available to execute selected operations locally,
-without the web interface. This is primarily intended to aid
-encryption/decryption operation with hardware keys, using HSM support on
-embedded firmwares.
 
 Design goals:
 

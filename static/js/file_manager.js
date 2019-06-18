@@ -73,11 +73,6 @@ Interlock.FileManager = new function() {
          This is necessary to prevent menu disappearing on Firefox */
       if (event.button !== undefined && event.button !== 2) {
         $('ul.inode_menu').remove();
-        /* unselect any previously selected file or directory if the user
-           performs a left click without the ctrl key pressed */
-        if (event.ctrlKey !== true) {
-          $('table.inodes_table tbody tr.ui-selected').removeClass('ui-selected');
-        }
       }
     });
 
@@ -392,6 +387,14 @@ Interlock.FileManager = new function() {
 
       } else {
         $inode.addClass('file');
+
+	/* removes selection when clicking again on a selected file */
+        $inodeName.click(function(event) {
+          $inode.removeClass('ui-selected');
+
+          event.stopPropagation();
+          event.preventDefault();
+        });
       }
 
       if (inode.private) {

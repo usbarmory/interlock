@@ -19,7 +19,7 @@ var URIPattern = regexp.MustCompile("/api/([A-Za-z0-9]+)/([a-z0-9_]+)")
 
 func applyHeaders(h http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Security-Policy", "default-src 'none'; script-src 'self' 'unsafe-eval' 'unsafe-inline; style-src 'self' 'unsafe-inline'; img-src 'self'; connect-src 'self';")
+		w.Header().Set("Content-Security-Policy", "default-src https:; script-src https: 'self' 'unsafe-eval' 'unsafe-inline'; style-src https: 'self' 'unsafe-inline'; img-src https: 'self'; connect-src https: 'self';")
 		w.Header().Set("Cache-Control", "no-cache, no-store, max-age=0, must-revalidate")
 		w.Header().Set("Pragma", "no-cache")
 		w.Header().Set("Expires", "Fri, 07 Jan 1981 00:00:00 GMT")

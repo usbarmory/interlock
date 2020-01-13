@@ -1,11 +1,11 @@
 Introduction
 ============
 
-INTERLOCK | https://github.com/inversepath/interlock  
+INTERLOCK | https://github.com/f-secure-foundry/interlock  
 Copyright (c) F-Secure Corporation
 
 The INTERLOCK application is a file encryption front-end developed, but not
-limited to, usage with the [USB armory](https://inversepath.com/usbarmory).
+limited to, usage with the [USB armory](https://github.com/f-secure-foundry/usbarmory).
 
 The primary interface consists of a web-based file manager for an encrypted
 partition running on the device hosting the JSON application server (e.g. USB
@@ -16,7 +16,7 @@ partition, as well as symmetric/asymmetric cryptographic operations on the
 individual files. Additionally secure messaging and file sharing is supported
 with an optional built-in Signal client.
 
-![INTERLOCK screenshot](https://inversepath.com/images/interlock.png)
+![INTERLOCK screenshot](https://github.com/f-secure-foundry/interlock/wiki/images/interlock.png)
 
 A command line mode is available to execute selected operations locally,
 without the web interface. This is primarily intended to aid
@@ -26,22 +26,22 @@ embedded firmwares.
 Authors
 =======
 
-Andrea Barisani <andrea@inversepath.com>  
-Daniele Bianco  <danbia@inversepath.com>  
+Andrea Barisani <andrea.barisani@f-secure.com>  
+Daniele Bianco  <daniele.bianco@f-secure.com>  
 
 Documentation
 =============
 
 The main documentation is included in the present
-[file](https://github.com/inversepath/interlock/blob/master/README.md),
+[file](https://github.com/f-secure-foundry/interlock/blob/master/README.md),
 additional information can be found on the
-[project wiki](https://github.com/inversepath/interlock/wiki).
+[project wiki](https://github.com/f-secure-foundry/interlock/wiki).
 
 Binary Releases
 ===============
 
 Pre-compiled binary releases for ARM targets are available
-[here](https://github.com/inversepath/interlock/releases).
+[here](https://github.com/f-secure-foundry/interlock/releases).
 
 Architecture
 ============
@@ -228,7 +228,7 @@ or cross-compiled, under Linux (it is not supported by or designed for other
 OSes at this time).
 
 ```
-git clone https://github.com/inversepath/interlock
+git clone https://github.com/f-secure-foundry/interlock
 cd interlock
 git submodule init
 git submodule update
@@ -242,7 +242,7 @@ Alternatively you can automatically download, compile and install the package,
 under your GOPATH, as follows:
 
 ```
-go get github.com/inversepath/interlock
+go get github.com/f-secure-foundry/interlock
 ```
 
 When cross compiling from a non-arm host for an arm target ensure that the
@@ -324,16 +324,16 @@ Configuration
   Available modules:
 
   - `mxc-scc2`:          NXP Security Controller (SCCv2). Requires kernel driver
-                         [mxc-scc2](https://github.com/inversepath/mxc-scc2).
+                         [mxc-scc2](https://github.com/f-secure-foundry/mxc-scc2).
 
   - `caam-keyblob`:      NXP Cryptographic Acceleration and Assurance Module (CAAM).
                          *NOTE*: stores encrypted derived keys in `~/.luks_kb/`,
                          which must be accompanied to the LUKS partition itself
                          when creating data backups. Requires kernel driver
-                         [caam-keyblob](https://github.com/inversepath/caam-keyblob).
+                         [caam-keyblob](https://github.com/f-secure-foundry/caam-keyblob).
 
   - `mxs-dcp`:           NXP Data Co-Processor (DCP). Requires kernel driver
-                         [mxs-dcp](https://github.com/inversepath/mxs-dcp).
+                         [mxs-dcp](https://github.com/f-secure-foundry/mxs-dcp).
 
   Available options:
 
@@ -436,7 +436,7 @@ Alternatively you can automatically download, compile and install the package,
 under your `GOPATH`, with Signal support as follows:
 
 ```
-go get -tags signal github.com/inversepath/interlock
+go get -tags signal github.com/f-secure-foundry/interlock
 ```
 
 The "Signal" entry must be added to the "ciphers" configuration parameter (see
@@ -486,7 +486,7 @@ being regular files, benefit from the available file operations.
 License
 =======
 
-INTERLOCK | https://github.com/inversepath/interlock  
+INTERLOCK | https://github.com/f-secure-foundry/interlock  
 Copyright (c) F-Secure Corporation
 
 This program is free software: you can redistribute it and/or modify it under

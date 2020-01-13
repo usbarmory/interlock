@@ -1,4 +1,4 @@
-// INTERLOCK | https://github.com/inversepath/interlock
+// INTERLOCK | https://github.com/f-secure-foundry/interlock
 // Copyright (c) F-Secure Corporation
 //
 // Use of this source code is governed by the license
@@ -42,8 +42,8 @@ const (
 // This uniquely ties the derived key to the specific hardware unit being used,
 // as well as the authentication password.
 //
-// See https://github.com/inversepath/mxs-scc2 for detailed information on the
-// SCCv2 encryption process.
+// See https://github.com/f-secure-foundry/mxs-scc2 for detailed information on
+// the SCCv2 encryption process.
 //
 // The salt, initialization vector are prepended to the encrypted file, the
 // HMAC for authentication is appended:

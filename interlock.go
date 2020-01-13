@@ -1,4 +1,4 @@
-// INTERLOCK | https://github.com/inversepath/interlock
+// INTERLOCK | https://github.com/f-secure-foundry/interlock
 // Copyright (c) F-Secure Corporation
 //
 // Use of this source code is governed by the license
@@ -12,7 +12,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/inversepath/interlock/internal"
+	"github.com/f-secure-foundry/interlock/internal"
 )
 
 var configPath = flag.String("c", "interlock.conf", "configuration file path")

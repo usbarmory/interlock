@@ -1,4 +1,4 @@
-// INTERLOCK | https://github.com/inversepath/interlock
+// INTERLOCK | https://github.com/f-secure-foundry/interlock
 // Copyright (c) F-Secure Corporation
 //
 // Use of this source code is governed by the license
@@ -86,8 +86,8 @@ func (kb *caam_kb_data) set(key, blob, keymod *[]byte) {
 // derived key decryption only with the specific hardware and user that
 // performed the encryption.
 //
-// See https://github.com/inversepath/caam-keyblob for detailed information on
-// the CAAM encryption process.
+// See https://github.com/f-secure-foundry/caam-keyblob for detailed
+// information on the CAAM encryption process.
 //
 // The derived key encrypted blob, salt, initialization vector are prepended to
 // the encrypted file, the HMAC for authentication is appended:

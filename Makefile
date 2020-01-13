@@ -1,13 +1,12 @@
 SHELL = /bin/bash
 GO ?= go
-BUILD_GOPATH = $(CURDIR)
 BUILD_TAGS = ""
 BUILD_USER = $(shell whoami)
 BUILD_HOST = $(shell hostname)
 BUILD_DATE = $(shell /bin/date -u "+%Y-%m-%d %H:%M:%S")
 BUILD = ${BUILD_USER}@${BUILD_HOST} on ${BUILD_DATE}
 REV = $(shell git rev-parse --short HEAD 2> /dev/null)
-PKG = "github.com/inversepath/interlock"
+PKG = "github.com/f-secure-foundry/interlock"
 
 all: build
 
@@ -18,6 +17,5 @@ build:
 	  interlock.go
 	@echo "compiled INTERLOCK ${REV} (${BUILD})"
 
-with_signal: BUILD_GOPATH = "$(CURDIR):${GOPATH}"
 with_signal: BUILD_TAGS = "signal"
 with_signal: build

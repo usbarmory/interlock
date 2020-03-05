@@ -13,8 +13,7 @@ armory).
 
 The file manager allows uploading/downloading of files to/from the encrypted
 partition, as well as symmetric/asymmetric cryptographic operations on the
-individual files. Additionally secure messaging and file sharing is supported
-with an optional built-in Signal client.
+individual files.
 
 ![INTERLOCK screenshot](https://github.com/f-secure-foundry/interlock/wiki/images/interlock.png)
 
@@ -73,9 +72,6 @@ Design goals:
 * Minimum amount of external dependencies, currently no code outside of Go
   standard and supplementary libraries is required for the basic server binary.
 
-  NOTE: Signal support can be optionally enabled at compile time, it currently
-  requires an external dependency, see related section for details.
-
 * Authentication process directly tied to LUKS partition locking/unlocking.
 
 * Support for additional symmetric/asymmetric encryption on individual
@@ -107,10 +103,6 @@ Symmetric ciphers:
 Security tokens:
 
 * Time-based One-Time Password Algorithm (TOTP), RFC623 implementation (Google Authenticator)
-
-Messaging and file sharing:
-
-* Signal protocol V2 via external library (https://github.com/aebruno/textsecure)
 
 Hardware Security Modules
 =========================
@@ -357,7 +349,7 @@ Configuration
 * `volume_group`: volume group name.
 
 * `ciphers`:      array of cipher names to enable, supported values are
-                  ["OpenPGP", "AES-256-OFB", "TOTP", "Signal"].
+                  ["OpenPGP", "AES-256-OFB", "TOTP"].
 
 The following example illustrates the configuration file format (plain JSON)
 and its default values.
@@ -406,82 +398,6 @@ on disk.
 
 Any non-debug log generated outside an unauthenticated session is issued
 through standard syslog facility.
-
-Signal support
-==============
-
-**NOTE**: compilation with this feature enabled might fail as the external
-library API is still subject to change.
-
-A messaging functionality, which leverages on the Open Whisper Systems
-[Signal](https://github.com/WhisperSystems/Signal-Android) protocol, provides
-communication with other Signal, including other INTERLOCK instances using this
-feature.
-
-The integration allows messaging with other Signal users as well as file
-sharing through attachments on chat sessions.
-
-The feature is disabled by default and it depends on an external Go
-[library](https://github.com/aebruno/textsecure).
-
-The functionality can be enabled by compiling INTERLOCK as shown in the
-_Compiling_ section, with the exception that the `with_signal` target should be
-used when issuing the make command:
-
-```
-make with_signal
-```
-
-Alternatively you can automatically download, compile and install the package,
-under your `GOPATH`, with Signal support as follows:
-
-```
-go get -tags signal github.com/f-secure-foundry/interlock
-```
-
-The "Signal" entry must be added to the "ciphers" configuration parameter (see
-the _Configuration_ section), to enable it.
-
-```
-        "ciphers": [
-                "OpenPGP",
-                "AES-256-OFB",
-                "TOTP",
-                "Signal"
-        ]
-```
-
-A pre-defined directory structure, stored on the encrypted filesystem under the
-key storage path, is assigned to hold generated keys, this is automatically
-managed by the protocol library.
-
-The user registration can be accomplished in the web interface, after logging
-in, using a dedicated action presented when the feature is compiled in and
-enabled in the configuration file. The registration process triggers, and
-prompts for, a verification code transmitted to the specified number via SMS or
-voice per user preference.
-
-**NOTE**: Any existing Signal registration for the specified mobile number gets
-invalidated and taken over by INTERLOCK.
-
-A contact is represented by a directory that can be regularly managed with the
-built-in file manager. The contact directory stores the chat history,
-attachments and is used as the entry point for starting a chat using the
-'Signal' right click menu action.
-
-The contact directories must respect to the following naming scheme and must be
-located under the top level `signal` directory:
-
-```
-signal/$name $number # e.g. signal/John Doe +3912345678
-```
-
-New contacts can be created using the file manager while incoming messages for
-unknown contacts trigger automatic creation of a contact directory with name
-'Unknown' and the originating number.
-
-All contact files reside on the encrypted partition managed by INTERLOCK and,
-being regular files, benefit from the available file operations.
 
 License
 =======

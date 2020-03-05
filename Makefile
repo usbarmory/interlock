@@ -16,6 +16,3 @@ build:
 	  -ldflags "-s -w -X '${PKG}/internal.Build=${BUILD} ${BUILD_TAGS}' -X '${PKG}/internal.Revision=${REV}'" \
 	  interlock.go
 	@echo "compiled INTERLOCK ${REV} (${BUILD})"
-
-with_signal: BUILD_TAGS = "signal"
-with_signal: build

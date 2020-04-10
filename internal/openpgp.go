@@ -301,12 +301,12 @@ func algoName(algo packet.PublicKeyAlgorithm) (name string) {
 
 func getKeyInfo(entity *openpgp.Entity) (info string) {
 	if entity == nil {
-		info += fmt.Sprintf("no entity\n")
+		info += "no entity\n"
 		return
 	}
 
 	if entity.PrivateKey != nil {
-		info += fmt.Sprintf("OpenPGP private key:\n")
+		info += "OpenPGP private key:\n"
 	} else {
 		creation := entity.PrimaryKey.CreationTime
 		algoID := entity.PrimaryKey.PubKeyAlgo
@@ -314,27 +314,27 @@ func getKeyInfo(entity *openpgp.Entity) (info string) {
 		keyID := entity.PrimaryKey.KeyIdShortString()
 		bitLength, _ := entity.PrimaryKey.BitLength()
 
-		info += fmt.Sprintf("OpenPGP public key:\n")
+		info += "OpenPGP public key:\n"
 		info += fmt.Sprintf("  ID: %v\n", keyID)
 		info += fmt.Sprintf("  Type: %v/%v\n", bitLength, algoName(algoID))
 		info += fmt.Sprintf("  Fingerprint: % X\n", fingerprint)
 		info += fmt.Sprintf("  Creation: %v\n", creation)
 	}
 
-	info += fmt.Sprintf("  Identities:\n")
+	info += "  Identities:\n"
 
 	for _, uid := range entity.Identities {
 		info += fmt.Sprintf("    %s\n", uid.Name)
 	}
 
-	info += fmt.Sprintf("  Subkeys:\n")
+	info += "  Subkeys:\n"
 
 	for _, sub := range entity.Subkeys {
 		bitLength, _ := sub.PublicKey.BitLength()
 		info += fmt.Sprintf("    %v/%v %v [expired: %v]\n", algoName(sub.PublicKey.PubKeyAlgo), bitLength, sub.Sig.CreationTime, sub.Sig.KeyExpired(time.Now()))
 	}
 
-	info += fmt.Sprintf("  Revocations:\n")
+	info += "  Revocations:\n"
 
 	for _, rev := range entity.Revocations {
 		info += fmt.Sprintf("    %v [reason: %s]\n", rev.CreationTime, rev.RevocationReasonText)

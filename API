@@ -78,7 +78,7 @@ On a successful login the "INTERLOCK-Token" is returned as cookie via the
 
 The XSRF protection token "X-XSRFToken" is returned in the response payload.
 This token must be included by the client as HTTP header in every request to
-the backend.
+the backend (except for GET /api/file/download?id=<download_id>).
 
 The "dispose" boolean indicates that the LUKS password must be removed after
 mounting the encrypted partition, this is possible as long as one other valid
@@ -228,6 +228,7 @@ response:
 
 Download a file, the file is specified by the download_id unique code returned
 by the POST to 'api/file/download'. The download_id is disposed after use.
+The XSRF protection token "X-XSRFToken" header is not required to be set.
 
 HTTP response codes:
   200: success

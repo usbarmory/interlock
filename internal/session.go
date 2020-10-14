@@ -40,13 +40,13 @@ func (s *sessionData) Validate(r *http.Request) (validSessionID bool, validXSRFT
 	session.Lock()
 	defer session.Unlock()
 
-	if len(session.SessionID) == len(sessionID.Value) && subtle.ConstantTimeCompare([]byte(session.SessionID), []byte(sessionID.Value)) == 1 {
+	if subtle.ConstantTimeCompare([]byte(session.SessionID), []byte(sessionID.Value)) == 1 {
 		validSessionID = true
 	} else {
 		err = errors.New("invalid session")
 	}
 
-	if len(session.XSRFToken) == len(XSRFToken) && subtle.ConstantTimeCompare([]byte(session.XSRFToken), []byte(XSRFToken)) == 1 {
+	if subtle.ConstantTimeCompare([]byte(session.XSRFToken), []byte(XSRFToken)) == 1 {
 		validXSRFToken = true
 	} else {
 		err = errors.New("missing XSRFToken")

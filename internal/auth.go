@@ -3,8 +3,6 @@
 //
 // Use of this source code is governed by the license
 // that can be found in the LICENSE file.
-//
-//+build linux
 
 package interlock
 
@@ -52,13 +50,13 @@ func authenticate(volume string, password string, dispose bool) (err error) {
 		return
 	}
 
-	err = luksOpen(volume, password)
+	err = unlock(volume, password)
 
 	if err != nil {
 		return
 	}
 
-	err = luksMount()
+	err = mount()
 
 	if err != nil {
 		return
@@ -71,7 +69,7 @@ func authenticate(volume string, password string, dispose bool) (err error) {
 	}
 
 	if dispose {
-		err = luksKeyOp(volume, password, "", _remove)
+		err = keyOp(volume, password, "", _remove)
 
 		if err != nil {
 			return
@@ -114,8 +112,8 @@ func login(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 	err = authenticate(req["volume"].(string), req["password"].(string), req["dispose"].(bool))
 
 	if err != nil {
-		_ = luksUnmount()
-		_ = luksClose()
+		_ = umount()
+		_ = lock()
 		return errorResponse(err, "INVALID_SESSION")
 	}
 
@@ -145,8 +143,8 @@ func login(w http.ResponseWriter, r *http.Request) (res jsonObject) {
 	XSRFToken, err := randomString(cookieSize)
 
 	if err != nil {
-		_ = luksUnmount()
-		_ = luksClose()
+		_ = umount()
+		_ = lock()
 		return errorResponse(err, "")
 	}
 
@@ -198,27 +196,17 @@ func logout(w http.ResponseWriter) (res jsonObject) {
 
 	conf.ActivateCiphers(false)
 
-	err := luksUnmount()
+	err := umount()
 
 	if err != nil {
 		return errorResponse(err, "")
 	}
 
-	err = luksClose()
+	err = lock()
 
 	if err != nil {
 		return errorResponse(err, "")
 	}
-
-	return
-}
-
-func poweroff(w http.ResponseWriter) (res jsonObject) {
-	res = logout(w)
-
-	go func() {
-		_, _ = execCommand("/sbin/poweroff", []string{}, true, "")
-	}()
 
 	return
 }

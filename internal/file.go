@@ -3,8 +3,6 @@
 //
 // Use of this source code is governed by the license
 // that can be found in the LICENSE file.
-//
-//+build linux
 
 package interlock
 
@@ -23,7 +21,6 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
-	"syscall"
 )
 
 const (
@@ -304,8 +301,6 @@ func fileOp(src string, dst string, mode int) (err error) {
 		switch mode {
 		case _copy, _move:
 			var stat os.FileInfo
-			var args []string
-			var cmd string
 
 			stat, err = os.Stat(dst)
 
@@ -325,14 +320,10 @@ func fileOp(src string, dst string, mode int) (err error) {
 			}
 
 			if mode == _copy {
-				args = []string{"-ra", src, dst}
-				cmd = "/bin/cp"
-			} else { // _move
-				args = []string{src, dst}
-				cmd = "/bin/mv"
+				err = cp(src, dst)
+			} else {
+				err = mv(src, dst)
 			}
-
-			_, err = execCommand(cmd, args, false, "")
 		case _extract:
 			switch filepath.Ext(src) {
 			case ".zip", ".ZIP":
@@ -385,15 +376,11 @@ func fileList(r *http.Request) (res jsonObject) {
 		return errorResponse(err, "")
 	}
 
-	var stat syscall.Statfs_t
-	err = syscall.Statfs(path, &stat)
+	total, free, err := fsStatus(path)
 
 	if err != nil {
 		return errorResponse(err, "")
 	}
-
-	totalSpace := stat.Blocks * uint64(stat.Bsize)
-	freeSpace := stat.Bavail * uint64(stat.Bsize)
 
 	inodes := []inode{}
 
@@ -445,8 +432,8 @@ func fileList(r *http.Request) (res jsonObject) {
 	res = jsonObject{
 		"status": "OK",
 		"response": map[string]interface{}{
-			"total_space": totalSpace,
-			"free_space":  freeSpace,
+			"total_space": total,
+			"free_space":  free,
 			"inodes":      inodes,
 		},
 	}

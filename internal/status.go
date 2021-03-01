@@ -13,7 +13,6 @@ import (
 	"log/syslog"
 	"sort"
 	"sync"
-	"syscall"
 	"time"
 )
 
@@ -108,34 +107,6 @@ func versionStatus() (res jsonObject) {
 			"revision": Revision,
 			"build":    build,
 			"key_path": conf.KeyPath,
-		},
-	}
-
-	return
-}
-
-func runningStatus() (res jsonObject) {
-	sys := &syscall.Sysinfo_t{}
-	_ = syscall.Sysinfo(sys)
-
-	log := []statusEntry{}
-
-	status.LogBuf.Do(func(v interface{}) {
-		if v != nil {
-			log = append(log, v.(statusEntry))
-		}
-	})
-
-	res = jsonObject{
-		"status": "OK",
-		"response": map[string]interface{}{
-			"uptime":       sys.Uptime,
-			"load_1":       sys.Loads[0],
-			"load_5":       sys.Loads[1],
-			"load_15":      sys.Loads[2],
-			"freeram":      sys.Freeram,
-			"log":          log,
-			"notification": status.Notifications(),
 		},
 	}
 

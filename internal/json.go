@@ -60,7 +60,7 @@ func (j jsonObject) String() (s string) {
 
 func validateRequest(req jsonObject, reqAttrs []string) error {
 	for i := 0; i < len(reqAttrs); i++ {
-		ok := false
+		var ok bool
 
 		args := strings.Split(reqAttrs[i], ":")
 

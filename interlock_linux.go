@@ -4,11 +4,12 @@
 // Use of this source code is governed by the license
 // that can be found in the LICENSE file.
 
+// +build linux
+
 package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"os"
 
@@ -98,22 +99,30 @@ func main() {
 
 	if op != "" {
 		err = interlock.Op(op)
-	} else {
-		conf.Print()
-
-		if conf.Debug {
-			log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
-			log.Println("debug mode enabled")
-		} else {
-			interlock.EnableSyslog()
-		}
-
-		err = interlock.StartServer()
 
 		if err != nil {
-			fmt.Println(err)
+			log.Fatal(err)
 		}
+
+		return
 	}
+
+	conf.Print()
+
+	if conf.Debug {
+		log.SetFlags(log.Ldate | log.Ltime | log.Lshortfile)
+		log.Println("debug mode enabled")
+	} else {
+		interlock.EnableSyslog()
+	}
+
+	srv, err := interlock.ConfigureServer()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = interlock.StartServer(srv)
 
 	if err != nil {
 		log.Fatal(err)

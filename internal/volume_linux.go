@@ -3,8 +3,8 @@
 //
 // Use of this source code is governed by the license
 // that can be found in the LICENSE file.
-//
-//+build linux
+
+// +build linux
 
 package interlock
 
@@ -14,58 +14,12 @@ import (
 	"errors"
 	"io"
 	"log/syslog"
-	"net/http"
 	"os/user"
 	"strings"
 	"syscall"
 )
 
-const mapping = "interlockfs"
-
-const (
-	_change = iota
-	_add
-	_remove
-)
-
-func passwordRequest(r *http.Request, mode int) (res jsonObject) {
-	var newPassword string
-
-	req, err := parseRequest(r)
-
-	if err != nil {
-		return errorResponse(err, "")
-	}
-
-	switch mode {
-	case _change, _add:
-		err = validateRequest(req, []string{"volume:s", "password:s", "newpassword:s"})
-		newPassword = req["newpassword"].(string)
-	case _remove:
-		err = validateRequest(req, []string{"volume:s", "password:s"})
-	default:
-		err = errors.New("unsupported operation")
-	}
-
-	if err != nil {
-		return errorResponse(err, "")
-	}
-
-	err = luksKeyOp(req["volume"].(string), req["password"].(string), newPassword, mode)
-
-	if err != nil {
-		return errorResponse(err, "")
-	}
-
-	res = jsonObject{
-		"status":   "OK",
-		"response": nil,
-	}
-
-	return
-}
-
-func luksOpen(volume string, password string) (err error) {
+func unlock(volume string, password string) (err error) {
 	var key string
 
 	if strings.Contains(volume, traversalPattern) {
@@ -99,7 +53,7 @@ func luksOpen(volume string, password string) (err error) {
 	return
 }
 
-func luksMount() (err error) {
+func mount() (err error) {
 	args := []string{"/dev/mapper/" + mapping, conf.MountPoint}
 	cmd := "/bin/mount"
 
@@ -127,7 +81,7 @@ func luksMount() (err error) {
 	return
 }
 
-func luksUnmount() (err error) {
+func umount() (err error) {
 	args := []string{conf.MountPoint}
 	cmd := "/bin/umount"
 
@@ -139,7 +93,7 @@ func luksUnmount() (err error) {
 	return
 }
 
-func luksClose() (err error) {
+func lock() (err error) {
 	args := []string{"luksClose", "/dev/mapper/" + mapping}
 	cmd := "/sbin/cryptsetup"
 
@@ -150,7 +104,7 @@ func luksClose() (err error) {
 	return
 }
 
-func luksKeyOp(volume string, password string, newPassword string, mode int) (err error) {
+func keyOp(volume string, password string, newPassword string, mode int) (err error) {
 	var action string
 	var input string
 	var key string

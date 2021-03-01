@@ -82,8 +82,8 @@ Design goals:
   encryption/decryption, archive creation/extraction) and locking of private
   keys.
 
-* Minimal footprint (single statically linked binary + supporting static files)
-  to ease integration/execution on the USB armory platform.
+* Minimal footprint (single statically linked binary) to ease
+  integration/execution on the USB armory platform.
 
 Ciphers
 =======
@@ -222,8 +222,6 @@ OSes at this time).
 ```
 git clone https://github.com/f-secure-foundry/interlock
 cd interlock
-git submodule init
-git submodule update
 make
 ```
 
@@ -237,15 +235,6 @@ under your GOPATH, as follows:
 go get github.com/f-secure-foundry/interlock
 ```
 
-When cross compiling from a non-arm host for an arm target ensure that the
-following compilation variables are set:
-
-```
-make GOARCH=arm \
-     CC=<path_to_cross_compiler>/arm-linux-gnueabihf-gcc \
-     CGO_ENABLED=1
-```
-
 Options
 =======
 
@@ -253,7 +242,7 @@ Options
   -h                   options help
   -b="0.0.0.0:4430"    binding address:port pair
   -c="interlock.conf"  configuration file path
-  -o=""                operation ((open:<volume>)|close|derive(:<data>)?)
+  -o=""                operation ((unlock:<volume>)|lock|derive(:<data>)?)
   -d=false:            debug mode
   -t=false:            test mode (WARNING: disables authentication)
 ```
@@ -261,24 +250,21 @@ Options
 The operation flag allows selected actions to be performed locally, without a
 web interface. The following operations are supported:
 
-* `open:<volume>`:  unlock LUKS volume to mapping "interlockfs", prompts
-                    password once. Uses HSM key derivation when configured.
+* `unlock:<volume>`: unlock LUKS volume to mapping "interlockfs", prompts
+                     password once. Uses HSM key derivation when configured.
 
-* `close`:          lock the LUKS volume mapped to "interlockfs".
+* `lock`:            lock the LUKS volume mapped to "interlockfs".
 
-* `derive:<data>`:  HSM key derivation from data (e.g. diversifier) specified
-                    in hex format (e.g. `derive:12ef`).
+* `derive:<data>`:   HSM key derivation from data (e.g. diversifier) specified
+                     in hex format (e.g. `derive:12ef`).
 
-* `derive`:         HSM key derivation from password, prompted twice
-                    interactively.
+* `derive`:          HSM key derivation from password, prompted twice
+                     interactively.
 
 Configuration
 =============
 
 * `debug`:         enable debugging logs.
-
-* `static_path`:   directory path for INTERLOCK static HTML/JavaScript files
-                   ("static" directory included in project repository).
 
 * `set_time`:      use the client browser time to set server time at login,
                    useful on non-routed USB armory devices (unable to set the
@@ -357,7 +343,6 @@ and its default values.
 ```
 {
         "debug": false,
-        "static_path": "static",
         "set_time": false,
         "bind_address": "0.0.0.0:4430",
         "tls": "on",

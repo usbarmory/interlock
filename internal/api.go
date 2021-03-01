@@ -7,13 +7,18 @@
 package interlock
 
 import (
+	"embed"
+	"errors"
 	"fmt"
+	"io/fs"
 	"log"
 	"net/http"
 	"net/url"
-	"os"
 	"regexp"
 )
+
+//go:embed static/*
+var static embed.FS
 
 var URIPattern = regexp.MustCompile("/api/([A-Za-z0-9]+)/([a-z0-9_]+)")
 
@@ -28,15 +33,15 @@ func applyHeaders(h http.Handler) http.HandlerFunc {
 	}
 }
 
-func registerHandlers(staticPath string) (err error) {
-	_, err = os.Stat(conf.StaticPath)
+func registerHandlers() (err error) {
+	root, err := fs.Sub(static, "static")
 
 	if err != nil {
-		return fmt.Errorf("invalid path for static files: %v", err)
+		return
 	}
 
-	staticDir := http.Dir(staticPath)
-	staticHandler := applyHeaders(http.FileServer(staticDir))
+	static := http.FileServer(http.FS(root))
+	staticHandler := applyHeaders(static)
 
 	http.Handle("/", http.StripPrefix("/", staticHandler))
 	http.HandleFunc("/api/", apiHandler)
@@ -106,7 +111,8 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 	case "/api/auth/logout":
 		res = logout(w)
 	case "/api/auth/poweroff":
-		res = poweroff(w)
+		res = logout(w)
+		defer poweroff()
 	case "/api/luks/change":
 		res = passwordRequest(r, _change)
 	case "/api/luks/add":
@@ -114,7 +120,7 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 	case "/api/luks/remove":
 		res = passwordRequest(r, _remove)
 	case "/api/config/time":
-		res = setTime(r)
+		res = timeRequest(r)
 	case "/api/file/list":
 		res = fileList(r)
 	case "/api/file/upload":
@@ -176,6 +182,43 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 	if res != nil {
 		sendResponse(w, res)
 	}
+}
+
+func passwordRequest(r *http.Request, mode int) (res jsonObject) {
+	var newPassword string
+
+	req, err := parseRequest(r)
+
+	if err != nil {
+		return errorResponse(err, "")
+	}
+
+	switch mode {
+	case _change, _add:
+		err = validateRequest(req, []string{"volume:s", "password:s", "newpassword:s"})
+		newPassword = req["newpassword"].(string)
+	case _remove:
+		err = validateRequest(req, []string{"volume:s", "password:s"})
+	default:
+		err = errors.New("unsupported operation")
+	}
+
+	if err != nil {
+		return errorResponse(err, "")
+	}
+
+	err = keyOp(req["volume"].(string), req["password"].(string), newPassword, mode)
+
+	if err != nil {
+		return errorResponse(err, "")
+	}
+
+	res = jsonObject{
+		"status":   "OK",
+		"response": nil,
+	}
+
+	return
 }
 
 func notFound() (res jsonObject) {

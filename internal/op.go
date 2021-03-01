@@ -4,6 +4,8 @@
 // Use of this source code is governed by the license
 // that can be found in the LICENSE file.
 
+// +build linux
+
 package interlock
 
 import (
@@ -17,7 +19,7 @@ import (
 	"golang.org/x/crypto/ssh/terminal"
 )
 
-var opPattern = regexp.MustCompile("^(open|close|derive)(:.+)?$")
+var opPattern = regexp.MustCompile("^(lock|unlock|derive)(:.+)?$")
 
 func Op(op string) (err error) {
 	var cmd string
@@ -41,7 +43,7 @@ func Op(op string) (err error) {
 	}
 
 	switch cmd {
-	case "open":
+	case "unlock":
 		if arg == "" {
 			return errors.New("invalid operation")
 		}
@@ -52,9 +54,9 @@ func Op(op string) (err error) {
 			return
 		}
 
-		err = luksOpen(arg, string(key))
-	case "close":
-		err = luksClose()
+		err = unlock(arg, string(key))
+	case "lock":
+		err = lock()
 	case "derive":
 		var derivedKey string
 

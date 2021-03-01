@@ -12,7 +12,6 @@ all: build
 
 build:
 	$(GO) build -v -tags ${BUILD_TAGS} \
-	  -gcflags=-trimpath=${CURDIR} -asmflags=-trimpath=${CURDIR} \
-	  -ldflags "-s -w -X '${PKG}/internal.Build=${BUILD} ${BUILD_TAGS}' -X '${PKG}/internal.Revision=${REV}'" \
-	  interlock.go
+	  -trimpath \
+	  -ldflags "-s -w -X '${PKG}/internal.Build=${BUILD} ${BUILD_TAGS}' -X '${PKG}/internal.Revision=${REV}'"
 	@echo "compiled INTERLOCK ${REV} (${BUILD})"

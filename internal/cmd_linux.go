@@ -3,8 +3,8 @@
 //
 // Use of this source code is governed by the license
 // that can be found in the LICENSE file.
-//
-//+build linux
+
+// +build linux
 
 package interlock
 
@@ -13,6 +13,7 @@ import (
 	"errors"
 	"log"
 	"os/exec"
+	"strconv"
 	"syscall"
 )
 
@@ -53,6 +54,33 @@ func execCommand(cmd string, args []string, root bool, input string) (output str
 	}
 
 	return stdout.String(), err
+}
+
+func setTime(epoch int64) (err error) {
+	args := []string{"-s", "@" + strconv.FormatInt(epoch, 10)}
+	_, err = execCommand("/bin/date", args, true, "")
+
+	return
+}
+
+func cp(src string, dst string) (err error) {
+	args :=  []string{"-ra", src, dst}
+	_, err = execCommand("/bin/cp", args, false, "")
+
+	return
+}
+
+func mv(src string, dst string) (err error) {
+	args :=  []string{src, dst}
+	_, err = execCommand("/bin/mv", args, false, "")
+
+	return
+}
+
+func poweroff() {
+	go func() {
+		_, _ = execCommand("/sbin/poweroff", []string{}, true, "")
+	}()
 }
 
 func ioctl(fd, cmd, arg uintptr) (err error) {

@@ -1,6 +1,5 @@
 {
   "debug": true,
-  "static_path": "static",
   "set_time": false,
   "bind_address": "0.0.0.0:4430",
   "tls": "on",

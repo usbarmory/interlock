@@ -27,28 +27,27 @@ import (
 	"time"
 )
 
-func StartServer() (err error) {
-	var server *http.Server
+func ConfigureServer() (srv *http.Server, err error) {
 	var TLSCert []byte
 	var TLSKey []byte
 
-	err = registerHandlers(conf.StaticPath)
-
-	if err != nil {
+	if err = registerHandlers(); err != nil {
 		return
 	}
 
-	if conf.TLS == "gen" {
+	switch conf.TLS {
+	case "off":
+		srv = &http.Server{
+			Addr: conf.BindAddress,
+		}
+
+		return
+	case "gen":
 		err = generateTLSCerts()
 
 		if err != nil {
 			return
 		}
-	}
-
-	if conf.TLS == "off" {
-		log.Printf("starting HTTP server on %s", conf.BindAddress)
-		return http.ListenAndServe(conf.BindAddress, nil)
 	}
 
 	if conf.tlsHSM != nil {
@@ -111,7 +110,7 @@ func StartServer() (err error) {
 			log.Fatal("could not parse client certificate authority")
 		}
 
-		server = &http.Server{
+		srv = &http.Server{
 			Addr: conf.BindAddress,
 			TLSConfig: &tls.Config{
 				Certificates: []tls.Certificate{certificate},
@@ -120,7 +119,7 @@ func StartServer() (err error) {
 			},
 		}
 	} else {
-		server = &http.Server{
+		srv = &http.Server{
 			Addr: conf.BindAddress,
 			TLSConfig: &tls.Config{
 				Certificates: []tls.Certificate{certificate},
@@ -128,10 +127,17 @@ func StartServer() (err error) {
 		}
 	}
 
-	log.Printf("starting HTTPS server on %s", conf.BindAddress)
-	err = server.ListenAndServeTLS("", "")
-
 	return
+}
+
+func StartServer(srv *http.Server) (err error) {
+	if conf.TLS == "off" {
+		log.Printf("starting HTTP server on %s", conf.BindAddress)
+		return srv.ListenAndServe()
+	} else {
+		log.Printf("starting HTTPS server on %s", conf.BindAddress)
+		return srv.ListenAndServeTLS("", "")
+	}
 }
 
 func generateTLSCerts() (err error) {

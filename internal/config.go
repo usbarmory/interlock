@@ -3,8 +3,6 @@
 //
 // Use of this source code is governed by the license
 // that can be found in the LICENSE file.
-//
-//+build linux
 
 package interlock
 
@@ -18,7 +16,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 )
@@ -27,7 +24,6 @@ const mountPoint = ".interlock-mnt"
 
 type Config struct {
 	Debug       bool     `json:"debug"`
-	StaticPath  string   `json:"static_path"`
 	SetTime     bool     `json:"set_time"`
 	BindAddress string   `json:"bind_address"`
 	TLS         string   `json:"tls"`
@@ -192,7 +188,6 @@ func (c *Config) PrintAvailableCiphers() {
 
 func (c *Config) SetDefaults() {
 	c.Debug = false
-	c.StaticPath = "static"
 	c.SetTime = false
 	c.TLS = "on"
 	c.TLSCert = "certs/cert.pem"
@@ -235,7 +230,7 @@ func (c *Config) Print() {
 	log.Printf("\n%s", string(j))
 }
 
-func setTime(r *http.Request) (res jsonObject) {
+func timeRequest(r *http.Request) (res jsonObject) {
 	req, err := parseRequest(r)
 
 	if err != nil {
@@ -261,18 +256,14 @@ func setTime(r *http.Request) (res jsonObject) {
 		return errorResponse(err, "")
 	}
 
-	args := []string{"-s", "@" + strconv.FormatInt(epoch, 10)}
-	cmd := "/bin/date"
-
 	if conf.SetTime {
-		_, err = execCommand(cmd, args, true, "")
+		err = setTime(epoch)
 
 		if err != nil {
 			return errorResponse(err, "")
 		}
 
 		hour, min, sec := time.Now().Clock()
-
 		status.Log(syslog.LOG_NOTICE, "adjusted device time to %02d:%02d:%02d", hour, min, sec)
 	}
 

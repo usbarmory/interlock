@@ -232,7 +232,7 @@ Alternatively you can automatically download, compile and install the package,
 under your GOPATH, as follows:
 
 ```
-go get github.com/f-secure-foundry/interlock
+go install github.com/f-secure-foundry/interlock@latest
 ```
 
 Options

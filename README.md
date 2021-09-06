@@ -102,7 +102,7 @@ Symmetric ciphers:
 
 Security tokens:
 
-* Time-based One-Time Password Algorithm (TOTP), RFC623 implementation (Google Authenticator)
+* Time-based One-Time Password Algorithm (TOTP), [RFC6238](https://datatracker.ietf.org/doc/html/rfc6238) implementation (Google Authenticator)
 
 Hardware Security Modules
 =========================

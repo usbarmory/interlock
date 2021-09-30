@@ -20,7 +20,10 @@ import (
 	"time"
 )
 
-const mountPoint = ".interlock-mnt"
+const (
+	BindAddress = "0.0.0.0:4430"
+	mountPoint  = ".interlock-mnt"
+)
 
 type Config struct {
 	Debug       bool     `json:"debug"`
@@ -207,6 +210,7 @@ func (c *Config) SetMountPoint() error {
 
 func (c *Config) Set(configPath string) (err error) {
 	debugFlag := c.Debug
+	bindAddress := c.BindAddress
 
 	b, err := ioutil.ReadFile(configPath)
 
@@ -218,6 +222,10 @@ func (c *Config) Set(configPath string) (err error) {
 
 	if debugFlag {
 		c.Debug = true
+	}
+
+	if bindAddress != BindAddress {
+		c.BindAddress = bindAddress
 	}
 
 	return

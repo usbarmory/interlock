@@ -1,9 +1,9 @@
 module github.com/f-secure-foundry/interlock
 
 require (
-	golang.org/x/crypto v0.0.0-20210506145944-38f3c27a63bf
-	golang.org/x/sys v0.0.0-20210507014357-30e306a8bba5
-	golang.org/x/term v0.0.0-20210503060354-a79de5458b56 // indirect
+	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519
+	golang.org/x/sys v0.0.0-20210930141918-969570ce7c6c
+	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 )
 
 go 1.16

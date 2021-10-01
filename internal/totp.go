@@ -53,11 +53,6 @@ func (t *tOTP) New() cipherInterface {
 	return new(tOTP).Init()
 }
 
-func (t *tOTP) Activate(activate bool) (err error) {
-	// no activation required
-	return
-}
-
 func (t *tOTP) GetInfo() cipherInfo {
 	return t.info
 }

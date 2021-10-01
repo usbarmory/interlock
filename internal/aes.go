@@ -57,11 +57,6 @@ func (a *aes256OFB) New() cipherInterface {
 	return new(aes256OFB).Init()
 }
 
-func (a *aes256OFB) Activate(activate bool) (err error) {
-	// no activation required
-	return
-}
-
 func (a *aes256OFB) GetInfo() cipherInfo {
 	return a.info
 }

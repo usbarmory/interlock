@@ -53,11 +53,6 @@ func (o *openPGP) New() cipherInterface {
 	return new(openPGP).Init()
 }
 
-func (o *openPGP) Activate(activate bool) (err error) {
-	// no activation required
-	return
-}
-
 func (o *openPGP) GetInfo() cipherInfo {
 	return o.info
 }

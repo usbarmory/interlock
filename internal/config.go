@@ -171,16 +171,6 @@ func (c *Config) EnableHSM() (err error) {
 	return
 }
 
-func (c *Config) ActivateCiphers(activate bool) {
-	for _, val := range c.enabledCiphers {
-		err := val.Activate(activate)
-
-		if err != nil {
-			log.Print(err)
-		}
-	}
-}
-
 func (c *Config) PrintAvailableCiphers() {
 	log.Println("supported ciphers:")
 

@@ -148,11 +148,6 @@ func (a *aes256CAAM) New() cipherInterface {
 	return new(aes256CAAM).Init()
 }
 
-func (a *aes256CAAM) Activate(activate bool) (err error) {
-	// no activation required
-	return
-}
-
 func (a *aes256CAAM) GetInfo() cipherInfo {
 	return a.info
 }

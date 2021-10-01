@@ -107,11 +107,6 @@ func (a *aes128DCP) New() cipherInterface {
 	return new(aes128DCP).Init()
 }
 
-func (a *aes128DCP) Activate(activate bool) (err error) {
-	// no activation required
-	return
-}
-
 func (a *aes128DCP) GetInfo() cipherInfo {
 	return a.info
 }

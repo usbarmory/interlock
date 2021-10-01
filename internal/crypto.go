@@ -50,8 +50,6 @@ type cipherInterface interface {
 	New() cipherInterface
 	// initialize cipher
 	Init() cipherInterface
-	// post-auth cipher activation
-	Activate(active bool) error
 	// provide cipher information
 	GetInfo() cipherInfo
 	// generate key

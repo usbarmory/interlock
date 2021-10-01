@@ -34,7 +34,6 @@ func randomString(size int) (c string, err error) {
 
 func authenticate(volume string, password string, dispose bool) (err error) {
 	if conf.TestMode {
-		conf.ActivateCiphers(true)
 		return
 	}
 
@@ -75,8 +74,6 @@ func authenticate(volume string, password string, dispose bool) (err error) {
 			return
 		}
 	}
-
-	conf.ActivateCiphers(true)
 
 	return
 }
@@ -194,17 +191,11 @@ func logout(w http.ResponseWriter) (res jsonObject) {
 		"response": nil,
 	}
 
-	conf.ActivateCiphers(false)
-
-	err := umount()
-
-	if err != nil {
+	if err := umount(); err != nil {
 		return errorResponse(err, "")
 	}
 
-	err = lock()
-
-	if err != nil {
+	if err := lock(); err != nil {
 		return errorResponse(err, "")
 	}
 

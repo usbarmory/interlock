@@ -104,11 +104,6 @@ func (a *aes256SCC) New() cipherInterface {
 	return new(aes256SCC).Init()
 }
 
-func (a *aes256SCC) Activate(activate bool) (err error) {
-	// no activation required
-	return
-}
-
 func (a *aes256SCC) GetInfo() cipherInfo {
 	return a.info
 }

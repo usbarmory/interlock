@@ -205,11 +205,6 @@ func (a *aes256CAAM) GenOTP(timestamp int64) (otp string, exp int64, err error) 
 	return
 }
 
-func (a *aes256CAAM) HandleRequest(r *http.Request) (res jsonObject) {
-	res = notFound()
-	return
-}
-
 func (h *CAAM) DeriveKey(diversifier []byte, iv []byte) (key []byte, err error) {
 	return CAAMDeriveKey(diversifier, iv)
 }

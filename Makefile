@@ -15,3 +15,6 @@ build:
 	  -trimpath \
 	  -ldflags "-s -w -X '${PKG}/internal.Build=${BUILD} ${BUILD_TAGS}' -X '${PKG}/internal.Revision=${REV}'"
 	@echo "compiled INTERLOCK ${REV} (${BUILD})"
+
+clean:
+	rm ${CURDIR}/interlock

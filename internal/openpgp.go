@@ -11,7 +11,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"net/http"
 	"os"
 	"path/filepath"
 	"time"
@@ -383,10 +382,5 @@ func serialize(e *openpgp.Entity, w io.Writer, config *packet.Config) (err error
 
 func (o *openPGP) GenOTP(timestamp int64) (otp string, exp int64, err error) {
 	err = errors.New("cipher does not support OTP generation")
-	return
-}
-
-func (o *openPGP) HandleRequest(r *http.Request) (res jsonObject) {
-	res = notFound()
 	return
 }

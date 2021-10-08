@@ -213,11 +213,6 @@ func (a *aes128DCP) GenOTP(timestamp int64) (otp string, exp int64, err error) {
 	return
 }
 
-func (a *aes128DCP) HandleRequest(r *http.Request) (res jsonObject) {
-	res = notFound()
-	return
-}
-
 func (h *DCP) DeriveKey(diversifier []byte, iv []byte) (key []byte, err error) {
 	return DCPDeriveKey(diversifier, iv)
 }

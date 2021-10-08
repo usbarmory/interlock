@@ -210,11 +210,6 @@ func (a *aes256SCC) GenOTP(timestamp int64) (otp string, exp int64, err error) {
 	return
 }
 
-func (a *aes256SCC) HandleRequest(r *http.Request) (res jsonObject) {
-	res = notFound()
-	return
-}
-
 func (h *SCC) DeriveKey(diversifier []byte, iv []byte) (key []byte, err error) {
 	return SCCDeriveKey(diversifier, iv)
 }

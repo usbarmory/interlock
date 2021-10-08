@@ -18,8 +18,6 @@ import (
 
 type jsonObject map[string]interface{}
 
-var censorPattern = "password"
-
 func parseRequest(r *http.Request) (j jsonObject, err error) {
 	body, err := ioutil.ReadAll(r.Body)
 
@@ -28,9 +26,7 @@ func parseRequest(r *http.Request) (j jsonObject, err error) {
 	}
 
 	if conf.Debug {
-		if conf.TestMode || strings.Contains(string(body), censorPattern) {
-			log.Printf("%s", body)
-		}
+		log.Printf("%s", body)
 	}
 
 	d := json.NewDecoder(strings.NewReader(string(body[:])))

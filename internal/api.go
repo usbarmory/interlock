@@ -14,13 +14,10 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"regexp"
 )
 
 //go:embed static/*
 var static embed.FS
-
-var URIPattern = regexp.MustCompile("/api/([A-Za-z0-9]+)/([a-z0-9_]+)")
 
 func applyHeaders(h http.Handler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -164,19 +161,7 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 	case "/api/status/running":
 		res = runningStatus()
 	default:
-		m := URIPattern.FindStringSubmatch(r.RequestURI)
-
-		if len(m) == 3 {
-			cipher, err := conf.GetAvailableCipher(m[1])
-
-			if err != nil {
-				res = notFound()
-			} else {
-				res = cipher.HandleRequest(r)
-			}
-		} else {
-			res = notFound()
-		}
+		res = notFound()
 	}
 
 	if res != nil {

@@ -15,7 +15,6 @@ import (
 	"errors"
 	"fmt"
 	"io/ioutil"
-	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -153,9 +152,4 @@ func (t *tOTP) Sign(input *os.File, output *os.File) error {
 
 func (t *tOTP) Verify(input *os.File, signature *os.File) error {
 	return errors.New("cipher does not support signature verification")
-}
-
-func (t *tOTP) HandleRequest(r *http.Request) (res jsonObject) {
-	res = notFound()
-	return
 }

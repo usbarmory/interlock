@@ -70,8 +70,6 @@ type cipherInterface interface {
 	Verify(src *os.File, sig *os.File) error
 	// One Time Password
 	GenOTP(timestamp int64) (otp string, exp int64, err error)
-	// cipher specific API request handler
-	HandleRequest(*http.Request) jsonObject
 }
 
 type HSMInterface interface {

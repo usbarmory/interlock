@@ -1,4 +1,4 @@
-module github.com/f-secure-foundry/interlock
+module github.com/usbarmory/interlock
 
 require (
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519

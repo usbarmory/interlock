@@ -1,4 +1,4 @@
-// INTERLOCK | https://github.com/f-secure-foundry/interlock
+// INTERLOCK | https://github.com/usbarmory/interlock
 // Copyright (c) F-Secure Corporation
 //
 // Use of this source code is governed by the license
@@ -39,7 +39,7 @@ type af_alg_iv struct {
 // This uniquely ties the derived key to the specific hardware unit being used,
 // as well as the authentication password.
 //
-// See https://github.com/f-secure-foundry/mxs-dcp for detailed information on
+// See https://github.com/usbarmory/mxs-dcp for detailed information on
 // the DCP encryption process.
 //
 // The salt, initialization vector are prepended to the encrypted file, the

@@ -1,11 +1,11 @@
 Introduction
 ============
 
-INTERLOCK | https://github.com/f-secure-foundry/interlock  
+INTERLOCK | https://github.com/usbarmory/interlock  
 Copyright (c) F-Secure Corporation
 
 The INTERLOCK application is a file encryption front-end developed, but not
-limited to, usage with the [USB armory](https://github.com/f-secure-foundry/usbarmory).
+limited to, usage with the [USB armory](https://github.com/usbarmory/usbarmory).
 
 The primary interface consists of a web-based file manager for an encrypted
 partition running on the device hosting the JSON application server (e.g. USB
@@ -15,7 +15,7 @@ The file manager allows uploading/downloading of files to/from the encrypted
 partition, as well as symmetric/asymmetric cryptographic operations on the
 individual files.
 
-![INTERLOCK screenshot](https://github.com/f-secure-foundry/interlock/wiki/images/interlock.png)
+![INTERLOCK screenshot](https://github.com/usbarmory/interlock/wiki/images/interlock.png)
 
 A command line mode is available to execute selected operations locally,
 without the web interface.
@@ -30,15 +30,15 @@ Documentation
 =============
 
 The main documentation is included in the present
-[file](https://github.com/f-secure-foundry/interlock/blob/master/README.md),
+[file](https://github.com/usbarmory/interlock/blob/master/README.md),
 additional information can be found on the
-[project wiki](https://github.com/f-secure-foundry/interlock/wiki).
+[project wiki](https://github.com/usbarmory/interlock/wiki).
 
 Binary Releases
 ===============
 
 Pre-compiled binary releases for ARM targets are available
-[here](https://github.com/f-secure-foundry/interlock/releases).
+[here](https://github.com/usbarmory/interlock/releases).
 
 Architecture
 ============
@@ -218,7 +218,7 @@ or cross-compiled, under Linux (it is not supported by or designed for other
 OSes at this time).
 
 ```
-git clone https://github.com/f-secure-foundry/interlock
+git clone https://github.com/usbarmory/interlock
 cd interlock
 make
 ```
@@ -230,7 +230,7 @@ Alternatively you can automatically download, compile and install the package,
 under your GOPATH, as follows:
 
 ```
-go install github.com/f-secure-foundry/interlock@latest
+go install github.com/usbarmory/interlock@latest
 ```
 
 Options
@@ -300,16 +300,16 @@ Configuration
   Available modules:
 
   - `mxc-scc2`:          NXP Security Controller (SCCv2). Requires kernel driver
-                         [mxc-scc2](https://github.com/f-secure-foundry/mxc-scc2).
+                         [mxc-scc2](https://github.com/usbarmory/mxc-scc2).
 
   - `caam-keyblob`:      NXP Cryptographic Acceleration and Assurance Module (CAAM).
                          *NOTE*: stores encrypted derived keys in `~/.luks_kb/`,
                          which must be accompanied to the LUKS partition itself
                          when creating data backups. Requires kernel driver
-                         [caam-keyblob](https://github.com/f-secure-foundry/caam-keyblob).
+                         [caam-keyblob](https://github.com/usbarmory/caam-keyblob).
 
   - `mxs-dcp`:           NXP Data Co-Processor (DCP). Requires kernel driver
-                         [mxs-dcp](https://github.com/f-secure-foundry/mxs-dcp).
+                         [mxs-dcp](https://github.com/usbarmory/mxs-dcp).
 
   Available options:
 
@@ -385,7 +385,7 @@ through standard syslog facility.
 License
 =======
 
-INTERLOCK | https://github.com/f-secure-foundry/interlock  
+INTERLOCK | https://github.com/usbarmory/interlock  
 Copyright (c) F-Secure Corporation
 
 This program is free software: you can redistribute it and/or modify it under

@@ -1,4 +1,4 @@
-// INTERLOCK | https://github.com/f-secure-foundry/interlock
+// INTERLOCK | https://github.com/usbarmory/interlock
 // Copyright (c) F-Secure Corporation
 //
 // Use of this source code is governed by the license
@@ -13,7 +13,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/f-secure-foundry/interlock/internal"
+	"github.com/usbarmory/interlock/internal"
 )
 
 func init() {

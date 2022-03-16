@@ -18,9 +18,7 @@ individual files.
 ![INTERLOCK screenshot](https://github.com/f-secure-foundry/interlock/wiki/images/interlock.png)
 
 A command line mode is available to execute selected operations locally,
-without the web interface. This is primarily intended to aid
-encryption/decryption operation with hardware keys, using HSM support on
-embedded firmwares.
+without the web interface.
 
 Authors
 =======
@@ -50,7 +48,7 @@ application server implementing the protocol specified in the API document.
 
 A command line mode is available to execute selected operations locally,
 without the web interface. This is primarily intended to aid
-encryption/decryption operation with hardware keys, using HSM support on
+encryption/decryption operation with key derivation using HSM support on
 embedded firmwares.
 
 The JSON application server is written in golang. The client HTML/Javascript

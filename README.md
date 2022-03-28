@@ -2,7 +2,7 @@ Introduction
 ============
 
 INTERLOCK | https://github.com/usbarmory/interlock  
-Copyright (c) F-Secure Corporation
+Copyright (c) WithSecure Corporation
 
 The INTERLOCK application is a file encryption front-end developed, but not
 limited to, usage with the [USB armory](https://github.com/usbarmory/usbarmory).
@@ -23,8 +23,8 @@ without the web interface.
 Authors
 =======
 
-Andrea Barisani <andrea.barisani@f-secure.com>  
-Daniele Bianco  <daniele.bianco@f-secure.com>  
+Andrea Barisani <andrea.barisani@withsecure.com>  
+Daniele Bianco  <daniele.bianco@withsecure.com>  
 
 Documentation
 =============
@@ -386,7 +386,7 @@ License
 =======
 
 INTERLOCK | https://github.com/usbarmory/interlock  
-Copyright (c) F-Secure Corporation
+Copyright (c) WithSecure Corporation
 
 This program is free software: you can redistribute it and/or modify it under
 the terms of the GNU General Public License as published by the Free Software

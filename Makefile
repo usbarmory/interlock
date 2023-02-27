@@ -17,4 +17,4 @@ build:
 	@echo "compiled INTERLOCK ${REV} (${BUILD})"
 
 clean:
-	rm ${CURDIR}/interlock
+	rm -f ${CURDIR}/interlock

@@ -4,7 +4,7 @@ Introduction
 INTERLOCK | https://github.com/usbarmory/interlock  
 Copyright (c) WithSecure Corporation
 
-The INTERLOCK application is a file encryption front-end developed, but not
+The INTERLOCK application is a file encryption front-end developed for, but not
 limited to, usage with the [USB armory](https://github.com/usbarmory/usbarmory).
 
 The primary interface consists of a web-based file manager for an encrypted

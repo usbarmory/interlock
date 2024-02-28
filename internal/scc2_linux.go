@@ -14,7 +14,6 @@ import (
 	"errors"
 	"io"
 	"log"
-	"net/http"
 	"os"
 	"syscall"
 	"unsafe"

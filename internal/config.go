@@ -187,7 +187,7 @@ func (c *Config) SetDefaults() {
 	c.TLSKey = "certs/key.pem"
 	c.HSM = "off"
 	c.KeyPath = "keys"
-	c.Ciphers = []string{"OpenPGP", "AES-256-OFB", "TOTP"}
+	c.Ciphers = []string{"OpenPGP", "AES-256-CTR", "TOTP"}
 	c.TestMode = false
 	c.VolumeGroup = "lvmvolume"
 }

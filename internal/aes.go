@@ -18,14 +18,14 @@ import (
 	"os"
 )
 
-// Symmetric file encryption using AES-256-OFB, key is derived from password
+// Symmetric file encryption using AES-256-CTR, key is derived from password
 // using PBKDF2 with SHA256 and 4096 rounds. The salt, initialization vector
 // are prepended to the encrypted file, the HMAC for authentication is
 // appended:
 //
 // salt (8 bytes) || iv (16 bytes) || ciphertext || hmac (32 bytes)
 
-type aes256OFB struct {
+type aes256CTR struct {
 	info     cipherInfo
 	password string
 
@@ -33,13 +33,13 @@ type aes256OFB struct {
 }
 
 func init() {
-	conf.SetAvailableCipher(new(aes256OFB).Init())
+	conf.SetAvailableCipher(new(aes256CTR).Init())
 }
 
-func (a *aes256OFB) Init() cipherInterface {
+func (a *aes256CTR) Init() cipherInterface {
 	a.info = cipherInfo{
-		Name:        "AES-256-OFB",
-		Description: "AES OFB w/ 256 bit key derived using PBKDF2",
+		Name:        "AES-256-CTR",
+		Description: "AES CTR w/ 256 bit key derived using PBKDF2",
 		KeyFormat:   "password",
 		Enc:         true,
 		Dec:         true,
@@ -52,15 +52,15 @@ func (a *aes256OFB) Init() cipherInterface {
 	return a
 }
 
-func (a *aes256OFB) New() cipherInterface {
-	return new(aes256OFB).Init()
+func (a *aes256CTR) New() cipherInterface {
+	return new(aes256CTR).Init()
 }
 
-func (a *aes256OFB) GetInfo() cipherInfo {
+func (a *aes256CTR) GetInfo() cipherInfo {
 	return a.info
 }
 
-func (a *aes256OFB) SetPassword(password string) (err error) {
+func (a *aes256CTR) SetPassword(password string) (err error) {
 	if len(password) < 8 {
 		return errors.New("password < 8 characters")
 	}
@@ -70,7 +70,7 @@ func (a *aes256OFB) SetPassword(password string) (err error) {
 	return
 }
 
-func (a *aes256OFB) Encrypt(input *os.File, output *os.File, sign bool) (err error) {
+func (a *aes256CTR) Encrypt(input *os.File, output *os.File, sign bool) (err error) {
 	if sign {
 		return errors.New("symmetric cipher does not support signing")
 	}
@@ -88,12 +88,12 @@ func (a *aes256OFB) Encrypt(input *os.File, output *os.File, sign bool) (err err
 		return
 	}
 
-	err = encryptOFB(key, salt, iv, input, output)
+	err = encryptCTR(key, salt, iv, input, output)
 
 	return
 }
 
-func (a *aes256OFB) Decrypt(input *os.File, output *os.File, verify bool) (err error) {
+func (a *aes256CTR) Decrypt(input *os.File, output *os.File, verify bool) (err error) {
 	if verify {
 		return errors.New("symmetric cipher does not support signature verification")
 	}
@@ -118,39 +118,39 @@ func (a *aes256OFB) Decrypt(input *os.File, output *os.File, verify bool) (err e
 		return
 	}
 
-	err = decryptOFB(key, salt, iv, input, output)
+	err = decryptCTR(key, salt, iv, input, output)
 
 	return
 }
 
-func (a *aes256OFB) GenKey(i string, e string) (p string, s string, err error) {
+func (a *aes256CTR) GenKey(i string, e string) (p string, s string, err error) {
 	err = errors.New("symmetric cipher does not support key generation")
 	return
 }
 
-func (a *aes256OFB) GetKeyInfo(k key) (i string, err error) {
+func (a *aes256CTR) GetKeyInfo(k key) (i string, err error) {
 	err = errors.New("symmetric cipher does not support key")
 	return
 }
 
-func (a *aes256OFB) SetKey(k key) error {
+func (a *aes256CTR) SetKey(k key) error {
 	return errors.New("symmetric cipher does not support key")
 }
 
-func (a *aes256OFB) Sign(i *os.File, o *os.File) error {
+func (a *aes256CTR) Sign(i *os.File, o *os.File) error {
 	return errors.New("symmetric cipher does not support signing")
 }
 
-func (a *aes256OFB) Verify(i *os.File, s *os.File) error {
+func (a *aes256CTR) Verify(i *os.File, s *os.File) error {
 	return errors.New("symmetric cipher does not support signature verification")
 }
 
-func (a *aes256OFB) GenOTP(timestamp int64) (otp string, exp int64, err error) {
+func (a *aes256CTR) GenOTP(timestamp int64) (otp string, exp int64, err error) {
 	err = errors.New("cipher does not support OTP generation")
 	return
 }
 
-func encryptOFB(key []byte, salt []byte, iv []byte, input *os.File, output *os.File) (err error) {
+func encryptCTR(key []byte, salt []byte, iv []byte, input *os.File, output *os.File) (err error) {
 	block, err := aes.NewCipher(key)
 
 	if err != nil {
@@ -173,7 +173,7 @@ func encryptOFB(key []byte, salt []byte, iv []byte, input *os.File, output *os.F
 	mac.Write(salt)
 	mac.Write(iv)
 
-	stream := cipher.NewOFB(block, iv)
+	stream := cipher.NewCTR(block, iv)
 	buf := make([]byte, 32*1024)
 
 	for {
@@ -206,7 +206,7 @@ func encryptOFB(key []byte, salt []byte, iv []byte, input *os.File, output *os.F
 	return
 }
 
-func decryptOFB(key []byte, salt []byte, iv []byte, input *os.File, output *os.File) (err error) {
+func decryptCTR(key []byte, salt []byte, iv []byte, input *os.File, output *os.File) (err error) {
 	block, err := aes.NewCipher(key)
 
 	if err != nil {
@@ -250,7 +250,7 @@ func decryptOFB(key []byte, salt []byte, iv []byte, input *os.File, output *os.F
 		return errors.New("invalid HMAC")
 	}
 
-	stream := cipher.NewOFB(block, iv)
+	stream := cipher.NewCTR(block, iv)
 	writer := &cipher.StreamWriter{S: stream, W: output}
 
 	_, err = input.Seek(headerSize, 0)

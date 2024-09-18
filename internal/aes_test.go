@@ -24,7 +24,7 @@ func TestAes(t *testing.T) {
 	ciphertext, _ := ioutil.TempFile("", "aes_test_ciphertext-")
 	decrypted, _ := ioutil.TempFile("", "aes_test_decrypted-")
 
-	a := &aes256OFB{}
+	a := &aes256CTR{}
 	a.SetPassword(password)
 
 	err := a.Encrypt(input, ciphertext, false)

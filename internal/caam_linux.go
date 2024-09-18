@@ -74,7 +74,7 @@ func (kb *caam_kb_data) set(key, blob, keymod *[]byte) {
 	kb.KeymodLen = uint32(len(*keymod))
 }
 
-// Symmetric file encryption using AES-256-OFB.
+// Symmetric file encryption using AES-256-CTR.
 //
 // A first key is derived from password using PBKDF2 with SHA256 and 4096
 // rounds, this key is then encrypted with AES-256-CCM using the NXP
@@ -130,7 +130,7 @@ func (h *CAAM) Cipher() cipherInterface {
 func (a *aes256CAAM) Init() (c cipherInterface) {
 	a.info = cipherInfo{
 		Name:        "AES-256-CAAM",
-		Description: "AES OFB w/ 256 bit key derived using PBKDF2 and CAAM device specific secret key",
+		Description: "AES CTR w/ 256 bit key derived using PBKDF2 and CAAM device specific secret key",
 		KeyFormat:   "password",
 		Enc:         true,
 		Dec:         true,
@@ -312,7 +312,7 @@ func CAAMDeriveKey(diversifier []byte, iv []byte) (key []byte, err error) {
 func CAAMEncrypt(password string, input *os.File, output *os.File) (err error) {
 	var blob []byte
 
-	// Generate a random AES-256-OFB file encryption key, to be protected
+	// Generate a random AES-256-CTR file encryption key, to be protected
 	// by the CAAM in an encrypted blob.
 	key := make([]byte, derivedKeySize)
 	_, err = io.ReadFull(rand.Reader, key)
@@ -351,7 +351,7 @@ func CAAMEncrypt(password string, input *os.File, output *os.File) (err error) {
 		return
 	}
 
-	return encryptOFB(key, salt, iv, input, output)
+	return encryptCTR(key, salt, iv, input, output)
 }
 
 func CAAMDecrypt(password string, input *os.File, output *os.File) (err error) {
@@ -393,7 +393,7 @@ func CAAMDecrypt(password string, input *os.File, output *os.File) (err error) {
 		return
 	}
 
-	return decryptOFB(key, salt, iv, input, output)
+	return decryptCTR(key, salt, iv, input, output)
 }
 
 func CAAMOp(mode, arg uintptr) (err error) {

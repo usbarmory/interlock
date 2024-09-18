@@ -29,7 +29,7 @@ type af_alg_iv struct {
 	iv    [aes.BlockSize]byte
 }
 
-// Symmetric file encryption using AES-128-OFB.
+// Symmetric file encryption using AES-128-CTR.
 //
 // A first key is derived from password using PBKDF2 with SHA256 and 4096
 // rounds, this key is then encrypted with AES-128-CBC using the NXP Data
@@ -89,7 +89,7 @@ func (h *DCP) Cipher() cipherInterface {
 func (a *aes128DCP) Init() (c cipherInterface) {
 	a.info = cipherInfo{
 		Name:        "AES-128-DCP",
-		Description: "AES OFB w/ 128 bit key derived using PBKDF2 and DCP device specific secret key",
+		Description: "AES CTR w/ 128 bit key derived using PBKDF2 and DCP device specific secret key",
 		KeyFormat:   "password",
 		Enc:         true,
 		Dec:         true,
@@ -144,7 +144,7 @@ func (a *aes128DCP) Encrypt(input *os.File, output *os.File, sign bool) (err err
 		return
 	}
 
-	err = encryptOFB(deviceKey, salt, iv, input, output)
+	err = encryptCTR(deviceKey, salt, iv, input, output)
 
 	return
 }
@@ -180,7 +180,7 @@ func (a *aes128DCP) Decrypt(input *os.File, output *os.File, verify bool) (err e
 		return
 	}
 
-	err = decryptOFB(deviceKey, salt, iv, input, output)
+	err = decryptCTR(deviceKey, salt, iv, input, output)
 
 	return
 }

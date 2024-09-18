@@ -32,7 +32,7 @@ const (
 	encryptCBC = 0
 )
 
-// Symmetric file encryption using AES-256-OFB.
+// Symmetric file encryption using AES-256-CTR.
 //
 // A first key is derived from password using PBKDF2 with SHA256 and 4096
 // rounds, this key is then encrypted with AES-256-CBC using the NXP Security
@@ -86,7 +86,7 @@ func (h *SCC) Cipher() cipherInterface {
 func (a *aes256SCC) Init() (c cipherInterface) {
 	a.info = cipherInfo{
 		Name:        "AES-256-SCC",
-		Description: "AES OFB w/ 256 bit key derived using PBKDF2 and SCCv2 device specific secret key",
+		Description: "AES CTR w/ 256 bit key derived using PBKDF2 and SCCv2 device specific secret key",
 		KeyFormat:   "password",
 		Enc:         true,
 		Dec:         true,
@@ -141,7 +141,7 @@ func (a *aes256SCC) Encrypt(input *os.File, output *os.File, sign bool) (err err
 		return
 	}
 
-	err = encryptOFB(deviceKey, salt, iv, input, output)
+	err = encryptCTR(deviceKey, salt, iv, input, output)
 
 	return
 }
@@ -177,7 +177,7 @@ func (a *aes256SCC) Decrypt(input *os.File, output *os.File, verify bool) (err e
 		return
 	}
 
-	err = decryptOFB(deviceKey, salt, iv, input, output)
+	err = decryptCTR(deviceKey, salt, iv, input, output)
 
 	return
 }

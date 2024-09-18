@@ -96,7 +96,7 @@ Asymmetric ciphers:
 
 Symmetric ciphers:
 
-* AES-256-OFB w/ PBKDF2 password derivation (SHA256, 4096 rounds) and HMAC (SHA256)
+* AES-256-CTR w/ PBKDF2 password derivation (SHA256, 4096 rounds) and HMAC (SHA256)
 
 Security tokens:
 
@@ -107,7 +107,7 @@ Hardware Security Modules
 
 The HSM support allows symmetric ciphering using device specific secret keys,
 allowing to uniquely tie derived keys to the specific hardware unit being used.
-An HSM specific AES-OFB based symmetric cipher is exposed, with keys derived
+An HSM specific AES-CTR based symmetric cipher is exposed, with keys derived
 from the user password as well as device specific secret.
 
 Additionally the LUKS password, for accessing encrypted volumes, can filtered
@@ -319,11 +319,11 @@ Configuration
                          case of failure, to plain ones in order to allow
                          change of credentials on pre-HSM deployments;
 
-  - `tls`:               use HSM secret key to AES-256-OFB encrypt the HTTPS
+  - `tls`:               use HSM secret key to AES-256-CTR encrypt the HTTPS
                          server TLS key (tls_key), automatically convert
                          existing plaintext keys;
 
-  - `cipher`:            expose AES-256-OFB derived symmetric cipher with
+  - `cipher`:            expose AES-256-CTR derived symmetric cipher with
                          password key derivation through HSM encryption to make
                          it device specific.
 
@@ -333,7 +333,7 @@ Configuration
 * `volume_group`: volume group name.
 
 * `ciphers`:      array of cipher names to enable, supported values are
-                  ["OpenPGP", "AES-256-OFB", "TOTP"].
+                  ["OpenPGP", "AES-256-CTR", "TOTP"].
 
 The following example illustrates the configuration file format (plain JSON)
 and its default values.
@@ -352,7 +352,7 @@ and its default values.
         "volume_group": "lvmvolume"
         "ciphers": [
                 "OpenPGP",
-                "AES-256-OFB",
+                "AES-256-CTR",
                 "TOTP"
         ]
 }

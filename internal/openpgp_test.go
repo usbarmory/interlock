@@ -9,7 +9,7 @@ package interlock
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"path"
 	"testing"
@@ -30,21 +30,21 @@ func TestOpenPGP(t *testing.T) {
 		return
 	}
 
-	pubKeyFile, _ := ioutil.TempFile("", "openpgp_test_pubkey-")
+	pubKeyFile, _ := os.CreateTemp("", "openpgp_test_pubkey-")
 	pubKeyFile.Write([]byte(testPubKey))
 	pubKeyFile.Seek(0, 0)
 
-	secKeyFile, _ := ioutil.TempFile("", "openpgp_test_seckey-")
+	secKeyFile, _ := os.CreateTemp("", "openpgp_test_seckey-")
 	secKeyFile.Write([]byte(testSecKey))
 	secKeyFile.Seek(0, 0)
 
-	input, _ := ioutil.TempFile("", "openaes_test_input-")
+	input, _ := os.CreateTemp("", "openaes_test_input-")
 	input.Write([]byte(cleartext))
 	input.Seek(0, 0)
 
-	ciphertext, _ := ioutil.TempFile("", "openpgp_test_ciphertext-")
-	decrypted, _ := ioutil.TempFile("", "openpgp_test_decrypted-")
-	signature, _ := ioutil.TempFile("", "openpgp_test_signature-")
+	ciphertext, _ := os.CreateTemp("", "openpgp_test_ciphertext-")
+	decrypted, _ := os.CreateTemp("", "openpgp_test_decrypted-")
+	signature, _ := os.CreateTemp("", "openpgp_test_signature-")
 
 	pubKey := key{
 		Identifier: "OpenPGP test public key",
@@ -99,7 +99,7 @@ func TestOpenPGP(t *testing.T) {
 	}
 
 	decrypted.Seek(0, 0)
-	compare, _ := ioutil.ReadAll(decrypted)
+	compare, _ := io.ReadAll(decrypted)
 
 	if !bytes.Equal([]byte(cleartext), compare) {
 		t.Error("cleartext and ciphertext differ")

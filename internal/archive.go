@@ -177,7 +177,6 @@ func unzipFile(src string, dst string) (err error) {
 				}
 
 				output.Close()
-				//lint:ignore SA1019 incorrectly matches zip:*FileHeader.ModTime()
 				os.Chtimes(dstPath, f.ModTime(), f.ModTime())
 			}
 		}

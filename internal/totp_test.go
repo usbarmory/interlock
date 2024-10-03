@@ -7,7 +7,6 @@
 package interlock
 
 import (
-	"io/ioutil"
 	"os"
 	"path"
 	"testing"
@@ -19,7 +18,7 @@ func TestTOTP(t *testing.T) {
 	testSecKey := "this is a TOTP test k"
 	totp := &tOTP{}
 
-	secKeyFile, _ := ioutil.TempFile("", "totp_test_seed-")
+	secKeyFile, _ := os.CreateTemp("", "totp_test_seed-")
 	secKeyFile.Write([]byte(testSecKey))
 	secKeyFile.Seek(0, 0)
 

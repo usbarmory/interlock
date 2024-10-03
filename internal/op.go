@@ -16,7 +16,7 @@ import (
 	"regexp"
 	"syscall"
 
-	"golang.org/x/crypto/ssh/terminal"
+	"golang.org/x/term"
 )
 
 var opPattern = regexp.MustCompile("^(lock|unlock|derive)(:.+)?$")
@@ -92,11 +92,11 @@ func Op(op string) (err error) {
 
 func promptPassword(confirm bool) ([]byte, error) {
 	fmt.Print("Password: ")
-	password, _ := terminal.ReadPassword(int(syscall.Stdin))
+	password, _ := term.ReadPassword(int(syscall.Stdin))
 
 	if confirm {
 		fmt.Printf("\nConfirm password: ")
-		confirmation, _ := terminal.ReadPassword(int(syscall.Stdin))
+		confirmation, _ := term.ReadPassword(int(syscall.Stdin))
 
 		if !bytes.Equal(password, confirmation) {
 			fmt.Println()

@@ -10,7 +10,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"log"
 	"log/syslog"
 	"net/http"
@@ -202,7 +201,7 @@ func (c *Config) Set(configPath string) (err error) {
 	debugFlag := c.Debug
 	bindAddress := c.BindAddress
 
-	b, err := ioutil.ReadFile(configPath)
+	b, err := os.ReadFile(configPath)
 
 	if err != nil {
 		return

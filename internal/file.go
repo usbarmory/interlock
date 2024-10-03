@@ -11,7 +11,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"log/syslog"
 	"net/http"
@@ -154,7 +153,7 @@ func fileNewfile(r *http.Request) (res jsonObject) {
 	}
 
 	contents := req["contents"].(string)
-	err = ioutil.WriteFile(path, []byte(contents), 0644)
+	err = os.WriteFile(path, []byte(contents), 0644)
 
 	if err != nil {
 		return errorResponse(errors.New("cannot create file"), "")
@@ -370,7 +369,7 @@ func fileList(r *http.Request) (res jsonObject) {
 		return errorResponse(err, "")
 	}
 
-	fileInfo, err := ioutil.ReadDir(path)
+	fileInfo, err := os.ReadDir(path)
 
 	if err != nil {
 		return errorResponse(err, "")
@@ -395,10 +394,13 @@ func fileList(r *http.Request) (res jsonObject) {
 		inode := inode{
 			Name:    file.Name(),
 			Dir:     file.IsDir(),
-			Size:    file.Size(),
-			Mtime:   file.ModTime().Unix(),
 			KeyPath: inKeyPath,
 			Private: private,
+		}
+
+		if info, err := file.Info(); err == nil {
+			inode.Mtime = info.ModTime().Unix()
+			inode.Size = info.Size()
 		}
 
 		if !file.IsDir() && inKeyPath {

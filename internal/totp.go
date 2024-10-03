@@ -14,7 +14,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -24,8 +23,6 @@ import (
 type tOTP struct {
 	info   cipherInfo
 	secKey []byte
-
-	cipherInterface
 }
 
 func init() {
@@ -76,7 +73,7 @@ func (t *tOTP) GetKeyInfo(k key) (info string, err error) {
 
 func (t *tOTP) SetKey(k key) (err error) {
 	keyPath := filepath.Join(conf.MountPoint, k.Path)
-	s, err := ioutil.ReadFile(keyPath)
+	s, err := os.ReadFile(keyPath)
 
 	if err != nil {
 		return

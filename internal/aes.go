@@ -28,8 +28,6 @@ import (
 type aes256CTR struct {
 	info     cipherInfo
 	password string
-
-	cipherInterface
 }
 
 func init() {

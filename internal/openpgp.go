@@ -24,8 +24,6 @@ type openPGP struct {
 	info   cipherInfo
 	pubKey *openpgp.Entity
 	secKey *openpgp.Entity
-
-	cipherInterface
 }
 
 func init() {

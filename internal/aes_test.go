@@ -8,7 +8,7 @@ package interlock
 
 import (
 	"bytes"
-	"io/ioutil"
+	"io"
 	"os"
 	"testing"
 )
@@ -17,12 +17,12 @@ func TestAes(t *testing.T) {
 	password := "interlocktest"
 	cleartext := "01234567890ABCDEFGHILMNOPQRSTUVZ!@#"
 
-	input, _ := ioutil.TempFile("", "aes_test_input-")
+	input, _ := os.CreateTemp("", "aes_test_input-")
 	input.Write([]byte(cleartext))
 	input.Seek(0, 0)
 
-	ciphertext, _ := ioutil.TempFile("", "aes_test_ciphertext-")
-	decrypted, _ := ioutil.TempFile("", "aes_test_decrypted-")
+	ciphertext, _ := os.CreateTemp("", "aes_test_ciphertext-")
+	decrypted, _ := os.CreateTemp("", "aes_test_decrypted-")
 
 	a := &aes256CTR{}
 	a.SetPassword(password)
@@ -42,7 +42,7 @@ func TestAes(t *testing.T) {
 	}
 
 	decrypted.Seek(0, 0)
-	compare, _ := ioutil.ReadAll(decrypted)
+	compare, _ := io.ReadAll(decrypted)
 
 	if !bytes.Equal([]byte(cleartext), compare) {
 		t.Error("cleartext and ciphertext differ")

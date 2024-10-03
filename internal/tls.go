@@ -15,7 +15,6 @@ import (
 	"crypto/x509"
 	"crypto/x509/pkix"
 	"encoding/pem"
-	"io/ioutil"
 	"log"
 	"log/syslog"
 	"math/big"
@@ -77,14 +76,14 @@ func ConfigureServer() (srv *http.Server, err error) {
 
 		TLSKey, err = decryptKey(HSM, conf.TLSKey)
 	} else {
-		TLSKey, err = ioutil.ReadFile(conf.TLSKey)
+		TLSKey, err = os.ReadFile(conf.TLSKey)
 	}
 
 	if err != nil {
 		return
 	}
 
-	TLSCert, err = ioutil.ReadFile(conf.TLSCert)
+	TLSCert, err = os.ReadFile(conf.TLSCert)
 
 	if err != nil {
 		return
@@ -100,7 +99,7 @@ func ConfigureServer() (srv *http.Server, err error) {
 		var clientCert []byte
 		certPool := x509.NewCertPool()
 
-		clientCert, err = ioutil.ReadFile(conf.TLSClientCA)
+		clientCert, err = os.ReadFile(conf.TLSClientCA)
 
 		if err != nil {
 			return
@@ -214,7 +213,7 @@ func encryptKeyFile(cipher cipherInterface, src string, dst string) (err error) 
 		return
 	}
 
-	output, err := ioutil.TempFile("", "tls_key-hsm")
+	output, err := os.CreateTemp("", "tls_key-hsm")
 
 	if err != nil {
 		input.Close()

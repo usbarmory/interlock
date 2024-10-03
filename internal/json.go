@@ -10,7 +10,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"strings"
@@ -19,7 +19,7 @@ import (
 type jsonObject map[string]interface{}
 
 func parseRequest(r *http.Request) (j jsonObject, err error) {
-	body, err := ioutil.ReadAll(r.Body)
+	body, err := io.ReadAll(r.Body)
 
 	if err != nil {
 		return
@@ -81,7 +81,7 @@ func validateRequest(req jsonObject, reqAttrs []string) error {
 		case "a":
 			_, ok = req[key].([]interface{})
 		case "i":
-			_, ok = req[key].(interface{})
+			_, ok = req[key]
 		default:
 			return errors.New("unknown validation kind")
 		}

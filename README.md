@@ -23,8 +23,8 @@ without the web interface.
 Authors
 =======
 
-Andrea Barisani <andrea.barisani@withsecure.com>  
-Daniele Bianco  <daniele.bianco@withsecure.com>  
+Andrea Barisani <andrea@inversepath.com>  
+Daniele Bianco  <daniele@inversepath.com>  
 
 Documentation
 =============

@@ -7,6 +7,7 @@
 package interlock
 
 import (
+	"crypto/pbkdf2"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/json"
@@ -19,8 +20,6 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
-
-	"golang.org/x/crypto/pbkdf2"
 )
 
 const derivedKeySize = 32
@@ -482,7 +481,7 @@ func deriveKeyPBKDF2(salt []byte, password string, size int) (randSalt []byte, k
 		salt = randSalt
 	}
 
-	key = pbkdf2.Key([]byte(password), salt, 4096, size, sha256.New)
+	key, err = pbkdf2.Key(sha256.New, password, salt, 4096, size)
 
 	return
 }

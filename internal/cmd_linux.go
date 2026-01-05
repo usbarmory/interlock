@@ -4,7 +4,7 @@
 // Use of this source code is governed by the license
 // that can be found in the LICENSE file.
 
-// +build linux
+//go:build linux
 
 package interlock
 
@@ -64,14 +64,14 @@ func setTime(epoch int64) (err error) {
 }
 
 func cp(src string, dst string) (err error) {
-	args :=  []string{"-ra", src, dst}
+	args := []string{"-ra", src, dst}
 	_, err = execCommand("/bin/cp", args, false, "")
 
 	return
 }
 
 func mv(src string, dst string) (err error) {
-	args :=  []string{src, dst}
+	args := []string{src, dst}
 	_, err = execCommand("/bin/mv", args, false, "")
 
 	return

@@ -21,8 +21,11 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-const ALG_TYPE = "skcipher"
-const ALG_NAME = "cbc-paes-dcp"
+const (
+	ALG_TYPE            = "skcipher"
+	ALG_NAME            = "cbc-paes-dcp"
+	DCP_PAES_KEY_UNIQUE = "\xfe" // Defined in Linux `include/soc/fsl/dcp.h`
+)
 
 type af_alg_iv struct {
 	ivlen uint32
@@ -73,9 +76,7 @@ func (h *DCP) New() HSMInterface {
 	}
 	defer unix.Close(fd)
 
-	err = unix.Bind(fd, &unix.SockaddrALG{Type: ALG_TYPE, Name: ALG_NAME})
-
-	if err != nil {
+	if err = unix.Bind(fd, &unix.SockaddrALG{Type: ALG_TYPE, Name: ALG_NAME}); err != nil {
 		log.Fatal(err)
 	}
 
@@ -231,7 +232,7 @@ func DCPDeriveKey(diversifier []byte, iv []byte) (key []byte, err error) {
 		return
 	}
 
-	if err = syscall.SetsockoptString(fd, unix.SOL_ALG, unix.ALG_SET_KEY, "\xfe"); err != nil {		
+	if err = syscall.SetsockoptString(fd, unix.SOL_ALG, unix.ALG_SET_KEY, DCP_PAES_KEY_UNIQUE); err != nil {
 		return
 	}
 
